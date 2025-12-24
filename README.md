@@ -1,117 +1,297 @@
-# 基于springboot的公交线路查询系统
+# 城市公交在线查询系统
 
-#### 介绍
+> 基于 Spring Boot 框架的智能公交查询系统，提供线路查询、站点检索、实时追踪、智能换乘等功能
 
-在城市交通日益复杂的背景下，为了方便市民出行，提高公共交通的利用率，我们开发了这个基于 Spring Boot 的公交线路查询系统。该系统旨在为用户提供准确、实时、便捷的公交线路信息查询服务，同时为管理员提供有效的管理工具，以保障系统的稳定运行和数据的及时更新。
+---
 
-#### 技术栈
+## 项目概述
 
-后端技术栈：Springboot+Mysql+Maven
+本系统旨在设计和实现一个基于Spring Boot框架的城市公交在线查询系统，解决市民出行中公交信息获取不便、实时性差、换乘方案不智能等痛点。通过该系统用户能够便捷查询公交线路、站点、实时到站信息及最优换乘方案。
 
-前端技术栈：Vue+Html+Css+Javascript+ElementUI
+---
 
-开发工具：Idea+Vscode+Navicate
+## 更新日志
 
-#### 系统功能介绍
+### v1.0.0 (2024-12-24)
 
-（一）管理员角色  
-个人中心：管理员可以在此查看和修改个人信息，接收系统通知和重要消息。  
-用户管理：对系统用户进行管理，包括用户信息的查看、修改、删除，以及用户权限的设置。  
-公交路线管理：负责添加、修改、删除公交线路的信息，包括线路名称、起点和终点、途经站点、运营时间、票价等。  
-网站公告管理：发布与公交线路调整、公交服务变更、特殊天气影响等相关的公告信息，确保用户及时了解重要动态。  
-友情链接管理：审核和管理与公交出行相关的友情链接，如公交卡充值网站、城市交通规划网站等，为用户提供更多的相关资源。  
-留言建议：查看用户的留言和建议，及时回复并处理，以不断改进系统服务。  
-系统管理：进行系统的参数设置、数据备份与恢复、日志管理等操作，保障系统的稳定运行和数据安全。  
+- [x] 项目初始化，搭建Spring Boot + MyBatis-Plus框架
+- [x] 创建13个核心数据表（用户、公交路线、公告、留言等）
+- [x] 实现12个服务层模块（Service + ServiceImpl）
+- [x] 完成Docker容器化部署配置
+- [x] 实现管理后台与前台用户界面
+- [x] GitHub仓库创建并推送代码
 
-（二）用户角色  
-公交路线：输入起点和终点，查询可行的公交线路、换乘方案、预计行程时间等信息。  
-网站公告：及时获取公交线路的变更、临时调整、优惠活动等重要通知。  
-友情链接：访问与公交出行相关的有用链接，获取更多辅助信息。  
-留言建议：向管理员提出关于公交线路优化、系统功能改进等方面的建议和意见。  
-个人中心：修改个人资料、查看查询历史和收藏的线路。  
-后台管理：管理自己的留言和建议记录。  
-在线提问：针对公交线路的疑问向管理员或其他用户发起实时提问，并得到解答。  
+---
 
-#### 系统作用
+## 开发计划
 
-方便市民出行  
-为用户提供准确的公交线路信息，帮助规划出行路线，节省出行时间。  
-提高公交服务质量  
-管理员可以根据用户的反馈和实际运营情况，优化公交线路和服务。  
-促进城市交通发展  
-鼓励更多市民选择公交出行，减少私人车辆使用，缓解交通拥堵，降低环境污染。  
-增强信息透明度  
-及时公布公交相关信息，让市民了解公交运营动态，增强对公交系统的信任。  
+### 一、主要任务和目标
 
-#### 系统功能截图
+#### 主要任务
 
-代码结构
+| 任务 | 描述 | 优先级 |
+|------|------|--------|
+| 公交线路查询 | 支持按线路名称、编号查询 | 高 |
+| 站点信息检索 | 查询站点位置、经过线路 | 高 |
+| 实时位置追踪 | 车辆实时位置与到站预测 | 中 |
+| 智能换乘规划 | 最优换乘方案推荐 | 高 |
+| 到站提醒 | 推送即将到站通知 | 中 |
 
-![输入图片说明](images/24db2739e61d63f0f0dfd0434c47105.png)
+#### 技术目标
 
-数据库表
+| 指标 | 目标值 |
+|------|--------|
+| 接口响应时间 | < 500ms |
+| 并发访问支持 | ≥ 500 |
+| 系统可用性 | 7×24小时 |
+| 容错降级 | 支持 |
 
-![输入图片说明](images/42bba6b9987a3d070244c56ec2356f5.png)
+### 二、开发进度
 
-登录
+#### 已完成 ✅
 
-![输入图片说明](images/e18148b3b35ba855d7db2439479f8dc.png)
+| 模块 | 内容 | 完成时间 |
+|------|------|----------|
+| 需求分析 | 用例分析、系统架构设计 | - |
+| 数据库设计 | ER图、13张数据表、索引优化 | - |
+| 后端框架 | Spring Boot + MyBatis-Plus + MySQL | 2024-12-24 |
+| 服务层实现 | 12个Service接口 + 实现类 | 2024-12-24 |
+| API接口 | RESTful风格接口（Controller层） | - |
+| 前端界面 | Vue管理后台 + jQuery前台 | - |
+| Docker部署 | docker-compose + 多阶段构建 | 2024-12-24 |
 
-前台页面首页
+#### 进行中 🚧
 
-![输入图片说明](images/fb3f40d0942ead058b95439952adc3f.png)
+| 任务 | 预计完成 |
+|------|----------|
+| 实时数据接入 | TBD |
 
-公交路线
+#### 计划中 📋
 
-![输入图片说明](images/e4e6c0d95f862ad4e19c9b7d61aeac7.png)
+| 阶段 | 任务 | 内容 |
+|------|------|------|
+| **后端增强** | 实时数据接入 | 对接GPS数据源，实现车辆位置追踪 |
+| | 路径规划算法 | 实现Dijkstra/A*算法，提供最优换乘方案 |
+| | 接口优化 | 添加缓存、限流、降级机制 |
+| **前端优化** | 地图集成 | 集成高德/百度地图API |
+| | 响应式优化 | 适配移动端设备 |
+| **测试部署** | 性能测试 | JMeter压测，验证500并发目标 |
+| | 容器化部署 | Docker Compose生产环境配置 |
 
-网站公告
+---
 
-![输入图片说明](images/475b0c6ed6cb389a9c74e6b6a96827b.png)
+## 技术架构
 
-个人中心
+### 后端技术栈
 
-![输入图片说明](images/49cedb0fba1c1e31c0f9ae8d113b9ed.png)
+```
+Spring Boot 2.2.2.RELEASE
+├── MyBatis-Plus 2.3        # ORM框架
+├── MySQL 8.0               # 数据库
+├── Shiro 1.3.2             # 权限管理
+├── Hutool 4.0.12           # 工具类库
+└── Swagger                 # API文档
+```
 
-留言建议
+### 前端技术栈
 
-![输入图片说明](images/63b89ef48b37000d245773e31dfbaa3.png)
+```
+管理后台：Vue.js + ElementUI
+前台页面：Vue.js + jQuery + Bootstrap
+地图：待集成高德/百度地图API
+```
 
-管理员端用户管理
+### 系统架构
 
-![输入图片说明](images/e081ea119e954dd1daeabc471cad35f.png)
+```
+┌─────────────────────────────────────────────────────┐
+│                    用户层                             │
+│    管理后台(Vue)    │    前台页面(Vue/jQuery)        │
+├─────────────────────────────────────────────────────┤
+│                   API网关层                           │
+│        RESTful API  │  Swagger文档                   │
+├─────────────────────────────────────────────────────┤
+│                   业务逻辑层                          │
+│  Service层 (12个模块) │  Controller层 (13个控制器)    │
+├─────────────────────────────────────────────────────┤
+│                   数据访问层                          │
+│        MyBatis-Plus  │  DAO层 (13个Mapper)           │
+├─────────────────────────────────────────────────────┤
+│                   数据存储层                          │
+│              MySQL 8.0 (13张表)                      │
+└─────────────────────────────────────────────────────┘
+```
 
-公交路线管理
+---
 
-![输入图片说明](images/93e786eef841fa08df36803e3c1967e.png)
+## 快速开始
 
-友情链接
+### 环境要求
 
-![输入图片说明](images/640477b7c32f2d1d36758841fc142de.png)
+| 组件 | 版本 |
+|------|------|
+| JDK | 1.8+ |
+| Maven | 3.6+ |
+| MySQL | 8.0+ |
+| Docker | 20.10+ (可选) |
 
-系统管理
+### 方式一：Docker 部署（推荐）
 
-![输入图片说明](images/8875bd29f0094f938cf1c1fb3e1a04e.png)
+```bash
+# 1. 克隆项目
+git clone https://github.com/Ruler4396/bus-route-query-system.git
+cd bus-route-query-system
 
-在线提问
+# 2. 一键启动
+docker compose up -d
 
-![输入图片说明](images/15b7d31888eeb7b9293741ffe934d8c.png)
+# 3. 访问系统
+# 前台：http://localhost:8080/springbootmf383/front/index.html
+# 后台：http://localhost:8080/springbootmf383/admin/dist/index.html
+```
 
-用户端后台管理
+### 方式二：本地开发
 
-![输入图片说明](images/0ab0df27d044a49378f0c59179665de.png)
+```bash
+# 1. 创建数据库
+mysql -u root -p < init-db.sql
 
-#### 总结
+# 2. 修改配置
+# 编辑 src/main/resources/application.yml
+# 设置数据库连接信息
 
-基于 Spring Boot 的公交线路查询系统，通过管理员和用户的不同功能模块，实现了公交线路信息的有效管理和便捷查询。管理员能够保障系统数据的准确性和及时性，用户能够轻松获取所需的公交出行信息。该系统有助于提升城市公共交通的服务水平，为市民创造更加便捷、高效的出行环境。
+# 3. 启动项目
+mvn spring-boot:run
+```
 
-#### 使用说明
+### 默认账号
 
-创建数据库，执行数据库脚本 修改jdbc数据库连接参数 下载安装maven依赖jar 启动idea中的springboot项目
+| 角色 | 用户名 | 密码 |
+|------|--------|------|
+| 管理员 | `abo` | `abo` |
+| 普通用户 | 需注册 | 需注册 |
 
-后台地址：http://localhost:8080/springbootmf383/admin/dist/index.html
+---
 
-管理员  abo 密码 abo
+## API 接口
 
+### 认证接口
 
-前台地址：http://localhost:8080/springbootmf383/front/index.html
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/users/login` | POST | 用户登录 |
+| `/users/register` | POST | 用户注册 |
+| `/users/logout` | GET | 退出登录 |
+
+### 公交查询接口
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/gongjiaoluxian/list` | GET | 公交路线列表 |
+| `/gongjiaoluxian/info/{id}` | GET | 路线详情 |
+| `/gongjiaoluxian/page` | GET | 分页查询 |
+
+### 其他接口
+
+- 公告管理：`/wangzhangonggao/*`
+- 留言建议：`/messages/*`
+- 在线提问：`/chat/*`
+- 友情链接：`/youqinglianjie/*`
+
+完整API文档：启动后访问 `/swagger-ui.html`
+
+---
+
+## 数据库设计
+
+### 核心数据表
+
+| 表名 | 说明 | 主要字段 |
+|------|------|----------|
+| `users` | 管理员表 | id, username, password, role |
+| `yonghu` | 用户表 | id, zhanghao, mima, xingming |
+| `gongjiaoluxian` | 公交路线表 | id, luxianbianhao, luxianmingcheng, qidianzhanming, zhongdianzhanming |
+| `wangzhangonggao` | 网站公告表 | id, biaoti, neirong, fabushijian |
+| `messages` | 留言建议表 | id, userid, content, reply |
+| `chat` | 在线提问表 | id, userid, ask, reply |
+
+### ER关系
+
+```
+用户(yonghu) ─┬─> 留言(messages)
+              ├─> 收藏(storeup)
+              ├─> 提问(chat)
+              └─> 评论(discuss*)
+
+管理员(users) ─> 管理(所有模块)
+```
+
+---
+
+## 系统截图
+
+### 前台用户界面
+
+| 功能 | 截图 |
+|------|------|
+| 首页 | ![首页](images/fb3f40d0942ead058b95439952adc3f.png) |
+| 公交路线 | ![公交路线](images/e4e6c0d95f862ad4e19c9b7d61aeac7.png) |
+| 网站公告 | ![网站公告](images/475b0c6ed6cb389a9c74e6b6a96827b.png) |
+
+### 管理后台
+
+| 功能 | 截图 |
+|------|------|
+| 登录 | ![登录](images/e18148b3b35ba855d7db2439479f8dc.png) |
+| 用户管理 | ![用户管理](images/e081ea119e954dd1daeabc471cad35f.png) |
+| 路线管理 | ![路线管理](images/93e786eef841fa08df36803e3c1967e.png) |
+| 留言管理 | ![留言管理](images/63b89ef48b37000d245773e31dfbaa3.png) |
+
+---
+
+## 常用命令
+
+```bash
+# Docker操作
+docker compose up -d          # 启动服务
+docker compose down           # 停止服务
+docker compose logs app       # 查看应用日志
+docker compose restart        # 重启服务
+
+# Maven操作
+mvn clean package             # 打包
+mvn spring-boot:run           # 运行
+
+# Git操作
+git pull origin main          # 拉取更新
+git add . && git commit       # 提交更改
+```
+
+---
+
+## 贡献指南
+
+欢迎提交 Issue 和 Pull Request！
+
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
+
+---
+
+## 许可证
+
+本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
+
+---
+
+## 联系方式
+
+- 仓库地址：https://github.com/Ruler4396/bus-route-query-system
+- 问题反馈：[Issues](https://github.com/Ruler4396/bus-route-query-system/issues)
+
+---
+
+**Powered by Spring Boot | Made with ❤️ by Ruler4396**
