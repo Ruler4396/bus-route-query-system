@@ -18,7 +18,10 @@ public class InterceptorConfig extends WebMvcConfigurationSupport{
 	
 	@Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(getAuthorizationInterceptor()).addPathPatterns("/**").excludePathPatterns("/static/**");
+        registry.addInterceptor(getAuthorizationInterceptor())
+                .addPathPatterns("/**")
+                .excludePathPatterns("/static/**")
+                .excludePathPatterns("/map/**");  // 排除地图API接口，无需登录即可访问
         super.addInterceptors(registry);
 	}
 	

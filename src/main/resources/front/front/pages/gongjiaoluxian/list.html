@@ -283,6 +283,9 @@ width: 100%;
 			<button :style='{"padding":"0 15px","boxShadow":"0 0 0px rgba(0,0,0,0)","margin":"0 0 0 10px","borderColor":"#409EFF","backgroundColor":"rgba(77, 79, 54, 1)","color":"#fff","borderRadius":"4px","borderWidth":"0","width":"auto","fontSize":"14px","borderStyle":"solid","height":"40px"}' id="btn-search" type="button" class="layui-btn layui-btn-normal">
 			  <i v-if="true" class="layui-icon layui-icon-search"></i>搜索
 			</button>
+			<button :style='{"padding":"0 15px","boxShadow":"0 0 0px rgba(0,0,0,0)","margin":"0 0 0 10px","borderColor":"#409EFF","backgroundColor":"rgba(183, 186, 107, 1)","color":"#fff","borderRadius":"4px","borderWidth":"0","width":"auto","fontSize":"14px","borderStyle":"solid","height":"40px"}' @click="jump('../gongjiaoluxian/map.html')" type="button" class="layui-btn btn-theme">
+			  <i v-if="true" class="layui-icon">&#xe635;</i>地图
+			</button>
 			<button :style='{"padding":"0 15px","boxShadow":"0 0 0px rgba(0,0,0,0)","margin":"0 0 0 10px","borderColor":"#409EFF","backgroundColor":"rgba(77, 79, 54, 1)","color":"#fff","borderRadius":"4px","borderWidth":"0","width":"auto","fontSize":"14px","borderStyle":"solid","height":"40px"}' v-if="isAuth('gongjiaoluxian','新增')" @click="jump('../gongjiaoluxian/add.html')" type="button" class="layui-btn btn-theme">
 			  <i v-if="true" class="layui-icon">&#xe654;</i>添加
 			</button>

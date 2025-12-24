@@ -78,20 +78,38 @@ public class GongjiaoluxianEntity<T> implements Serializable {
 	/**
 	 * 起点站名
 	 */
-					
+
 	private String qidianzhanming;
-	
+
+	/**
+	 * 起点站坐标
+	 */
+
+	private String qidianzuobiao;
+
 	/**
 	 * 途径站点
 	 */
-					
+
 	private String tujingzhandian;
-	
+
+	/**
+	 * 站点坐标JSON数据
+	 */
+
+	private String zhandianzuobiao;
+
 	/**
 	 * 终点站名
 	 */
-					
+
 	private String zhongdianzhanming;
+
+	/**
+	 * 终点站坐标
+	 */
+
+	private String zhongdianzuobiao;
 	
 	/**
 	 * 路线详情
@@ -205,6 +223,18 @@ public class GongjiaoluxianEntity<T> implements Serializable {
 		return qidianzhanming;
 	}
 	/**
+	 * 设置：起点站坐标
+	 */
+	public void setQidianzuobiao(String qidianzuobiao) {
+		this.qidianzuobiao = qidianzuobiao;
+	}
+	/**
+	 * 获取：起点站坐标
+	 */
+	public String getQidianzuobiao() {
+		return qidianzuobiao;
+	}
+	/**
 	 * 设置：途径站点
 	 */
 	public void setTujingzhandian(String tujingzhandian) {
@@ -217,6 +247,18 @@ public class GongjiaoluxianEntity<T> implements Serializable {
 		return tujingzhandian;
 	}
 	/**
+	 * 设置：站点坐标JSON数据
+	 */
+	public void setZhandianzuobiao(String zhandianzuobiao) {
+		this.zhandianzuobiao = zhandianzuobiao;
+	}
+	/**
+	 * 获取：站点坐标JSON数据
+	 */
+	public String getZhandianzuobiao() {
+		return zhandianzuobiao;
+	}
+	/**
 	 * 设置：终点站名
 	 */
 	public void setZhongdianzhanming(String zhongdianzhanming) {
@@ -227,6 +269,18 @@ public class GongjiaoluxianEntity<T> implements Serializable {
 	 */
 	public String getZhongdianzhanming() {
 		return zhongdianzhanming;
+	}
+	/**
+	 * 设置：终点站坐标
+	 */
+	public void setZhongdianzuobiao(String zhongdianzuobiao) {
+		this.zhongdianzuobiao = zhongdianzuobiao;
+	}
+	/**
+	 * 获取：终点站坐标
+	 */
+	public String getZhongdianzuobiao() {
+		return zhongdianzuobiao;
 	}
 	/**
 	 * 设置：路线详情
