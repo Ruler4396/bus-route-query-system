@@ -100,6 +100,12 @@ public class GongjiaoluxianEntity<T> implements Serializable {
 	private String zhandianzuobiao;
 
 	/**
+	 * 路线轨迹JSON数据(道路折线)
+	 */
+
+	private String luxianguiji;
+
+	/**
 	 * 终点站名
 	 */
 
@@ -142,8 +148,50 @@ public class GongjiaoluxianEntity<T> implements Serializable {
 	 */
 					
 	private Integer clicknum;
-	
-	
+
+	/**
+	 * 无障碍设施(轮椅坡道,盲道,语音提示等)
+	 */
+
+	private String wuzhangaisheshi;
+
+	/**
+	 * 无障碍级别(0-完全无障碍,1-基本无障碍,2-部分障碍,3-有障碍)
+	 */
+
+	private Integer wuzhangaijibie;
+
+	/**
+	 * 电梯设施(站点名称列表)
+	 */
+
+	private String diantifacilities;
+
+	/**
+	 * 轮椅专用区域说明
+	 */
+
+	private String xunlianzhuankuan;
+
+	/**
+	 * 是否有语音播报(0-无,1-有)
+	 */
+
+	private Integer yuyintongbao;
+
+	/**
+	 * 是否有盲道支持(0-无,1-有)
+	 */
+
+	private Integer mangdaozhichi;
+
+	/**
+	 * 是否支持导盲犬(0-无,1-有)
+	 */
+
+	private Integer ditezhichi;
+
+
 	@JsonFormat(locale="zh", timezone="GMT+8", pattern="yyyy-MM-dd HH:mm:ss")
 	@DateTimeFormat
 	private Date addtime;
@@ -259,6 +307,18 @@ public class GongjiaoluxianEntity<T> implements Serializable {
 		return zhandianzuobiao;
 	}
 	/**
+	 * 设置：路线轨迹JSON数据(道路折线)
+	 */
+	public void setLuxianguiji(String luxianguiji) {
+		this.luxianguiji = luxianguiji;
+	}
+	/**
+	 * 获取：路线轨迹JSON数据(道路折线)
+	 */
+	public String getLuxianguiji() {
+		return luxianguiji;
+	}
+	/**
 	 * 设置：终点站名
 	 */
 	public void setZhongdianzhanming(String zhongdianzhanming) {
@@ -341,6 +401,90 @@ public class GongjiaoluxianEntity<T> implements Serializable {
 	 */
 	public Integer getClicknum() {
 		return clicknum;
+	}
+	/**
+	 * 设置：无障碍设施
+	 */
+	public void setWuzhangaisheshi(String wuzhangaisheshi) {
+		this.wuzhangaisheshi = wuzhangaisheshi;
+	}
+	/**
+	 * 获取：无障碍设施
+	 */
+	public String getWuzhangaisheshi() {
+		return wuzhangaisheshi;
+	}
+	/**
+	 * 设置：无障碍级别
+	 */
+	public void setWuzhangaijibie(Integer wuzhangaijibie) {
+		this.wuzhangaijibie = wuzhangaijibie;
+	}
+	/**
+	 * 获取：无障碍级别
+	 */
+	public Integer getWuzhangaijibie() {
+		return wuzhangaijibie;
+	}
+	/**
+	 * 设置：电梯设施
+	 */
+	public void setDiantifacilities(String diantifacilities) {
+		this.diantifacilities = diantifacilities;
+	}
+	/**
+	 * 获取：电梯设施
+	 */
+	public String getDiantifacilities() {
+		return diantifacilities;
+	}
+	/**
+	 * 设置：轮椅专用区域
+	 */
+	public void setXunlianzhuankuan(String xunlianzhuankuan) {
+		this.xunlianzhuankuan = xunlianzhuankuan;
+	}
+	/**
+	 * 获取：轮椅专用区域
+	 */
+	public String getXunlianzhuankuan() {
+		return xunlianzhuankuan;
+	}
+	/**
+	 * 设置：语音播报
+	 */
+	public void setYuyintongbao(Integer yuyintongbao) {
+		this.yuyintongbao = yuyintongbao;
+	}
+	/**
+	 * 获取：语音播报
+	 */
+	public Integer getYuyintongbao() {
+		return yuyintongbao;
+	}
+	/**
+	 * 设置：盲道支持
+	 */
+	public void setMangdaozhichi(Integer mangdaozhichi) {
+		this.mangdaozhichi = mangdaozhichi;
+	}
+	/**
+	 * 获取：盲道支持
+	 */
+	public Integer getMangdaozhichi() {
+		return mangdaozhichi;
+	}
+	/**
+	 * 设置：导盲犬支持
+	 */
+	public void setDitezhichi(Integer ditezhichi) {
+		this.ditezhichi = ditezhichi;
+	}
+	/**
+	 * 获取：导盲犬支持
+	 */
+	public Integer getDitezhichi() {
+		return ditezhichi;
 	}
 
 }

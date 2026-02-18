@@ -14,6 +14,9 @@
 <link rel="stylesheet" href="../../css/swiper.min.css">
 <link rel="stylesheet" href="../../xznstatic/css/common.css"/>
 <link rel="stylesheet" href="../../xznstatic/css/style.css"/>
+<link rel="stylesheet" href="../../css/accessibility-sr-only.css">
+<link rel="stylesheet" href="../../css/accessibility-high-contrast.css">
+<link rel="stylesheet" href="../../css/transit-business-ui.css">
 <script src="../../xznstatic/js/jquery-1.11.3.min.js"></script>
 <script src="../../xznstatic/js/jquery.SuperSlide.2.1.1.js"></script>
 </head>
@@ -909,8 +912,9 @@
 		box-shadow: 0 0 6px rgba(0,0,0,0);
 	}
 </style>
-<body>
-  <div id="app">
+<body class="transit-ui transit-page page-home">
+  <a href="#app" class="skip-link">跳转到主要内容</a>
+  <div id="app" role="main" aria-label="首页主要内容" tabindex="-1">
     <div class="banner">
 		<div class="layui-carousel" id="test1" :style='{"boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"0 auto","borderColor":"rgba(0,0,0,.3)","borderRadius":"0","borderWidth":"0","width":"100%","borderStyle":"solid"}'>
 		  <div carousel-item>
@@ -931,6 +935,67 @@
       </div> -->
     </div>
 
+
+	<section class="hero-command-center" aria-label="无障碍公交出行指挥台">
+		<div class="hero-main">
+			<span class="hero-eyebrow">Inclusive Transit Intelligence</span>
+			<h1 class="hero-title">无障碍公交出行指挥台</h1>
+			<p class="hero-desc">
+				为视障、听障与行动不便人群提供统一的文字字幕提示、键盘快捷导航与路线级无障碍信息，确保每一步决策都可理解、可感知、可独立完成。
+			</p>
+			<div class="hero-actions">
+				<a class="hero-action primary" href="../gongjiaoluxian/map.html">进入无障碍地图</a>
+				<a class="hero-action" href="../gongjiaoluxian/list.html">查看路线清单</a>
+				<a class="hero-action" href="../accessibility/settings.html">打开辅助设置</a>
+			</div>
+			<div class="hero-shortcuts" aria-label="快捷键提示">
+				<span class="hero-shortcut"><kbd>Alt + H</kbd>返回首页</span>
+				<span class="hero-shortcut"><kbd>Alt + M</kbd>打开地图</span>
+				<span class="hero-shortcut"><kbd>Alt + A</kbd>无障碍设置</span>
+			</div>
+		</div>
+		<div class="hero-side" aria-label="运行状态概览">
+			<div class="hero-side-title">Service Status</div>
+			<div class="hero-kpi-list">
+				<div class="hero-kpi">
+					<div class="kpi-label">视觉辅助模式</div>
+					<div class="kpi-value">高对比 / 大字体</div>
+				</div>
+				<div class="hero-kpi">
+					<div class="kpi-label">听障友好提示</div>
+					<div class="kpi-value">字幕化状态提醒</div>
+				</div>
+				<div class="hero-kpi">
+					<div class="kpi-label">交互方式</div>
+					<div class="kpi-value">键盘优先导航</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="journey-board" aria-label="残障用户出行任务路径">
+		<div class="journey-head">
+			<h2>从需求到出发，仅需三步</h2>
+			<p>按视障、听障与行动不便人士的真实决策路径组织：先选路线，再核对无障碍条件，最后进入实时导航与求助。</p>
+		</div>
+		<div class="journey-grid">
+			<a href="../gongjiaoluxian/list.html" class="journey-card">
+				<div class="journey-step">Step 1</div>
+				<h3>选择可达路线</h3>
+				<p>按起终点、无障碍等级与车辆设施筛选，优先推荐低障碍路线。</p>
+			</a>
+			<a href="../gongjiaoluxian/map.html" class="journey-card">
+				<div class="journey-step">Step 2</div>
+				<h3>核对站点条件</h3>
+				<p>检查电梯/坡道/盲道/语音提示状态，避免临场信息缺失。</p>
+			</a>
+			<a href="../messages/list.html" class="journey-card">
+				<div class="journey-step">Step 3</div>
+				<h3>获取协助与反馈</h3>
+				<p>遇到障碍可立即提交问题或在线提问，形成服务改进闭环。</p>
+			</a>
+		</div>
+	</section>
 
     <div id="content">
 	<!-- 商品推荐 -->
@@ -1400,6 +1465,7 @@
     jQuery(".product_list").slide({mainCell:".bd ul",autoPage:true,effect:"leftLoop",autoPlay:true,vis:5,trigger:"click",interTime:4000});
   };
 </script>
+<script src="../../js/accessibility.js"></script>
 <script src="../../xznstatic/js/index.js"></script>
 </body>
 </html>

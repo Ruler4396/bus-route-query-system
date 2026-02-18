@@ -11,6 +11,9 @@
 <link rel="stylesheet" href="../../layui/css/layui.css">
 <link rel="stylesheet" href="../../xznstatic/css/common.css"/>
 <link rel="stylesheet" href="../../xznstatic/css/style.css"/>
+<link rel="stylesheet" href="../../css/accessibility-sr-only.css">
+<link rel="stylesheet" href="../../css/accessibility-high-contrast.css">
+<link rel="stylesheet" href="../../css/transit-business-ui.css">
 <script type="text/javascript" src="../../xznstatic/js/jquery-1.11.3.min.js"></script>
 <script type="text/javascript" src="../../xznstatic/js/jquery.SuperSlide.2.1.1.js"></script>
 </head>
@@ -247,8 +250,9 @@ width: 100%;
     padding-left: 10px;
   }
 </style>
-<body>
-  <div id="app">
+<body class="transit-ui transit-page page-route-list">
+  <a href="#app" class="skip-link">跳转到主要内容</a>
+  <div id="app" role="main" aria-label="公交路线查询" tabindex="-1">
     <div class="banner">
       <div class="layui-carousel" id="test1" :style='{"boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"0 auto","borderColor":"rgba(0,0,0,.3)","borderRadius":"0","borderWidth":"0","width":"100%","borderStyle":"solid"}'>
       		  <div carousel-item>
@@ -276,34 +280,61 @@ width: 100%;
 				<div class="lable" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(0,0,0,0)","backgroundColor":"transparent","color":"rgba(19, 19, 19, 1)","borderRadius":"0","textAlign":"right","borderWidth":"0","width":"auto","fontSize":"16px","borderStyle":"solid"}'>途径站点</div>
 				<input type="text" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"140px","fontSize":"14px","borderStyle":"solid","height":"40px"}' name="tujingzhandian" id="tujingzhandian" placeholder="途径站点" autocomplete="off" class="layui-input">
 			</div>
-			<div class="item-list">
-				<div class="lable" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(0,0,0,0)","backgroundColor":"transparent","color":"rgba(19, 19, 19, 1)","borderRadius":"0","textAlign":"right","borderWidth":"0","width":"auto","fontSize":"16px","borderStyle":"solid"}'>终点站名</div>
-				<input type="text" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"140px","fontSize":"14px","borderStyle":"solid","height":"40px"}' name="zhongdianzhanming" id="zhongdianzhanming" placeholder="终点站名" autocomplete="off" class="layui-input">
-			</div>
-			<button :style='{"padding":"0 15px","boxShadow":"0 0 0px rgba(0,0,0,0)","margin":"0 0 0 10px","borderColor":"#409EFF","backgroundColor":"rgba(77, 79, 54, 1)","color":"#fff","borderRadius":"4px","borderWidth":"0","width":"auto","fontSize":"14px","borderStyle":"solid","height":"40px"}' id="btn-search" type="button" class="layui-btn layui-btn-normal">
-			  <i v-if="true" class="layui-icon layui-icon-search"></i>搜索
-			</button>
-			<button :style='{"padding":"0 15px","boxShadow":"0 0 0px rgba(0,0,0,0)","margin":"0 0 0 10px","borderColor":"#409EFF","backgroundColor":"rgba(183, 186, 107, 1)","color":"#fff","borderRadius":"4px","borderWidth":"0","width":"auto","fontSize":"14px","borderStyle":"solid","height":"40px"}' @click="jump('../gongjiaoluxian/map.html')" type="button" class="layui-btn btn-theme">
-			  <i v-if="true" class="layui-icon">&#xe635;</i>地图
-			</button>
+				<div class="item-list">
+					<div class="lable" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(0,0,0,0)","backgroundColor":"transparent","color":"rgba(19, 19, 19, 1)","borderRadius":"0","textAlign":"right","borderWidth":"0","width":"auto","fontSize":"16px","borderStyle":"solid"}'>终点站名</div>
+					<input type="text" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"140px","fontSize":"14px","borderStyle":"solid","height":"40px"}' name="zhongdianzhanming" id="zhongdianzhanming" placeholder="终点站名" autocomplete="off" class="layui-input">
+				</div>
+				<div class="item-list">
+					<div class="lable" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(0,0,0,0)","backgroundColor":"transparent","color":"rgba(19, 19, 19, 1)","borderRadius":"0","textAlign":"right","borderWidth":"0","width":"auto","fontSize":"16px","borderStyle":"solid"}'>推荐偏好</div>
+					<select id="preferenceType" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"140px","fontSize":"14px","borderStyle":"solid","height":"40px"}' class="layui-input">
+						<option value="AUTO" selected>智能推荐</option>
+						<option value="ACCESSIBLE">无障碍优先</option>
+						<option value="TIME">时间优先</option>
+						<option value="DISTANCE">距离优先</option>
+					</select>
+				</div>
+				<button :style='{"padding":"0 15px","boxShadow":"0 0 0px rgba(0,0,0,0)","margin":"0 0 0 10px","borderColor":"#409EFF","backgroundColor":"rgba(77, 79, 54, 1)","color":"#fff","borderRadius":"4px","borderWidth":"0","width":"auto","fontSize":"14px","borderStyle":"solid","height":"40px"}' id="btn-search" type="button" class="layui-btn layui-btn-normal">
+				  <i v-if="true" class="layui-icon layui-icon-search"></i>搜索
+				</button>
+				<button :style='{"padding":"0 15px","boxShadow":"0 0 0px rgba(0,0,0,0)","margin":"0 0 0 10px","borderColor":"#409EFF","backgroundColor":"rgba(183, 186, 107, 1)","color":"#fff","borderRadius":"4px","borderWidth":"0","width":"auto","fontSize":"14px","borderStyle":"solid","height":"40px"}' id="btn-plan" type="button" class="layui-btn layui-btn-normal">
+				  <i v-if="true" class="layui-icon layui-icon-release"></i>无障碍推荐
+				</button>
+				<button :style='{"padding":"0 15px","boxShadow":"0 0 0px rgba(0,0,0,0)","margin":"0 0 0 10px","borderColor":"#409EFF","backgroundColor":"rgba(183, 186, 107, 1)","color":"#fff","borderRadius":"4px","borderWidth":"0","width":"auto","fontSize":"14px","borderStyle":"solid","height":"40px"}' @click="jump('../gongjiaoluxian/map.html')" type="button" class="layui-btn btn-theme">
+				  <i v-if="true" class="layui-icon">&#xe635;</i>地图
+				</button>
 			<button :style='{"padding":"0 15px","boxShadow":"0 0 0px rgba(0,0,0,0)","margin":"0 0 0 10px","borderColor":"#409EFF","backgroundColor":"rgba(77, 79, 54, 1)","color":"#fff","borderRadius":"4px","borderWidth":"0","width":"auto","fontSize":"14px","borderStyle":"solid","height":"40px"}' v-if="isAuth('gongjiaoluxian','新增')" @click="jump('../gongjiaoluxian/add.html')" type="button" class="layui-btn btn-theme">
 			  <i v-if="true" class="layui-icon">&#xe654;</i>添加
 			</button>
-		</form>
-	    <!-- 样式一 -->
-	    <div class="list" style="position: relative;">
-	      <div @click="jump('../gongjiaoluxian/detail.html?id='+item.id)" v-for="(item,index) in dataList" :key="index" class="list-item" :class="3=='3'?'list-item3':3=='5'?'list-item5':''">
-	        <div class="list-item-body animation-box" :style='{"padding":"10px","boxShadow":"0px 0px 0px 10px rgba(183, 186, 107, 1)","margin":"0 50px 50px 70px","borderColor":"rgba(183, 186, 107, 1)","backgroundColor":"#fff","borderRadius":"50%","borderWidth":"0","borderStyle":"solid"}'>
+			</form>
+			<div v-if="isPlanMode" :style='{"padding":"0 10px","margin":"0 0 10px 0","color":"rgba(77, 79, 54, 1)","fontSize":"14px","fontWeight":"600"}'>
+				当前展示：无障碍推荐结果（按综合评分降序）
+			</div>
+			<div v-if="planNoticeText" :style='{"padding":"8px 12px","margin":"0 10px 12px 10px","borderRadius":"6px","fontSize":"13px","lineHeight":"1.5","border":"1px solid","borderColor":planNoticeType==="error"?"#d9534f":(planNoticeType==="warn"?"#f0ad4e":(planNoticeType==="success"?"#5cb85c":"#999")),"backgroundColor":planNoticeType==="error"?"#fbe9e7":(planNoticeType==="warn"?"#fff7e6":(planNoticeType==="success"?"#edf7ed":"#f7f7f7")),"color":planNoticeType==="error"?"#a94442":(planNoticeType==="warn"?"#8a6d3b":(planNoticeType==="success"?"#3c763d":"#555"))}'>
+				{{planNoticeText}}
+			</div>
+		    <!-- 样式一 -->
+		    <div class="list" style="position: relative;">
+		      <div @click="jump('../gongjiaoluxian/detail.html?id='+item.id)" v-for="(item,index) in dataList" :key="index" class="list-item" :class="3=='3'?'list-item3':3=='5'?'list-item5':''">
+		        <div class="list-item-body animation-box" :style='{"padding":"10px","boxShadow":"0px 0px 0px 10px rgba(183, 186, 107, 1)","margin":"0 50px 50px 70px","borderColor":"rgba(183, 186, 107, 1)","backgroundColor":"#fff","borderRadius":"50%","borderWidth":"0","borderStyle":"solid"}'>
 				<img :style='{"boxShadow":"0 0 0px rgba(77, 79, 54,.8)","borderColor":"rgba(0,0,0,.3)","borderRadius":"50% ","borderWidth":"0","width":"180px","borderStyle":"solid","height":"180px"}' :src="item.fengmian?baseurl+item.fengmian.split(',')[0]:''">
 				<div class="info">
 					<div v-if="item.price" :style='{"padding":"5px","margin":"10px 0 0 0","backgroundColor":"rgba(0,0,0,0)","color":"rgba(183, 186, 107, 1)","borderRadius":"0","textAlign":"center","width":"100%","fontSize":"18px"}' class="price"><span :style='{"fontSize":"12px"}'>￥</span>{{Number(item.price).toFixed(2)}}</div>
-					<div v-if="item.vipprice&&item.vipprice>0" :style='{"padding":"5px","margin":"10px 0 0 0","backgroundColor":"rgba(0,0,0,0)","color":"rgba(183, 186, 107, 1)","borderRadius":"0","textAlign":"center","width":"100%","fontSize":"18px"}' class="price"><span :style='{"fontSize":"12px"}'>￥</span>{{Number(item.vipprice).toFixed(2)}} <span :style='{"fontSize":"12px"}'>会员价</span></div>
-					<div v-if="item.jf" :style='{"padding":"5px","margin":"10px 0 0 0","backgroundColor":"rgba(0,0,0,0)","color":"rgba(183, 186, 107, 1)","borderRadius":"0","textAlign":"center","width":"100%","fontSize":"18px"}' class="price"><span :style='{"fontSize":"12px"}'></span>{{Number(item.jf).toFixed(0)}}积分</div>
-					<div v-if="true" :style='{"isshow":true,"padding":"5px","margin":"5px 0 0 0","backgroundColor":"rgba(0,0,0,0)","color":"rgba(0, 0, 0, 1)","borderRadius":"0","textAlign":"center","width":"100%","fontSize":"12px"}' class="name">{{item.luxianmingcheng}}</div>
-				</div>
-	        </div>
-	      </div>
-	    </div>
+						<div v-if="item.vipprice&&item.vipprice>0" :style='{"padding":"5px","margin":"10px 0 0 0","backgroundColor":"rgba(0,0,0,0)","color":"rgba(183, 186, 107, 1)","borderRadius":"0","textAlign":"center","width":"100%","fontSize":"18px"}' class="price"><span :style='{"fontSize":"12px"}'>￥</span>{{Number(item.vipprice).toFixed(2)}} <span :style='{"fontSize":"12px"}'>会员价</span></div>
+						<div v-if="item.jf" :style='{"padding":"5px","margin":"10px 0 0 0","backgroundColor":"rgba(0,0,0,0)","color":"rgba(183, 186, 107, 1)","borderRadius":"0","textAlign":"center","width":"100%","fontSize":"18px"}' class="price"><span :style='{"fontSize":"12px"}'></span>{{Number(item.jf).toFixed(0)}}积分</div>
+						<div v-if="true" :style='{"isshow":true,"padding":"5px","margin":"5px 0 0 0","backgroundColor":"rgba(0,0,0,0)","color":"rgba(0, 0, 0, 1)","borderRadius":"0","textAlign":"center","width":"100%","fontSize":"12px"}' class="name">{{item.luxianmingcheng}}</div>
+						<div v-if="item.isRecommended" :style='{"padding":"4px 8px","margin":"4px 0 0 0","backgroundColor":"rgba(46, 58, 31, 1)","color":"#fff","borderRadius":"12px","textAlign":"center","width":"100%","fontSize":"12px"}'>
+							推荐分 {{Number(item.totalScore || 0).toFixed(1)}} / 无障碍 {{Number(item.accessibilityScore || 0).toFixed(1)}}
+						</div>
+						<div v-if="item.recommendationReason" :style='{"padding":"4px 6px","margin":"4px 0 0 0","backgroundColor":"rgba(245, 247, 238, 1)","color":"rgba(46, 58, 31, 1)","borderRadius":"6px","textAlign":"center","width":"100%","fontSize":"12px"}'>
+							{{item.recommendationReason}}
+						</div>
+					</div>
+		        </div>
+		      </div>
+			  <div v-if="!dataList || dataList.length===0" :style='{"padding":"30px 0","textAlign":"center","color":"rgba(90, 90, 90, 1)","fontSize":"14px"}'>
+				  {{isPlanMode ? "暂无可用推荐路线，请调整起终点或偏好后重试" : "暂无线路数据"}}
+			  </div>
+		    </div>
 		<div class="pager" id="pager" :style="{textAlign:2==1?'left':2==2?'center':'right'}"></div>
 	  </div>
 	</div>
@@ -313,19 +344,23 @@ width: 100%;
 
   <script src="../../layui/layui.js"></script>
   <script src="../../js/vue.js"></script>
-  <script src="../../js/config.js"></script>
-  <script src="../../modules/config.js"></script>
-  <script src="../../js/utils.js"></script>
+	  <script src="../../js/config.js"></script>
+	  <script src="../../modules/config.js"></script>
+	  <script src="../../js/utils.js"></script>
+	  <script src="../../js/accessibility.js"></script>
 
   <script type="text/javascript">
     var vue = new Vue({
       el: '#app',
-      data: {
-        swiperList: [],
-        dataList: [],
+	      data: {
+	        swiperList: [],
+	        dataList: [],
 	baseurl:'',
-	swiperIndex: '-1'
-      },
+	swiperIndex: '-1',
+	isPlanMode: false,
+	planNoticeType: '',
+	planNoticeText: ''
+	      },
       filters: {
         newsDesc: function(val) {
           if (val) {
@@ -400,16 +435,34 @@ width: 100%;
       // 分页列表
       pageList();
 
-      // 搜索按钮
-      jquery('#btn-search').click(function(e) {
-        pageList();
-      });
+	      // 搜索按钮
+	      jquery('#btn-search').click(function(e) {
+	        pageList();
+	      });
 
-      function pageList() {
-        var param = {
-          page: 1,
-          limit: limit
-        }
+	      // 无障碍推荐按钮
+	      jquery('#btn-plan').click(function(e) {
+	        planAccessibleRoutes();
+	      });
+
+	      function clearPager() {
+	        jquery('#pager').html('');
+	      }
+
+	      function setPlanNotice(type, text) {
+	        vue.planNoticeType = type || '';
+	        vue.planNoticeText = text || '';
+	      }
+
+	      function clearPlanNotice() {
+	        setPlanNotice('', '');
+	      }
+
+	      function pageList() {
+	        var param = {
+	          page: 1,
+	          limit: limit
+	        }
 
 
         if (jquery('#luxianmingcheng').val()) {
@@ -427,11 +480,13 @@ width: 100%;
 
 
 
-        // 获取列表数据
-        http.request('gongjiaoluxian/list', 'get', param, function(res) {
-          vue.dataList = res.data.list
-          // 分页
-          laypage.render({
+	        // 获取列表数据
+	        http.request('gongjiaoluxian/list', 'get', param, function(res) {
+	          vue.isPlanMode = false;
+	          clearPlanNotice();
+	          vue.dataList = res.data.list
+	          // 分页
+	          laypage.render({
             elem: 'pager',
             count: res.data.total,
             limit: limit,
@@ -447,10 +502,91 @@ width: 100%;
                 })
               }
             }
-          });
-        })
-      }
-    });
+	          });
+	        })
+	      }
+
+	      function planAccessibleRoutes() {
+	        var startStation = jquery.trim(jquery('#qidianzhanming').val() || '');
+	        var endStation = jquery.trim(jquery('#zhongdianzhanming').val() || '');
+
+	        if (!startStation || !endStation) {
+	          setPlanNotice('warn', '请先输入起点站名和终点站名，再执行无障碍推荐');
+	          layer.msg('请先输入起点站名和终点站名');
+	          return;
+	        }
+
+	        var param = {
+	          startStation: startStation,
+	          endStation: endStation,
+	          preferenceType: jquery('#preferenceType').val() || 'AUTO'
+	        };
+	        var userId = localStorage.getItem('userid');
+	        if (userId && userId !== 'null' && userId !== 'undefined') {
+	          param.userId = userId;
+	        }
+
+	        setPlanNotice('info', '正在计算推荐路线，请稍候...');
+	        var loadingIndex = layer.load(1, {
+	          shade: [0.1, '#fff']
+	        });
+
+	        jquery.ajax({
+	          url: http.baseurl + 'route/plan',
+	          type: 'get',
+	          data: param,
+	          dataType: 'json',
+	          beforeSend: function(request) {
+	            request.setRequestHeader("Token", localStorage.getItem("Token"));
+	          },
+	          success: function(res) {
+	            if (!res || res.code !== 0) {
+	              vue.isPlanMode = true;
+	              vue.dataList = [];
+	              clearPager();
+	              setPlanNotice('error', (res && res.msg) ? res.msg : '推荐服务返回异常，请稍后重试');
+	              return;
+	            }
+
+	            var routeResults = (res.data && res.data.list && jquery.isArray(res.data.list)) ? res.data.list : [];
+	            var list = [];
+	            routeResults.forEach(function(result) {
+	              if (!result || !result.route) {
+	                return;
+	              }
+	              var route = result.route;
+	              route.accessibilityScore = Number(result.accessibilityScore || 0);
+	              route.totalScore = Number(result.totalScore || 0);
+	              route.recommendationReason = result.recommendationReason || '暂无推荐理由';
+	              route.isRecommended = true;
+	              list.push(route);
+	            });
+
+	            vue.isPlanMode = true;
+	            vue.dataList = list;
+	            clearPager();
+
+	            if (!list.length) {
+	              setPlanNotice('warn', '未找到匹配路线，请调整起终点或偏好后重试');
+	              layer.msg('未找到匹配路线，请调整起终点后重试');
+	              return;
+	            }
+
+	            setPlanNotice('success', '已返回 ' + list.length + ' 条推荐路线');
+	          },
+	          error: function(xhr, status, error) {
+	            vue.isPlanMode = true;
+	            vue.dataList = [];
+	            clearPager();
+	            setPlanNotice('error', '推荐接口请求失败：' + (error || status || '未知错误'));
+	            layer.msg('推荐接口请求失败，请检查后端服务');
+	          },
+	          complete: function() {
+	            layer.close(loadingIndex);
+	          }
+	        });
+	      }
+	    });
 
     window.xznSlide = function() {
       jQuery(".banner").slide({mainCell:".bd ul",autoPlay:true,interTime:5000});

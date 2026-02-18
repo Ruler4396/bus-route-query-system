@@ -13,6 +13,12 @@
 <link rel="stylesheet" href="../../xznstatic/css/style.css"/>
 <script type="text/javascript" src="../../xznstatic/js/jquery-1.11.3.min.js"></script>
 <script type="text/javascript" src="../../xznstatic/js/jquery.SuperSlide.2.1.1.js"></script>
+
+		<link rel="stylesheet" href="../../css/transit-business-ui.css">
+
+		<link rel="stylesheet" href="../../css/accessibility-sr-only.css">
+
+		<link rel="stylesheet" href="../../css/accessibility-high-contrast.css">
 </head>
 <style>
 	html::after {
@@ -247,7 +253,7 @@ width: 100%;
     padding-left: 10px;
   }
 </style>
-<body>
+<body class="transit-ui transit-page">
   <div id="app">
     <div class="banner">
       <div class="layui-carousel" id="test1" :style='{"boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"0 auto","borderColor":"rgba(0,0,0,.3)","borderRadius":"0","borderWidth":"0","width":"100%","borderStyle":"solid"}'>
@@ -435,5 +441,7 @@ width: 100%;
       jQuery(".product_list").slide({mainCell:".bd ul",autoPage:true,effect:"leftLoop",autoPlay:true,vis:5,trigger:"click",interTime:4000});
     };
   </script>
+
+		<script src="../../js/accessibility.js"></script>
 </body>
 </html>

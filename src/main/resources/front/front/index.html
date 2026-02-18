@@ -1,182 +1,38 @@
 <!-- 首页 -->
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-		<title>首页</title>
+		<title>城市公交查询系统 - 首页</title>
 		<link rel="stylesheet" href="./layui/css/layui.css">
 		<link rel="stylesheet" href="./xznstatic/css/common.css"/>
 		<link rel="stylesheet" href="./xznstatic/css/style.css"/>
+		<link rel="stylesheet" href="./css/accessibility-sr-only.css">
+		<link rel="stylesheet" href="./css/accessibility-high-contrast.css">
+		<link rel="stylesheet" href="./css/transit-business-ui.css">
 	</head>
 	<style type="text/css">
 		html, body {
 			height: 100%;
 		}
-		#iframe {
-			width: 100%;
-			margin-top: 67px;
-						padding-top: 70px;
-					}
+
 		#header {
-			height: auto;
-			background: #fff;
-			border-bottom: 0;
 			position: fixed;
 			top: 0;
 			left: 0;
 			width: 100%;
-			z-index: 1;
+			z-index: 20;
 		}
 
-		#header .nav-top {
-			display: flex;
-			align-items: center;
-			padding: 0 20px;
-			font-size: 16px;
-			color: #2a8a15;
-			box-sizing: border-box;
-			height: 67px;
-			background: #4d4f36;
-			box-shadow: 0px 1px 0px 0px rgba(255,255,255,1);
-			justify-content: center;
-			position: relative;
-			z-index: 1;
-		}
-
-		#header .nav-top-img {
-			width: 124px;
-			height: 40px;
-			padding: 0;
-			margin: 0;
-			border-radius: 6px;
-			border-width: 0;
-			border-style: solid;
-			border-color: rgba(0,0,0,.3);
-			box-shadow: 0 0 6px rgba(0,0,0,.3);
-		}
-
-		#header .nav-top-title {
-			line-height: 40px;
-			font-size: 30px;
-			color: rgba(255, 255, 255, 1);
-			padding: 0 10px;
-			margin: 0 10px;
-			border-radius: 6px;
-			border-width: 0;
-			border-style: solid;
-			border-color: rgba(0,0,0,.3);
-						background-color: rgba(0,0,0,0);
-						box-shadow: 0 0 0px rgba(0,0,0,.3);
-		}
-
-		#header .nav-top-tel {
-			line-height: 40px;
-			font-size: 16px;
-			color: #333;
-			padding: 0 10px;
-			margin: 0;
-			border-radius: 6px;
-			border-width: 0;
-			border-style: solid;
-			border-color: rgba(0,0,0,.3);
-			box-shadow: 0 0 6px rgba(0,0,0,.3);
-		}
-
-		#header .navs {
-			display: flex;
-			padding: 0 20px;
-			align-items: center;
-			box-sizing: border-box;
-			height: 70px;
-			background: #4d4f36;
-			box-shadow: 0px -5px 0px 4px rgba(255,255,255,1);
-			justify-content: center;
-		}
-		#header .navs1 {
-			width: 200px;
-			height: 100vh;
-			background: darkgoldenrod;
-			position: absolute;
-			top: 0;
-			display: block;
-			padding: 0;
-			overflow-y: scroll;
-			scrollbar-width: none;
-			-ms-overflow-style: none;
-		}
-		
-		#header .navs.navs1::-webkit-scrollbar {
-			display: none;
-		}
-		
-		#header .navs1 .list {
-			display: flex;
-			flex-direction: column;
-		}
-		#header .navs .title {
-			width: auto;
-			line-height: 40px;
-			font-size: 16px;
-			color: #333;
-			padding: 0 10px;
-			margin: 0 5px;
-			border-radius: 6px;
-			border-width: 0;
-			border-style: solid;
-			border-color: rgba(0,0,0,.3);
-						background-color: rgba(0,0,0,0);
-						box-shadow: 0 0 6px rgba(0,0,0,0);
-		}
-		#header .navs li {
-			display: inline-block;
-			width: auto;
-			line-height: 70px;
-			padding: 0 20px;
-			margin: 0;
-			color: rgba(255, 255, 255, 1);
-			font-size: 16px;
-			border-radius: 0;
-			border-width: 0;
-			border-style: solid;
-			border-color: rgba(0,0,0,.3);
-			background-color: rgba(247, 247, 247, 0);
-			box-shadow: 0 0 0px rgba(0,0,0,.1);
-			text-align: center;
-			box-sizing: border-box;
-			cursor: pointer;
-		}
-		#header .navs li a{
-			color: inherit;
-		}
-		#header .navs li.current a{
-			color: inherit;
-		}
-		#header .navs li a:hover{
-			color: inherit;
-		}
-		#header .navs li.current {
-			color: rgba(255, 255, 255, 1);
-			font-size: 16px;
-			border-radius: 0;
-			border-width: 0;
-			border-style: solid;
-			border-color: rgba(0,0,0,.3);
-			background-color: rgba(183, 186, 107, 1);
-			box-shadow: 0 0 0px rgba(255,0,0,.8);
-		}
-		#header .navs li:hover {
-			color: rgba(255, 255, 255, 1);
-			font-size: 16px;
-			border-radius: 0;
-			border-width: 0;
-			border-style: solid;
-			border-color: rgba(0,0,0,.3);
-			background-color: rgba(183, 186, 107, 1);
-			box-shadow: 0 0 0px rgba(0,0,0,.3);
+		#iframe {
+			width: 100%;
+			border: 0;
 		}
 	</style>
-	<body>
+		<body class="transit-ui transit-shell">
+		<!-- 跳过导航链接（无障碍） -->
+		<a href="#main-content" class="skip-link">跳转到主要内容</a>
 		<!-- start 顶部导航栏 -->
 		<div id="header">
 			<div v-if='true' class="nav-top">
@@ -184,28 +40,60 @@
 			  <div v-if="true" class="nav-top-title">{{projectName}}</div>
 			  <div class="nav-top-tel"></div>
 			</div>
-					    <div class="navs">
-		    	<!-- <div class="logo" style="font-size: 20px;top: 32px;color: #fff;font-weight: bold;margin-left: -200px;width: 240px;" v-text="projectName"></div> -->
+		    <div class="navs nav-reframed" role="navigation" aria-label="无障碍任务导航">
 				<div class="title" v-if="false" v-text="projectName"></div>
-				<div class="list">
-					<ul>
-						<li class='current'><a href="javascript:navPage('./pages/home/home.html')" class="menumain"><i v-if="false" class="layui-icon layui-icon-home"></i>首页</a></li>
-						<li v-for="(item,index) in indexNav" v-bind:key="index"><a :href="'javascript:navPage(\''+item.url+'\')'" class="menumain" style="cursor: pointer;"><i v-if="false" class="layui-icon" :class="iconArr[index]"></i>{{item.name}}</a></li>
-						<li><a href="javascript:centerPage();" class="menumain"><i v-if="false" class="layui-icon layui-icon-username"></i>个人中心</a></li>
-						<li><a :href="adminurl" target="_blank" class="menumain" style="cursor: pointer;"><i v-if="false" class="layui-icon layui-icon-link"></i>后台管理</a></li>
-						<li v-if="chatFlag"><a href="javascript:chatTap()" class="menumain"><i v-if="false" class="layui-icon">&#xe677;</i>在线提问</a></li>
-					</ul>
+				<div class="list nav-grid">
+					<div class="nav-primary-group" aria-label="核心出行任务">
+						<div class="nav-group-title">核心出行任务</div>
+						<ul>
+							<li :class="{current: activeNavUrl === './pages/home/home.html'}">
+								<a href="javascript:void(0)" @click="openNav('./pages/home/home.html')">首页总览</a>
+							</li>
+							<li v-for="(item,index) in primaryNav" :key="'primary-'+index" :class="{current: activeNavUrl === item.url}">
+								<a href="javascript:void(0)" @click="openNav(item.url)">{{item.name}}</a>
+							</li>
+						</ul>
+					</div>
+					<div class="nav-support-group" aria-label="服务与支持">
+						<div class="nav-group-title">支持与管理</div>
+						<div class="nav-utility-actions">
+							<a href="javascript:void(0)" class="utility-link" @click="centerPageShell()">个人中心</a>
+							<a href="javascript:void(0)" class="utility-link" @click="openAccessibilityPage()">无障碍设置</a>
+							<a v-if="chatFlag" href="javascript:void(0)" class="utility-link urgent" @click="chatTapShell()">在线提问</a>
+							<a v-if="showAdminEntry" :href="adminurl" target="_blank" class="utility-link">后台管理</a>
+						</div>
+						<div class="nav-support-links">
+							<a v-for="(item,index) in supportNav" :key="'support-'+index" href="javascript:void(0)" @click="openNav(item.url)" class="support-link">{{item.name}}</a>
+						</div>
+					</div>
 				</div>
 		    </div>
+			<div class="transit-assist-strip" role="region" aria-label="无障碍快捷控制区">
+				<div class="assist-left">
+					<div class="assist-label">Accessibility Command Deck</div>
+					<div class="assist-title">无障碍快捷控制</div>
+				</div>
+				<div class="assist-actions">
+					<button id="assistHighContrast" class="assist-btn" type="button" aria-label="切换高对比度模式">高对比度</button>
+					<button id="assistFontPlus" class="assist-btn" type="button" aria-label="增大字体">字体 +</button>
+					<button id="assistFontMinus" class="assist-btn" type="button" aria-label="减小字体">字体 -</button>
+					<button id="assistSpeech" class="assist-btn" type="button" aria-label="切换语音播报">语音播报</button>
+					<button id="assistKeyboard" class="assist-btn" type="button" aria-label="切换键盘导航">键盘导航</button>
+					<span id="assistStatusText" class="assist-status" aria-live="polite">系统状态同步中…</span>
+				</div>
+			</div>
 								</div>
 		<!-- end 顶部导航栏 -->
-
-		<iframe src="./pages/home/home.html" id="iframe" frameborder="0" scrolling="no" width="100%" onload="changeFrameHeight"></iframe>
+		<main id="main-content" tabindex="-1" aria-label="页面主要内容区域">
+			<iframe src="./pages/home/home.html" id="iframe" frameborder="0" scrolling="no" width="100%" title="业务内容区域" onload="changeFrameHeight"></iframe>
+		</main>
+		<button class="accessibility-btn" type="button" aria-label="打开无障碍设置" onclick="navPage('./pages/accessibility/settings.html')">♿</button>
 
 		<script src="./xznstatic/js/jquery-1.11.3.min.js"></script>
 		<script src="./layui/layui.js"></script>
 		<script src="./js/vue.js"></script>
 		<script src="./js/config.js"></script>
+		<script src="./js/accessibility.js"></script>
 
 		<script>
       var vue1 = new Vue({el: '#tabbar'})
@@ -215,13 +103,17 @@
 				data: {
 					iconArr: ['layui-icon-gift','layui-icon-email','layui-icon-logout','layui-icon-transfer','layui-icon-slider','layui-icon-print','layui-icon-cols','layui-icon-snowflake','layui-icon-note','layui-icon-flag','layui-icon-theme','layui-icon-website','layui-icon-console','layui-icon-face-surprised','layui-icon-template-1','layui-icon-app','layui-icon-read','layui-icon-component','layui-icon-file-b','layui-icon-unlink','layui-icon-tabs','layui-icon-form','layui-icon-chat'],
 					indexNav: indexNav,
+					primaryNav: [],
+					supportNav: [],
+					activeNavUrl: './pages/home/home.html',
+					showAdminEntry: false,
 					cartFlag: cartFlag,
 					adminurl: adminurl,
 					chatFlag: chatFlag,
 					projectName: projectName,
 				},
 				mounted: function() {
-					this.bindClickOnLi();
+					this.initNavStructure();
 				},
 				created() {
 					this.iconArr.sort(()=>{
@@ -232,14 +124,34 @@
 					jump(url) {
 						jump(url)
 					},
-					bindClickOnLi() {
-						let list = document.getElementsByTagName("li");
-						for(var i = 0;i<list.length;i++){
-							list[i].onclick = function(){
-								$(this).addClass("current").siblings().removeClass("current");
-                                localStorage.setItem("checkedLiIndex",$(this).index());
+					initNavStructure() {
+						var saved = localStorage.getItem('iframeUrl');
+						var role = localStorage.getItem('userTable');
+						this.showAdminEntry = role === 'users';
+						this.activeNavUrl = saved || './pages/home/home.html';
+						this.primaryNav = [];
+						this.supportNav = [];
+						for (var i = 0; i < this.indexNav.length; i++) {
+							var item = this.indexNav[i];
+							if (item.name.indexOf('友情链接') !== -1 || item.name.indexOf('资源') !== -1) {
+								this.supportNav.push(item);
+							} else {
+								this.primaryNav.push(item);
 							}
 						}
+					},
+					openNav(url) {
+						this.activeNavUrl = url;
+						navPage(url);
+					},
+					centerPageShell() {
+						centerPage();
+					},
+					openAccessibilityPage() {
+						this.openNav('./pages/accessibility/settings.html');
+					},
+					chatTapShell() {
+						chatTap();
 					}
 				}
 			});
@@ -263,18 +175,99 @@
 				}
 			}
 
+			function updateAssistStatus() {
+				if (!window.AccessibilityUtils) return;
+				var settings = window.AccessibilityUtils.getSettings();
+				var status = [
+					settings.highContrast ? '高对比开启' : '高对比关闭',
+					'字体' + settings.fontSize + 'px',
+					settings.speech ? '语音开启' : '语音关闭',
+					settings.keyboardNav ? '键盘导航开启' : '键盘导航关闭'
+				].join(' | ');
+				var statusNode = document.getElementById('assistStatusText');
+				if (statusNode) {
+					statusNode.textContent = status;
+				}
+			}
+
+			function syncAssistSettingsToIframe() {
+				if (!window.AccessibilityUtils) return;
+				var iframe = document.getElementById('iframe');
+				if (!iframe || !iframe.contentWindow || !iframe.contentWindow.AccessibilityUtils) return;
+				try {
+					iframe.contentWindow.AccessibilityUtils.saveSettings(AccessibilityUtils.getSettings());
+				} catch (e) {
+					console.warn('同步无障碍设置到iframe失败:', e);
+				}
+			}
+
+			function initAssistDeck() {
+				if (!window.AccessibilityUtils) return;
+				var bind = function(id, handler) {
+					var node = document.getElementById(id);
+					if (node) node.addEventListener('click', handler);
+				};
+
+				bind('assistHighContrast', function() {
+					var enabled = AccessibilityUtils.toggleHighContrast();
+					AccessibilityUtils.announce(enabled ? '高对比模式已开启' : '高对比模式已关闭');
+					syncAssistSettingsToIframe();
+					updateAssistStatus();
+				});
+				bind('assistFontPlus', function() {
+					AccessibilityUtils.increaseFontSize();
+					AccessibilityUtils.announce('字体已放大');
+					syncAssistSettingsToIframe();
+					updateAssistStatus();
+				});
+				bind('assistFontMinus', function() {
+					AccessibilityUtils.decreaseFontSize();
+					AccessibilityUtils.announce('字体已缩小');
+					syncAssistSettingsToIframe();
+					updateAssistStatus();
+				});
+				bind('assistSpeech', function() {
+					var enabled = AccessibilityUtils.toggleSpeech();
+					AccessibilityUtils.announce(enabled ? '语音播报已开启' : '语音播报已关闭');
+					syncAssistSettingsToIframe();
+					updateAssistStatus();
+				});
+				bind('assistKeyboard', function() {
+					var enabled = AccessibilityUtils.toggleKeyboardNav();
+					AccessibilityUtils.announce(enabled ? '键盘导航已开启' : '键盘导航已关闭');
+					syncAssistSettingsToIframe();
+					updateAssistStatus();
+				});
+				var iframe = document.getElementById('iframe');
+				if (iframe) {
+					iframe.addEventListener('load', function() {
+						syncAssistSettingsToIframe();
+						updateAssistStatus();
+					});
+				}
+				syncAssistSettingsToIframe();
+				updateAssistStatus();
+			}
+
 			// 导航栏跳转
 			function navPage(url) {
 				localStorage.setItem('iframeUrl', url);
 				document.getElementById('iframe').src = url;
+				if (vue) {
+					vue.activeNavUrl = url;
+				}
 			}
 
 			// 跳转到个人中心也
 			function centerPage() {
 				var userTable = localStorage.getItem('userTable');
 				if (userTable) {
-					localStorage.setItem('iframeUrl', './pages/' + userTable + '/center.html');
-					document.getElementById('iframe').src = './pages/' + userTable + '/center.html';
+					var centerUrl = './pages/' + userTable + '/center.html';
+					localStorage.setItem('iframeUrl', centerUrl);
+					document.getElementById('iframe').src = centerUrl;
+					if (vue) {
+						vue.activeNavUrl = centerUrl;
+					}
 				} else {
 					window.location.href = './pages/login/login.html'
 				}
@@ -282,13 +275,6 @@
 
 			var iframeUrl = localStorage.getItem('iframeUrl');
 			document.getElementById('iframe').src = iframeUrl  || './pages/home/home.html';
-
-            let list = document.getElementsByTagName("li");
-            for(var i = 0;i<list.length;i++){
-                if(i==localStorage.getItem("checkedLiIndex")) {
-                    $(list[i]).addClass("current").siblings().removeClass("current");
-                }
-            }
 
       // var i = 0;
       setInterval(function(){
@@ -325,6 +311,8 @@
 			window.onresize = function() {
 				changeFrameHeight();
 			}
+
+			setTimeout(initAssistDeck, 300);
 		</script>
 	</body>
 </html>

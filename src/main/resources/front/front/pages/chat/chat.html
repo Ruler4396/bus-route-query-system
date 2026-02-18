@@ -45,8 +45,14 @@
 				box-sizing: border-box;
 			}
 		</style>
-	</head>
-	<body style="overflow-y: hidden;overflow-x: hidden;">
+	
+		<link rel="stylesheet" href="../../css/transit-business-ui.css">
+
+		<link rel="stylesheet" href="../../css/accessibility-sr-only.css">
+
+		<link rel="stylesheet" href="../../css/accessibility-high-contrast.css">
+</head>
+	<body class="transit-ui transit-page" style="overflow-y: hidden;overflow-x: hidden;">
 		<div id="app">
 			<el-form class="detail-form-content chat-form" ref="ruleForm" label-width="0">
 				<div class="chat-content">
@@ -138,5 +144,7 @@
 				app.init();
 			});
 		</script>
-	</body>
+	
+		<script src="../../js/accessibility.js"></script>
+</body>
 </html>

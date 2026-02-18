@@ -42,25 +42,59 @@ var centerMenu = [{
 var indexNav = [
 
 {
-	name: '公交路线',
+	name: '无障碍路线规划',
 	url: './pages/gongjiaoluxian/list.html'
 }, 
 {
-	name: '网站公告',
+	name: '实时线路地图',
+	url: './pages/gongjiaoluxian/map.html'
+}, 
+{
+	name: '出行服务公告',
 	url: './pages/wangzhangonggao/list.html'
 }, 
 {
-	name: '友情链接',
-	url: './pages/youqinglianjie/list.html'
-}, 
-
-{
-	name: '留言建议',
+	name: '留言与改进建议',
 	url: './pages/messages/list.html'
+},
+{
+	name: '无障碍资源链接',
+	url: './pages/youqinglianjie/list.html'
 }
 ]
 
 var adminurl =  "http://localhost:8080/springbootmf383/admin/dist/index.html";
+
+/**
+ * 地图引擎配置
+ * provider: auto | gaode | leaflet
+ * 1. auto: 有高德key则优先高德，否则自动降级Leaflet
+ * 2. gaode: 强制高德，加载失败会降级Leaflet并提示
+ * 3. leaflet: 强制Leaflet兜底模式
+ *
+ * leafletTileMode: online | offline
+ * 1. online: 使用在线瓦片服务（默认 OpenStreetMap）
+ * 2. offline: 使用本地瓦片服务（如 /springbootmf383/front/tiles/{z}/{x}/{y}.png）
+ */
+var mapEngineConfig = {
+	provider: 'gaode',
+	amapKey: '116043f95f5218e800db21bda1cafd00',
+	amapVersion: '2.0',
+	amapSecurityJsCode: '8526d37e3fd9de964efaf654fe296f9e',
+	amapServiceHost: '',
+	center: [113.2644, 23.1291],
+	zoom: 13,
+	dataCoordinateSystem: 'wgs84',
+	amapLineSearchCity: '广州',
+	leafletTileMode: 'online',
+	leafletTileUrl: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+	leafletOnlineTileUrl: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+	leafletOfflineTileUrl: '/springbootmf383/front/tiles/{z}/{x}/{y}.png',
+	leafletOnlineAttribution: '&copy; OpenStreetMap contributors',
+	leafletOfflineAttribution: 'Local Tiles',
+	leafletMinZoom: 3,
+	leafletMaxZoom: 19
+}
 
 var cartFlag = false
 

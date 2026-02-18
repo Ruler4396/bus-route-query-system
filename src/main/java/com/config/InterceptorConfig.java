@@ -21,7 +21,8 @@ public class InterceptorConfig extends WebMvcConfigurationSupport{
         registry.addInterceptor(getAuthorizationInterceptor())
                 .addPathPatterns("/**")
                 .excludePathPatterns("/static/**")
-                .excludePathPatterns("/map/**");  // 排除地图API接口，无需登录即可访问
+                .excludePathPatterns("/map/**")   // 排除地图API接口，无需登录即可访问
+                .excludePathPatterns("/ws/**");   // 排除WebSocket推送端点
         super.addInterceptors(registry);
 	}
 	

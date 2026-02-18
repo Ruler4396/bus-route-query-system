@@ -1,10 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(robocopy:*)",
-      "Bash(powershell:*)",
-      "Bash(cmd.exe /c \"move /Y \"\"E:\\\\Chrome Download\\\\Bus-route-query-system-master\"\" \"\"D:\\\\bus-route-query-system\"\"\")",
-      "Bash(cmd.exe /c \"xcopy \"\"E:\\\\Chrome Download\\\\Bus-route-query-system-master\"\" \"\"D:\\\\bus-route-query-system\"\" /E /I /H /Y\")"
+      "Bash(timeout /t 15 /nobreak)",
+      "Bash(curl:*)",
+      "Bash(git tag:*)",
+      "Bash(tree:*)",
+      "Bash(mvn clean compile:*)",
+      "Bash(java:*)"
     ]
   }
 }

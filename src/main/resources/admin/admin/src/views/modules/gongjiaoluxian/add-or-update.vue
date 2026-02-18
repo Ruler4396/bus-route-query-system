@@ -87,7 +87,63 @@
         </div>
       </el-col>
       </el-row>
-          <el-row>
+      <el-row>
+        <el-col :span="24">
+          <el-form-item label="无障碍级别" prop="wuzhangaijibie">
+            <el-select v-model="ruleForm.wuzhangaijibie" placeholder="请选择无障碍级别">
+              <el-option label="完全无障碍" :value="0"></el-option>
+              <el-option label="基本无障碍" :value="1"></el-option>
+              <el-option label="部分障碍" :value="2"></el-option>
+              <el-option label="有障碍" :value="3"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="24">
+          <el-form-item label="无障碍设施">
+            <el-checkbox-group v-model="accessibilityFacilities">
+              <el-checkbox label="wheelchair">轮椅坡道</el-checkbox>
+              <el-checkbox label="blindpath">盲道</el-checkbox>
+              <el-checkbox label="voice">语音提示</el-checkbox>
+              <el-checkbox label="display">电子显示屏</el-checkbox>
+              <el-checkbox label="elevator">无障碍电梯</el-checkbox>
+            </el-checkbox-group>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="8">
+          <el-form-item label="语音播报">
+            <el-switch v-model="ruleForm.yuyintongbao" :active-value="1" :inactive-value="0"></el-switch>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="盲道支持">
+            <el-switch v-model="ruleForm.mangdaozhichi" :active-value="1" :inactive-value="0"></el-switch>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="导盲犬支持">
+            <el-switch v-model="ruleForm.ditezhichi" :active-value="1" :inactive-value="0"></el-switch>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="24">
+          <el-form-item label="电梯设施">
+            <el-input v-model="ruleForm.diantifacilities" placeholder="请输入设有电梯的站点，多个站点用逗号分隔"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="24">
+          <el-form-item label="轮椅专用区域">
+            <el-input v-model="ruleForm.xunlianzhuankuan" placeholder="请输入轮椅专用区域说明"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
             <el-col :span="24">
               <el-form-item class="textarea" v-if="type!='info'" label="途径站点" prop="tujingzhandian">
                 <el-input
@@ -218,6 +274,13 @@ export default {
 	crazilynum : false,
 	clicktime : false,
 	clicknum : false,
+	wuzhangaijibie : false,
+	wuzhangaisheshi : false,
+	diantifacilities : false,
+	xunlianzhuankuan : false,
+	yuyintongbao : false,
+	mangdaozhichi : false,
+	ditezhichi : false,
       },
       ruleForm: {
         luxianbianhao: this.getUUID(),
@@ -229,7 +292,15 @@ export default {
         zhongdianzhanming: '',
         luxianxiangqing: '',
         clicktime: '',
+        wuzhangaijibie: 0,
+        wuzhangaisheshi: '',
+        diantifacilities: '',
+        xunlianzhuankuan: '',
+        yuyintongbao: 0,
+        mangdaozhichi: 0,
+        ditezhichi: 0,
       },
+      accessibilityFacilities: [],
       rules: {
           luxianbianhao: [
           ],

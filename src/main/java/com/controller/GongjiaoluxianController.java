@@ -9,10 +9,16 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Date;
 import java.util.List;
+import java.net.URLEncoder;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import com.utils.ValidatorUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -186,6 +192,63 @@ public class GongjiaoluxianController {
         gongjiaoluxianService.deleteBatchIds(Arrays.asList(ids));
         return R.ok();
     }
+
+    /**
+     * 导出Excel
+     */
+    @RequestMapping("/export")
+    public void export(@RequestParam Map<String, Object> params, GongjiaoluxianEntity gongjiaoluxian,
+                       HttpServletResponse response) throws IOException {
+        EntityWrapper<GongjiaoluxianEntity> ew = new EntityWrapper<GongjiaoluxianEntity>();
+        List<GongjiaoluxianEntity> records = gongjiaoluxianService.selectList(
+            MPUtil.sort(MPUtil.between(MPUtil.likeOrEq(ew, gongjiaoluxian), params), params)
+        );
+
+        Workbook workbook = new XSSFWorkbook();
+        try {
+            Sheet sheet = workbook.createSheet("公交路线");
+            String[] headers = {
+                "路线编号", "路线名称", "价格", "起点站名", "途径站点", "终点站名",
+                "无障碍设施", "无障碍级别", "语音播报", "盲道支持", "导盲犬支持", "创建时间"
+            };
+
+            Row headerRow = sheet.createRow(0);
+            for (int i = 0; i < headers.length; i++) {
+                headerRow.createCell(i).setCellValue(headers[i]);
+            }
+
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            for (int i = 0; i < records.size(); i++) {
+                GongjiaoluxianEntity item = records.get(i);
+                Row row = sheet.createRow(i + 1);
+                row.createCell(0).setCellValue(safeText(item.getLuxianbianhao()));
+                row.createCell(1).setCellValue(safeText(item.getLuxianmingcheng()));
+                row.createCell(2).setCellValue(item.getJiage() == null ? "" : item.getJiage().toString());
+                row.createCell(3).setCellValue(safeText(item.getQidianzhanming()));
+                row.createCell(4).setCellValue(safeText(item.getTujingzhandian()));
+                row.createCell(5).setCellValue(safeText(item.getZhongdianzhanming()));
+                row.createCell(6).setCellValue(safeText(item.getWuzhangaisheshi()));
+                row.createCell(7).setCellValue(item.getWuzhangaijibie() == null ? "" : item.getWuzhangaijibie().toString());
+                row.createCell(8).setCellValue(item.getYuyintongbao() != null && item.getYuyintongbao() == 1 ? "支持" : "不支持");
+                row.createCell(9).setCellValue(item.getMangdaozhichi() != null && item.getMangdaozhichi() == 1 ? "支持" : "不支持");
+                row.createCell(10).setCellValue(item.getDitezhichi() != null && item.getDitezhichi() == 1 ? "支持" : "不支持");
+                row.createCell(11).setCellValue(item.getAddtime() == null ? "" : sdf.format(item.getAddtime()));
+            }
+
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            String fileName = URLEncoder.encode("gongjiaoluxian-export.xlsx", "UTF-8").replaceAll("\\+", "%20");
+            response.reset();
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", "attachment;filename*=UTF-8''" + fileName);
+            workbook.write(response.getOutputStream());
+            response.flushBuffer();
+        } finally {
+            workbook.close();
+        }
+    }
     
     /**
      * 提醒接口
@@ -258,10 +321,8 @@ public class GongjiaoluxianController {
         return R.ok().put("data", page);
     }
 
-
-
-
-
-
+    private String safeText(String value) {
+        return value == null ? "" : value;
+    }
 
 }

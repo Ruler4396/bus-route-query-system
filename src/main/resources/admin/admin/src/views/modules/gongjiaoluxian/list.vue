@@ -68,10 +68,12 @@
               type="danger"
               @click="deleteHandler()"
             >{{ contents.btnAdAllFont == 1?'删除':'' }}</el-button>
-
-
-
-
+            <el-button
+              v-if="isAuth('gongjiaoluxian','查看')"
+              type="warning"
+              icon="el-icon-download"
+              @click="exportHandler()"
+            >导出Excel</el-button>
 
           </el-form-item>
         </el-row>
@@ -490,6 +492,49 @@ export default {
     // 下载
     download(file){
       window.open(`${file}`)
+    },
+    // 导出
+    exportHandler() {
+      let params = {
+        sort: 'id',
+        order: 'desc'
+      }
+      if(this.searchForm.luxianmingcheng!='' && this.searchForm.luxianmingcheng!=undefined){
+        params['luxianmingcheng'] = '%' + this.searchForm.luxianmingcheng + '%'
+      }
+      if(this.searchForm.qidianzhanming!='' && this.searchForm.qidianzhanming!=undefined){
+        params['qidianzhanming'] = '%' + this.searchForm.qidianzhanming + '%'
+      }
+      if(this.searchForm.tujingzhandian!='' && this.searchForm.tujingzhandian!=undefined){
+        params['tujingzhandian'] = '%' + this.searchForm.tujingzhandian + '%'
+      }
+      if(this.searchForm.zhongdianzhanming!='' && this.searchForm.zhongdianzhanming!=undefined){
+        params['zhongdianzhanming'] = '%' + this.searchForm.zhongdianzhanming + '%'
+      }
+
+      this.$http({
+        url: "gongjiaoluxian/export",
+        method: "get",
+        params: params,
+        responseType: "blob"
+      }).then((response) => {
+        const blob = new Blob([response.data], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        })
+        const disposition = response.headers["content-disposition"] || ""
+        const match = disposition.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/)
+        const fileName = match ? decodeURIComponent(match[1] || match[2]) : "gongjiaoluxian-export.xlsx"
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = fileName
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        window.URL.revokeObjectURL(url)
+      }).catch(() => {
+        this.$message.error("导出失败，请稍后重试")
+      })
     },
     // 删除
     deleteHandler(id) {

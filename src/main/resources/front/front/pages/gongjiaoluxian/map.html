@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="../../layui/css/layui.css">
     <link rel="stylesheet" href="../../xznstatic/css/common.css"/>
     <link rel="stylesheet" href="../../xznstatic/css/style.css"/>
+    <link rel="stylesheet" href="../../css/accessibility-sr-only.css">
+    <link rel="stylesheet" href="../../css/accessibility-high-contrast.css">
+    <link rel="stylesheet" href="../../css/transit-business-ui.css">
     <script type="text/javascript" src="../../xznstatic/js/jquery-1.11.3.min.js"></script>
 
     <!-- Leaflet CSS -->
@@ -242,15 +245,17 @@
         }
     </style>
 </head>
-<body>
-    <div id="app">
+<body class="transit-ui transit-page page-route-map">
+    <a href="#app" class="skip-link">跳转到主要内容</a>
+    <div id="app" role="main" aria-label="公交路线地图页面" tabindex="-1">
         <div class="map-container">
             <!-- 左侧边栏 -->
             <div class="sidebar">
                 <!-- 路线选择 -->
                 <div class="sidebar-panel">
                     <div class="panel-title">选择路线</div>
-                    <select id="routeSelect" class="route-select" onchange="loadRoute()">
+                    <label for="routeSelect" class="sr-only">选择公交路线</label>
+                    <select id="routeSelect" class="route-select" onchange="loadRoute()" aria-label="选择公交路线">
                         <option value="">-- 请选择路线 --</option>
                     </select>
                 </div>
@@ -294,13 +299,21 @@
                 <div class="sidebar-panel">
                     <div class="panel-title">地图控制</div>
                     <div class="btn-group">
-                        <button class="btn-map btn-primary" onclick="fitBounds()">
+                        <button class="btn-map btn-primary" onclick="fitBounds()" aria-label="地图适应视图">
                             适应视图
                         </button>
-                        <button class="btn-map btn-secondary" id="vehicleBtn" onclick="toggleVehicle()">
-                            模拟车辆
+                        <button class="btn-map btn-secondary" id="vehicleBtn" onclick="toggleVehicle()" aria-label="切换实时车辆显示">
+                            实时车辆
                         </button>
                     </div>
+                    <div class="btn-group" style="margin-top: 10px;">
+                        <button class="btn-map btn-primary" onclick="planGaodeRoute()" aria-label="调用高德路径规划">
+                            高德路径
+                        </button>
+                    </div>
+                    <p id="engineStatus" style="margin: 10px 0 0; font-size: 12px; color: #666;">
+                        地图引擎：初始化中
+                    </p>
                 </div>
             </div>
 
@@ -317,62 +330,289 @@
     <script src="../../js/vue.js"></script>
     <script src="../../js/config.js"></script>
     <script src="../../js/utils.js"></script>
+    <script src="../../js/accessibility.js"></script>
 
     <script>
-        var map = null;
-        var routeLayer = null;
-        var markersLayer = null;
-        var vehicleMarker = null;
+        var mapEngine = {
+            type: null,
+            map: null,
+            routeLayer: null,
+            markersLayer: null,
+            routePolyline: null,
+            plannedRouteOverlay: null,
+            stationMarkers: [],
+            vehicleMarker: null,
+            infoWindow: null,
+            driving: null,
+            lineSearch: null,
+            renderStations: []
+        };
         var vehicleTimer = null;
+        var vehicleSocket = null;
+        var useWebSocketVehicle = false;
         var currentRoute = null;
         var stationData = [];
         var vehicleIndex = 0;
         var isVehicleRunning = false;
         var baseURL = 'http://localhost:8080/springbootmf383';
+        var mapSettings = window.mapEngineConfig || {};
+        mapSettings.provider = (mapSettings.provider || 'auto').toLowerCase();
+        mapSettings.amapVersion = mapSettings.amapVersion || '2.0';
+        mapSettings.center = mapSettings.center || [113.2644, 23.1291];
+        mapSettings.zoom = Number(mapSettings.zoom || 13);
+        mapSettings.dataCoordinateSystem = (mapSettings.dataCoordinateSystem || 'wgs84').toLowerCase();
+        mapSettings.amapLineSearchCity = mapSettings.amapLineSearchCity || '广州';
+        mapSettings.leafletTileMode = (mapSettings.leafletTileMode || 'online').toLowerCase();
+        mapSettings.leafletTileUrl = mapSettings.leafletTileUrl || 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        mapSettings.leafletOnlineTileUrl = mapSettings.leafletOnlineTileUrl || mapSettings.leafletTileUrl;
+        mapSettings.leafletOfflineTileUrl = mapSettings.leafletOfflineTileUrl || '/springbootmf383/front/tiles/{z}/{x}/{y}.png';
+        mapSettings.leafletOnlineAttribution = mapSettings.leafletOnlineAttribution || '&copy; OpenStreetMap contributors';
+        mapSettings.leafletOfflineAttribution = mapSettings.leafletOfflineAttribution || 'Local Tiles';
+        mapSettings.leafletMinZoom = Number(mapSettings.leafletMinZoom || 3);
+        mapSettings.leafletMaxZoom = Number(mapSettings.leafletMaxZoom || 19);
 
-        // 初始化地图
+        function msg(text, icon) {
+            if (window.layui && layui.layer) {
+                layui.layer.msg(text, { icon: icon || 0 });
+            } else {
+                console.log(text);
+            }
+        }
+
+        function setEngineStatus(text, color) {
+            $('#engineStatus').text(text).css('color', color || '#666');
+        }
+
+        function shouldUseAmap() {
+            if (mapSettings.provider === 'gaode') return true;
+            if (mapSettings.provider === 'leaflet') return false;
+            return !!mapSettings.amapKey;
+        }
+
+        function isLeafletOfflineMode() {
+            return mapSettings.leafletTileMode === 'offline';
+        }
+
+        function getLeafletTileOptions() {
+            var offlineMode = isLeafletOfflineMode();
+            var tileUrl = offlineMode ? mapSettings.leafletOfflineTileUrl : mapSettings.leafletOnlineTileUrl;
+            var attribution = offlineMode ? mapSettings.leafletOfflineAttribution : mapSettings.leafletOnlineAttribution;
+            return {
+                tileUrl: tileUrl,
+                attribution: attribution,
+                minZoom: mapSettings.leafletMinZoom,
+                maxZoom: mapSettings.leafletMaxZoom,
+                modeText: offlineMode ? '离线瓦片' : '在线瓦片'
+            };
+        }
+
+        function dataIsWgs84() {
+            return mapSettings.dataCoordinateSystem === 'wgs84';
+        }
+
+        function outOfChina(lng, lat) {
+            return lng < 72.004 || lng > 137.8347 || lat < 0.8293 || lat > 55.8271;
+        }
+
+        function transformLat(lng, lat) {
+            var ret = -100.0 + 2.0 * lng + 3.0 * lat + 0.2 * lat * lat + 0.1 * lng * lat + 0.2 * Math.sqrt(Math.abs(lng));
+            ret += (20.0 * Math.sin(6.0 * lng * Math.PI) + 20.0 * Math.sin(2.0 * lng * Math.PI)) * 2.0 / 3.0;
+            ret += (20.0 * Math.sin(lat * Math.PI) + 40.0 * Math.sin(lat / 3.0 * Math.PI)) * 2.0 / 3.0;
+            ret += (160.0 * Math.sin(lat / 12.0 * Math.PI) + 320.0 * Math.sin(lat * Math.PI / 30.0)) * 2.0 / 3.0;
+            return ret;
+        }
+
+        function transformLng(lng, lat) {
+            var ret = 300.0 + lng + 2.0 * lat + 0.1 * lng * lng + 0.1 * lng * lat + 0.1 * Math.sqrt(Math.abs(lng));
+            ret += (20.0 * Math.sin(6.0 * lng * Math.PI) + 20.0 * Math.sin(2.0 * lng * Math.PI)) * 2.0 / 3.0;
+            ret += (20.0 * Math.sin(lng * Math.PI) + 40.0 * Math.sin(lng / 3.0 * Math.PI)) * 2.0 / 3.0;
+            ret += (150.0 * Math.sin(lng / 12.0 * Math.PI) + 300.0 * Math.sin(lng / 30.0 * Math.PI)) * 2.0 / 3.0;
+            return ret;
+        }
+
+        function wgs84ToGcj02(lng, lat) {
+            if (outOfChina(lng, lat)) {
+                return [lng, lat];
+            }
+            var a = 6378245.0;
+            var ee = 0.00669342162296594323;
+            var dLat = transformLat(lng - 105.0, lat - 35.0);
+            var dLng = transformLng(lng - 105.0, lat - 35.0);
+            var radLat = lat / 180.0 * Math.PI;
+            var magic = Math.sin(radLat);
+            magic = 1 - ee * magic * magic;
+            var sqrtMagic = Math.sqrt(magic);
+            dLat = (dLat * 180.0) / ((a * (1 - ee)) / (magic * sqrtMagic) * Math.PI);
+            dLng = (dLng * 180.0) / (a / sqrtMagic * Math.cos(radLat) * Math.PI);
+            return [lng + dLng, lat + dLat];
+        }
+
+        function toAmapLngLat(lng, lat) {
+            var x = Number(lng);
+            var y = Number(lat);
+            if (isNaN(x) || isNaN(y)) {
+                return [x, y];
+            }
+            if (dataIsWgs84()) {
+                return wgs84ToGcj02(x, y);
+            }
+            return [x, y];
+        }
+
+        function toAmapStation(station) {
+            var rawLng = Number(station.lng);
+            var rawLat = Number(station.lat);
+            var converted = toAmapLngLat(rawLng, rawLat);
+            var mapped = Object.assign({}, station);
+            mapped.rawLng = rawLng;
+            mapped.rawLat = rawLat;
+            mapped.lng = converted[0];
+            mapped.lat = converted[1];
+            return mapped;
+        }
+
+        function normalizeStationName(name) {
+            return String(name || '')
+                .replace(/[（(].*?[）)]/g, '')
+                .replace(/\s+/g, '')
+                .toLowerCase();
+        }
+
+        function haversineMeters(a, b) {
+            if (!a || !b) return NaN;
+            var lat1 = Number(a.lat), lng1 = Number(a.lng);
+            var lat2 = Number(b.lat), lng2 = Number(b.lng);
+            if ([lat1, lng1, lat2, lng2].some(function(v) { return isNaN(v); })) {
+                return NaN;
+            }
+            var r = 6378137;
+            var dLat = (lat2 - lat1) * Math.PI / 180;
+            var dLng = (lng2 - lng1) * Math.PI / 180;
+            var aa = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            return 2 * r * Math.asin(Math.sqrt(aa));
+        }
+
+        function loadAmapSdk() {
+            return new Promise(function(resolve, reject) {
+                if (window.AMap) {
+                    resolve(window.AMap);
+                    return;
+                }
+                if (!mapSettings.amapKey) {
+                    reject(new Error('未配置高德Key'));
+                    return;
+                }
+                if (mapSettings.amapSecurityJsCode || mapSettings.amapServiceHost) {
+                    window._AMapSecurityConfig = {};
+                    if (mapSettings.amapSecurityJsCode) {
+                        window._AMapSecurityConfig.securityJsCode = mapSettings.amapSecurityJsCode;
+                    }
+                    if (mapSettings.amapServiceHost) {
+                        window._AMapSecurityConfig.serviceHost = mapSettings.amapServiceHost;
+                    }
+                }
+                var script = document.createElement('script');
+                script.src = 'https://webapi.amap.com/maps?v=' + encodeURIComponent(mapSettings.amapVersion) +
+                    '&key=' + encodeURIComponent(mapSettings.amapKey);
+                script.async = true;
+                script.onload = function() {
+                    if (window.AMap) {
+                        resolve(window.AMap);
+                    } else {
+                        reject(new Error('高德SDK加载完成但对象不可用'));
+                    }
+                };
+                script.onerror = function() {
+                    reject(new Error('高德SDK加载失败'));
+                };
+                document.head.appendChild(script);
+            });
+        }
+
         function initMap() {
-            map = L.map('map').setView([31.2304, 121.4737], 13);
+            if (shouldUseAmap()) {
+                loadAmapSdk().then(function() {
+                    initAmap();
+                }).catch(function(err) {
+                    console.warn('高德初始化失败，降级到Leaflet：', err);
+                    setEngineStatus('地图引擎：Leaflet（高德初始化失败，已降级）', '#d9534f');
+                    initLeaflet();
+                });
+                return;
+            }
+            initLeaflet();
+        }
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                maxZoom: 19
-            }).addTo(map);
-
-            routeLayer = L.layerGroup().addTo(map);
-            markersLayer = L.layerGroup().addTo(map);
-
+        function initAmap() {
+            mapEngine.type = 'gaode';
+            var amapCenter = toAmapLngLat(mapSettings.center[0], mapSettings.center[1]);
+            mapEngine.map = new AMap.Map('map', {
+                zoom: mapSettings.zoom,
+                center: amapCenter,
+                viewMode: '2D'
+            });
+            mapEngine.infoWindow = new AMap.InfoWindow({ offset: new AMap.Pixel(0, -18) });
+            AMap.plugin(['AMap.ToolBar', 'AMap.Scale'], function() {
+                mapEngine.map.addControl(new AMap.ToolBar());
+                mapEngine.map.addControl(new AMap.Scale());
+            });
+            setEngineStatus('地图引擎：高德地图（主方案）', '#3c763d');
             loadRoutes();
         }
 
-        // 加载路线列表
+        function initLeaflet() {
+            if (!window.L) {
+                setEngineStatus('地图引擎：Leaflet资源加载失败', '#d9534f');
+                msg('Leaflet资源不可用，请检查网络或切换到本地Leaflet资源', 5);
+                return;
+            }
+            mapEngine.type = 'leaflet';
+            var tileOptions = getLeafletTileOptions();
+            mapEngine.map = L.map('map').setView([mapSettings.center[1], mapSettings.center[0]], mapSettings.zoom);
+            L.tileLayer(tileOptions.tileUrl, {
+                attribution: tileOptions.attribution,
+                minZoom: tileOptions.minZoom,
+                maxZoom: tileOptions.maxZoom
+            }).addTo(mapEngine.map);
+            mapEngine.routeLayer = L.layerGroup().addTo(mapEngine.map);
+            mapEngine.markersLayer = L.layerGroup().addTo(mapEngine.map);
+            if ($('#engineStatus').text().indexOf('降级') === -1) {
+                setEngineStatus('地图引擎：Leaflet（' + tileOptions.modeText + '）', '#666');
+            }
+            loadRoutes();
+        }
+
         function loadRoutes() {
             $.ajax({
                 url: baseURL + '/map/routes',
                 type: 'GET',
                 success: function(res) {
-                    if (res.code === 0) {
-                        var select = $('#routeSelect');
-                        select.empty();
-                        select.append('<option value="">-- 请选择路线 --</option>');
-                        res.data.forEach(function(route) {
-                            select.append('<option value="' + route.id + '">' +
-                                route.luxianbianhao + ' - ' + route.luxianmingcheng + '</option>');
-                        });
-
-                        // 获取URL参数中的路线ID
-                        var urlParams = new URLSearchParams(window.location.search);
-                        var routeId = urlParams.get('id');
-                        if (routeId) {
-                            $('#routeSelect').val(routeId);
-                            loadRoute();
-                        }
+                    if (res.code !== 0) {
+                        msg(res.msg || '加载路线失败', 5);
+                        return;
                     }
+                    var select = $('#routeSelect');
+                    select.empty();
+                    select.append('<option value="">-- 请选择路线 --</option>');
+                    (res.data || []).forEach(function(route) {
+                        select.append('<option value="' + route.id + '">' +
+                            route.luxianbianhao + ' - ' + route.luxianmingcheng + '</option>');
+                    });
+                    var urlParams = new URLSearchParams(window.location.search);
+                    var routeId = urlParams.get('id');
+                    if (routeId) {
+                        $('#routeSelect').val(routeId);
+                        loadRoute();
+                    }
+                },
+                error: function() {
+                    msg('加载路线列表失败，请检查后端服务', 5);
                 }
             });
         }
 
-        // 加载路线
         function loadRoute() {
             var routeId = $('#routeSelect').val();
             if (!routeId) {
@@ -381,7 +621,6 @@
                 $('#stationList').html('<p style="color: #999; text-align: center; padding: 20px 0;">加载路线后显示站点</p>');
                 return;
             }
-
             $.ajax({
                 url: baseURL + '/map/route/' + routeId,
                 type: 'GET',
@@ -389,107 +628,506 @@
                     if (res.code === 0) {
                         currentRoute = res.data;
                         displayRoute(res.data);
+                    } else {
+                        msg(res.msg || '加载路线详情失败', 5);
                     }
+                },
+                error: function() {
+                    msg('加载路线详情失败', 5);
                 }
             });
         }
 
-        // 显示路线
         function displayRoute(route) {
             clearMap();
-
-            $('#routeInfo').html(`
-                <p><strong>路线编号:</strong> ${route.luxianbianhao}</p>
-                <p><strong>路线名称:</strong> ${route.luxianmingcheng}</p>
-                <p><strong>起点站:</strong> ${route.qidianzhanming}</p>
-                <p><strong>终点站:</strong> ${route.zhongdianzhanming}</p>
-                <p><strong>票价:</strong> ¥${route.jiage || 2}</p>
-            `);
-
+            $('#routeInfo').html(
+                '<p><strong>路线编号:</strong> ' + (route.luxianbianhao || '-') + '</p>' +
+                '<p><strong>路线名称:</strong> ' + (route.luxianmingcheng || '-') + '</p>' +
+                '<p><strong>起点站:</strong> ' + (route.qidianzhanming || '-') + '</p>' +
+                '<p><strong>终点站:</strong> ' + (route.zhongdianzhanming || '-') + '</p>' +
+                '<p><strong>票价:</strong> ¥' + (route.jiage || 2) + '</p>' +
+                '<p><strong>预计到终点:</strong> <span id="etaValue">计算中...</span></p>'
+            );
             $.ajax({
                 url: baseURL + '/map/stations/' + route.id,
                 type: 'GET',
                 success: function(res) {
-                    if (res.code === 0) {
-                        try {
-                            var stations = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
-                            stationData = stations;
-                            drawRoute(route, stations);
-                            displayStationList(stations);
-                        } catch (e) {
-                            console.error('解析站点数据失败:', e);
-                        }
+                    if (res.code !== 0) {
+                        msg(res.msg || '加载站点失败', 5);
+                        return;
                     }
+                    try {
+                        var stations = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+                        stationData = (stations || []).filter(function(s) {
+                            return s && s.lat !== undefined && s.lng !== undefined;
+                        }).map(function(s) {
+                            s.lat = Number(s.lat);
+                            s.lng = Number(s.lng);
+                            return s;
+                        });
+                        drawRoute(route, stationData);
+                        displayStationList(stationData);
+                        refreshEta(0);
+                    } catch (e) {
+                        console.error('解析站点数据失败:', e);
+                        msg('站点数据格式错误', 5);
+                    }
+                },
+                error: function() {
+                    msg('加载站点失败', 5);
                 }
             });
         }
 
-        // 绘制路线
-        function drawRoute(route, stations) {
-            if (!stations || stations.length === 0) {
+        function parseRoutePath(route) {
+            if (!route || !route.luxianguiji) {
+                return [];
+            }
+            try {
+                var raw = route.luxianguiji;
+                var arr = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                if (!Array.isArray(arr)) {
+                    return [];
+                }
+                return arr.map(function(p) {
+                    if (Array.isArray(p) && p.length >= 2) {
+                        return { lng: Number(p[0]), lat: Number(p[1]) };
+                    }
+                    return { lng: Number(p && p.lng), lat: Number(p && p.lat) };
+                }).filter(function(p) {
+                    return !isNaN(p.lng) && !isNaN(p.lat);
+                });
+            } catch (e) {
+                console.warn('解析路线轨迹失败，回退站点直连', e);
+                return [];
+            }
+        }
+
+        function getRoutePathForRender(route, stations) {
+            var fromRoute = parseRoutePath(route);
+            if (fromRoute.length >= 2) {
+                return fromRoute;
+            }
+            return (stations || []).map(function(s) {
+                return { lng: Number(s.lng), lat: Number(s.lat) };
+            }).filter(function(p) {
+                return !isNaN(p.lng) && !isNaN(p.lat);
+            });
+        }
+
+        function refreshEta(currentStationIndex) {
+            if (!currentRoute || !currentRoute.id) {
                 return;
             }
+            $.ajax({
+                url: baseURL + '/map/eta/' + currentRoute.id,
+                type: 'GET',
+                data: { currentStationIndex: currentStationIndex || 0 },
+                success: function(res) {
+                    if (res.code !== 0 || !res.data) {
+                        $('#etaValue').text('暂无数据');
+                        return;
+                    }
+                    var eta = Number(res.data.etaMinutes || 0);
+                    var expected = res.data.expectedArrivalTime || '--:--';
+                    var detailParts = [];
+                    var remainingDistanceKm = Number(res.data.remainingDistanceKm);
+                    var avgSpeedKmh = Number(res.data.avgSpeedKmh);
+                    var trafficLevel = res.data.trafficLevel || '';
 
-            var latlngs = stations.map(function(s) {
-                return [s.lat, s.lng];
+                    if (!isNaN(remainingDistanceKm) && remainingDistanceKm >= 0) {
+                        detailParts.push('剩余约 ' + remainingDistanceKm.toFixed(1) + ' 公里');
+                    }
+                    if (trafficLevel) {
+                        detailParts.push('路况' + trafficLevel);
+                    }
+                    if (!isNaN(avgSpeedKmh) && avgSpeedKmh > 0) {
+                        detailParts.push('均速' + avgSpeedKmh.toFixed(1) + ' km/h');
+                    }
+
+                    var etaText = eta + ' 分钟（约 ' + expected + ' 到达）';
+                    if (detailParts.length > 0) {
+                        etaText += '，' + detailParts.join('，');
+                    }
+                    $('#etaValue').text(etaText);
+                },
+                error: function() {
+                    $('#etaValue').text('计算失败');
+                }
             });
+        }
 
-            var polyline = L.polyline(latlngs, {
+        function drawRoute(route, stations) {
+            if (!stations || stations.length === 0) return;
+            var pathPoints = getRoutePathForRender(route, stations);
+            if (mapEngine.type === 'gaode') {
+                drawRouteAmap(route, stations, pathPoints);
+            } else {
+                drawRouteLeaflet(stations, pathPoints);
+            }
+        }
+
+        function drawRouteLeaflet(stations, pathPoints) {
+            mapEngine.renderStations = (stations || []).map(function(station) {
+                return Object.assign({}, station);
+            });
+            var latlngs = (pathPoints && pathPoints.length >= 2 ? pathPoints : stations).map(function(s) {
+                var lat = Number(s.lat);
+                var lng = Number(s.lng);
+                return [lat, lng];
+            }).filter(function(p) {
+                return !isNaN(p[0]) && !isNaN(p[1]);
+            });
+            mapEngine.routePolyline = L.polyline(latlngs, {
                 color: '#2196F3',
                 weight: 5,
                 opacity: 0.8
-            }).addTo(routeLayer);
-
+            }).addTo(mapEngine.routeLayer);
             stations.forEach(function(station, index) {
                 var isTerminal = index === 0 || index === stations.length - 1;
                 var marker = L.marker([station.lat, station.lng], {
                     icon: L.divIcon({
                         className: 'custom-marker',
-                        html: '<div style="background: ' + (isTerminal ? '#4CAF50' : '#2196F3') + '; color: white; width: ' + (isTerminal ? '28' : '24') + 'px; height: ' + (isTerminal ? '28' : '24') + 'px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: ' + (isTerminal ? '13' : '11') + 'px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">' + (index + 1) + '</div>',
+                        html: '<div style="background:' + (isTerminal ? '#4CAF50' : '#2196F3') + ';color:#fff;width:' + (isTerminal ? '28' : '24') + 'px;height:' + (isTerminal ? '28' : '24') + 'px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:' + (isTerminal ? '13' : '11') + 'px;box-shadow:0 2px 4px rgba(0,0,0,0.3);">' + (index + 1) + '</div>',
                         iconSize: [isTerminal ? 28 : 24, isTerminal ? 28 : 24],
                         iconAnchor: [isTerminal ? 14 : 12, isTerminal ? 14 : 12]
                     })
-                }).addTo(markersLayer);
-
+                }).addTo(mapEngine.markersLayer);
                 marker.bindPopup('<div class="popup-content"><strong>' + station.name + '</strong><br>第' + (index + 1) + '站</div>');
-
-                marker.on('click', function() {
-                    highlightStation(station.name);
-                });
+                marker.on('click', function() { highlightStation(station.name); });
             });
-
-            map.fitBounds(polyline.getBounds(), { padding: [50, 50] });
+            mapEngine.map.fitBounds(mapEngine.routePolyline.getBounds(), { padding: [50, 50] });
         }
 
-        // 显示站点列表
+        function extractLineSearchLines(result) {
+            if (!result) {
+                return [];
+            }
+            if (Array.isArray(result.lineInfo)) {
+                return result.lineInfo;
+            }
+            if (result.lineInfo && Array.isArray(result.lineInfo.results)) {
+                return result.lineInfo.results;
+            }
+            if (Array.isArray(result.lines)) {
+                return result.lines;
+            }
+            return [];
+        }
+
+        function getLineStopName(stop) {
+            return (stop && (stop.name || stop.stationName || stop.stopname || stop.id)) || '';
+        }
+
+        function getLineStopPosition(stop) {
+            if (!stop) {
+                return null;
+            }
+            if (stop.location && typeof stop.location.getLng === 'function') {
+                return { lng: Number(stop.location.getLng()), lat: Number(stop.location.getLat()) };
+            }
+            if (stop.location && stop.location.lng !== undefined && stop.location.lat !== undefined) {
+                return { lng: Number(stop.location.lng), lat: Number(stop.location.lat) };
+            }
+            if (stop.lng !== undefined && stop.lat !== undefined) {
+                return { lng: Number(stop.lng), lat: Number(stop.lat) };
+            }
+            return null;
+        }
+
+        function extractLinePathPoints(line) {
+            var rawPath = line && line.path;
+            if (!Array.isArray(rawPath)) {
+                return [];
+            }
+            return rawPath.map(function(p) {
+                if (p && typeof p.getLng === 'function') {
+                    return { lng: Number(p.getLng()), lat: Number(p.getLat()) };
+                }
+                return { lng: Number(p && p.lng), lat: Number(p && p.lat) };
+            }).filter(function(p) {
+                return !isNaN(p.lng) && !isNaN(p.lat);
+            });
+        }
+
+        function scoreLineCandidate(line, route, stations) {
+            var routeNo = String(route.luxianbianhao || '').toLowerCase();
+            var routeName = String(route.luxianmingcheng || '').toLowerCase();
+            var lineName = String(line && line.name || '').toLowerCase();
+            var stationStart = normalizeStationName((stations[0] && stations[0].name) || route.qidianzhanming);
+            var stationEnd = normalizeStationName((stations[stations.length - 1] && stations[stations.length - 1].name) || route.zhongdianzhanming);
+            var lineStops = (line && (line.via_stops || line.bus_stops || line.stops)) || [];
+            var stopNames = lineStops.map(function(s) {
+                return normalizeStationName(getLineStopName(s));
+            });
+
+            var score = 0;
+            if (routeNo && lineName.indexOf(routeNo) >= 0) {
+                score += 8;
+            }
+            if (routeName && lineName.indexOf(routeName) >= 0) {
+                score += 3;
+            }
+            if (stationStart && stopNames.some(function(n) { return n.indexOf(stationStart) >= 0 || stationStart.indexOf(n) >= 0; })) {
+                score += 8;
+            }
+            if (stationEnd && stopNames.some(function(n) { return n.indexOf(stationEnd) >= 0 || stationEnd.indexOf(n) >= 0; })) {
+                score += 8;
+            }
+            var stationNames = stations.map(function(s) { return normalizeStationName(s.name); });
+            var matchCount = stationNames.filter(function(name) {
+                return !!name && stopNames.some(function(stopName) {
+                    return stopName.indexOf(name) >= 0 || name.indexOf(stopName) >= 0;
+                });
+            }).length;
+            score += Math.min(matchCount, 12);
+            return score;
+        }
+
+        function pickBestLineCandidate(lines, route, stations) {
+            if (!lines || !lines.length) {
+                return null;
+            }
+            var best = null;
+            var maxScore = -Infinity;
+            lines.forEach(function(line) {
+                var score = scoreLineCandidate(line, route, stations);
+                if (score > maxScore) {
+                    maxScore = score;
+                    best = line;
+                }
+            });
+            return best;
+        }
+
+        function buildRenderedStationsFromLine(stations, line) {
+            var lineStops = (line && (line.via_stops || line.bus_stops || line.stops)) || [];
+            var byName = {};
+            lineStops.forEach(function(stop) {
+                var key = normalizeStationName(getLineStopName(stop));
+                if (!key || byName[key]) {
+                    return;
+                }
+                var pos = getLineStopPosition(stop);
+                if (pos && !isNaN(pos.lng) && !isNaN(pos.lat)) {
+                    byName[key] = pos;
+                }
+            });
+            return stations.map(function(station) {
+                var mapped = toAmapStation(station);
+                var key = normalizeStationName(station.name);
+                if (key && byName[key]) {
+                    mapped.lng = byName[key].lng;
+                    mapped.lat = byName[key].lat;
+                }
+                return mapped;
+            });
+        }
+
+        function logStationOffsetCheck(stations, renderedStations) {
+            if (!dataIsWgs84()) {
+                return;
+            }
+            var largeOffsets = [];
+            (stations || []).forEach(function(station, index) {
+                var rendered = renderedStations[index];
+                if (!rendered) {
+                    return;
+                }
+                var localGcj = toAmapStation(station);
+                var meters = haversineMeters(
+                    { lat: localGcj.lat, lng: localGcj.lng },
+                    { lat: rendered.lat, lng: rendered.lng }
+                );
+                if (!isNaN(meters) && meters > 50) {
+                    largeOffsets.push((station.name || ('站点' + (index + 1))) + '≈' + meters.toFixed(1) + 'm');
+                }
+            });
+            if (largeOffsets.length) {
+                console.warn('站点与高德LineSearch位置差异较大：', largeOffsets.join(', '));
+            }
+        }
+
+        function tryDrawRouteAmapByLineSearch(route, stations) {
+            return new Promise(function(resolve) {
+                if (!window.AMap || !AMap.plugin) {
+                    resolve(false);
+                    return;
+                }
+                var keyword = route.luxianbianhao || route.luxianmingcheng;
+                if (!keyword) {
+                    resolve(false);
+                    return;
+                }
+                AMap.plugin('AMap.LineSearch', function() {
+                    try {
+                        if (!mapEngine.lineSearch) {
+                            mapEngine.lineSearch = new AMap.LineSearch({
+                                city: mapSettings.amapLineSearchCity,
+                                pageIndex: 1,
+                                pageSize: 20,
+                                extensions: 'all'
+                            });
+                        }
+                        mapEngine.lineSearch.search(keyword, function(status, result) {
+                            if (status !== 'complete') {
+                                resolve(false);
+                                return;
+                            }
+                            var lines = extractLineSearchLines(result);
+                            var selected = pickBestLineCandidate(lines, route, stations);
+                            if (!selected) {
+                                resolve(false);
+                                return;
+                            }
+                            var path = extractLinePathPoints(selected);
+                            if (path.length < 2) {
+                                resolve(false);
+                                return;
+                            }
+                            mapEngine.routePolyline = new AMap.Polyline({
+                                path: path.map(function(p) { return [p.lng, p.lat]; }),
+                                strokeColor: '#2196F3',
+                                strokeWeight: 6,
+                                strokeOpacity: 0.85
+                            });
+                            mapEngine.map.add(mapEngine.routePolyline);
+                            mapEngine.renderStations = buildRenderedStationsFromLine(stations, selected);
+                            logStationOffsetCheck(stations, mapEngine.renderStations);
+                            mapEngine.stationMarkers = [];
+                            mapEngine.renderStations.forEach(function(station, index) {
+                                var isTerminal = index === 0 || index === mapEngine.renderStations.length - 1;
+                                var marker = new AMap.Marker({
+                                    position: [station.lng, station.lat],
+                                    anchor: 'center',
+                                    content: '<div style="background:' + (isTerminal ? '#4CAF50' : '#2196F3') + ';color:#fff;width:' + (isTerminal ? '28' : '24') + 'px;height:' + (isTerminal ? '28' : '24') + 'px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:' + (isTerminal ? '13' : '11') + 'px;box-shadow:0 2px 4px rgba(0,0,0,0.3);">' + (index + 1) + '</div>'
+                                });
+                                marker.on('click', function() {
+                                    showPointPopup(station.lat, station.lng, station.name);
+                                    highlightStation(station.name);
+                                });
+                                mapEngine.stationMarkers.push(marker);
+                            });
+                            mapEngine.map.add(mapEngine.stationMarkers);
+                            mapEngine.map.setFitView([mapEngine.routePolyline].concat(mapEngine.stationMarkers), false, [60, 60, 60, 60]);
+                            setEngineStatus('地图引擎：高德地图（LineSearch公交轨迹）', '#3c763d');
+                            resolve(true);
+                        });
+                    } catch (e) {
+                        console.warn('LineSearch渲染失败，回退路线轨迹字段', e);
+                        resolve(false);
+                    }
+                });
+            });
+        }
+
+        function drawRouteAmapFallback(stations, pathPoints) {
+            var amapStations = stations.map(function(station) {
+                return toAmapStation(station);
+            });
+            mapEngine.renderStations = amapStations;
+            var path = (pathPoints && pathPoints.length >= 2 ? pathPoints : stations).map(function(s) {
+                var coord = toAmapLngLat(Number(s.lng), Number(s.lat));
+                return [coord[0], coord[1]];
+            }).filter(function(p) {
+                return !isNaN(p[0]) && !isNaN(p[1]);
+            });
+            mapEngine.routePolyline = new AMap.Polyline({
+                path: path,
+                strokeColor: '#2196F3',
+                strokeWeight: 6,
+                strokeOpacity: 0.85
+            });
+            mapEngine.map.add(mapEngine.routePolyline);
+            mapEngine.stationMarkers = [];
+            amapStations.forEach(function(station, index) {
+                var isTerminal = index === 0 || index === amapStations.length - 1;
+                var marker = new AMap.Marker({
+                    position: [station.lng, station.lat],
+                    anchor: 'center',
+                    content: '<div style="background:' + (isTerminal ? '#4CAF50' : '#2196F3') + ';color:#fff;width:' + (isTerminal ? '28' : '24') + 'px;height:' + (isTerminal ? '28' : '24') + 'px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:' + (isTerminal ? '13' : '11') + 'px;box-shadow:0 2px 4px rgba(0,0,0,0.3);">' + (index + 1) + '</div>'
+                });
+                marker.on('click', function() {
+                    showPointPopup(station.lat, station.lng, station.name);
+                    highlightStation(station.name);
+                });
+                mapEngine.stationMarkers.push(marker);
+            });
+            mapEngine.map.add(mapEngine.stationMarkers);
+            mapEngine.map.setFitView([mapEngine.routePolyline].concat(mapEngine.stationMarkers), false, [60, 60, 60, 60]);
+            setEngineStatus('地图引擎：高德地图（GCJ转换+轨迹字段）', '#3c763d');
+        }
+
+        function drawRouteAmap(route, stations, pathPoints) {
+            tryDrawRouteAmapByLineSearch(route, stations).then(function(ok) {
+                if (!ok) {
+                    drawRouteAmapFallback(stations, pathPoints);
+                }
+            });
+        }
+
         function displayStationList(stations) {
+            if (!stations || !stations.length) {
+                $('#stationList').html('<p style="color:#999;text-align:center;padding:20px 0;">暂无站点数据</p>');
+                return;
+            }
             var html = '';
             stations.forEach(function(station, index) {
-                html += '<div class="station-item" onclick="panToStation(' +
-                        station.lat + ', ' + station.lng + ', \'' + station.name + '\', this)">';
+                var displayName = String(station.name || ('站点' + (index + 1)));
+                html += '<div class="station-item" onclick="panToStation(' + index + ', this)">';
                 html += '<span class="station-index">' + (index + 1) + '</span>';
-                html += '<span>' + station.name + '</span>';
+                html += '<span>' + displayName + '</span>';
                 html += '</div>';
             });
             $('#stationList').html(html);
         }
 
-        // 定位到站点
-        function panToStation(lat, lng, name, element) {
-            map.setView([lat, lng], 15);
+        function getRenderedStation(index) {
+            if (index < 0) {
+                return null;
+            }
+            if (mapEngine.renderStations && mapEngine.renderStations[index]) {
+                return mapEngine.renderStations[index];
+            }
+            if (!stationData[index]) {
+                return null;
+            }
+            if (mapEngine.type === 'gaode') {
+                return toAmapStation(stationData[index]);
+            }
+            return stationData[index];
+        }
+
+        function showPointPopup(lat, lng, name) {
+            if (mapEngine.type === 'gaode') {
+                mapEngine.infoWindow.setContent('<div class="popup-content"><strong>' + name + '</strong></div>');
+                mapEngine.infoWindow.open(mapEngine.map, [lng, lat]);
+                return;
+            }
             L.popup()
                 .setLatLng([lat, lng])
                 .setContent('<div class="popup-content"><strong>' + name + '</strong></div>')
-                .openOn(map);
+                .openOn(mapEngine.map);
+        }
 
+        function panToStation(index, element) {
+            var station = getRenderedStation(index);
+            if (!station) {
+                return;
+            }
+            if (mapEngine.type === 'gaode') {
+                mapEngine.map.setZoomAndCenter(15, [station.lng, station.lat]);
+            } else {
+                mapEngine.map.setView([station.lat, station.lng], 15);
+            }
+            showPointPopup(station.lat, station.lng, station.name || ('站点' + (index + 1)));
             $('.station-item').removeClass('active');
             $(element).addClass('active');
         }
 
-        // 高亮站点
         function highlightStation(name) {
             $('.station-item').each(function() {
-                if ($(this).text().includes(name)) {
+                if ($(this).text().indexOf(name) > -1) {
                     $(this).addClass('active');
                 } else {
                     $(this).removeClass('active');
@@ -497,26 +1135,50 @@
             });
         }
 
-        // 适应视图
         function fitBounds() {
-            if (routeLayer.getLayers().length > 0) {
-                map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
+            if (!mapEngine.routePolyline) return;
+            if (mapEngine.type === 'gaode') {
+                var overlays = [mapEngine.routePolyline].concat(mapEngine.stationMarkers || []).filter(Boolean);
+                if (mapEngine.plannedRouteOverlay) {
+                    overlays.push(mapEngine.plannedRouteOverlay);
+                }
+                mapEngine.map.setFitView(overlays, false, [60, 60, 60, 60]);
+            } else if (mapEngine.routeLayer.getLayers().length > 0) {
+                mapEngine.map.fitBounds(mapEngine.routeLayer.getBounds(), { padding: [50, 50] });
             }
         }
 
-        // 清除地图
         function clearMap() {
-            routeLayer.clearLayers();
-            markersLayer.clearLayers();
-            if (vehicleMarker) {
-                map.removeLayer(vehicleMarker);
-                vehicleMarker = null;
-            }
             stopVehicle();
             stationData = [];
+            mapEngine.renderStations = [];
+            if (mapEngine.type === 'gaode') {
+                if (mapEngine.routePolyline) {
+                    mapEngine.map.remove(mapEngine.routePolyline);
+                    mapEngine.routePolyline = null;
+                }
+                if (mapEngine.plannedRouteOverlay) {
+                    mapEngine.map.remove(mapEngine.plannedRouteOverlay);
+                    mapEngine.plannedRouteOverlay = null;
+                }
+                if (mapEngine.stationMarkers && mapEngine.stationMarkers.length) {
+                    mapEngine.map.remove(mapEngine.stationMarkers);
+                    mapEngine.stationMarkers = [];
+                }
+                if (mapEngine.driving) {
+                    mapEngine.driving.clear();
+                }
+                if (mapEngine.infoWindow) {
+                    mapEngine.infoWindow.close();
+                }
+            } else {
+                mapEngine.routeLayer.clearLayers();
+                mapEngine.markersLayer.clearLayers();
+                mapEngine.routePolyline = null;
+                mapEngine.plannedRouteOverlay = null;
+            }
         }
 
-        // 切换车辆模拟
         function toggleVehicle() {
             if (isVehicleRunning) {
                 stopVehicle();
@@ -525,44 +1187,202 @@
             }
         }
 
-        // 开始车辆模拟
-        function startVehicle() {
-            if (stationData.length < 2) {
-                layui.layer.msg('请先选择一条路线');
+        function buildVehicleWsUrl(routeId) {
+            var wsBase = baseURL.replace(/^http/, 'ws');
+            return wsBase + '/ws/vehicle?routeId=' + encodeURIComponent(routeId);
+        }
+
+        function createVehicleMarker(station) {
+            if (mapEngine.type === 'gaode') {
+                var pos = toAmapLngLat(station.lng, station.lat);
+                mapEngine.vehicleMarker = new AMap.Marker({
+                    position: [pos[0], pos[1]],
+                    anchor: 'center',
+                    content: '<div style="background:#F44336;color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 4px rgba(0,0,0,0.3);">🚌</div>'
+                });
+                mapEngine.map.add(mapEngine.vehicleMarker);
                 return;
             }
-
-            isVehicleRunning = true;
-            vehicleIndex = 0;
-
-            vehicleMarker = L.marker([stationData[0].lat, stationData[0].lng], {
+            mapEngine.vehicleMarker = L.marker([station.lat, station.lng], {
                 icon: L.divIcon({
                     className: 'vehicle-marker',
-                    html: '<div style="background: #F44336; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">🚌</div>',
+                    html: '<div style="background:#F44336;color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 4px rgba(0,0,0,0.3);">🚌</div>',
                     iconSize: [32, 32],
                     iconAnchor: [16, 16]
                 })
-            }).addTo(map);
-
-            vehicleMarker.bindPopup('<div class="popup-content"><strong>车辆</strong><br>' + stationData[0].name + '站</div>').openPopup();
-
-            vehicleTimer = setInterval(moveVehicle, 2000);
-
-            $('#vehicleBtn').text('停止模拟').removeClass('btn-secondary').addClass('btn-danger');
+            }).addTo(mapEngine.map);
         }
 
-        // 移动车辆
+        function updateVehicleMarker(station) {
+            if (!mapEngine.vehicleMarker) return;
+            if (mapEngine.type === 'gaode') {
+                var pos = toAmapLngLat(station.lng, station.lat);
+                mapEngine.vehicleMarker.setPosition([pos[0], pos[1]]);
+                return;
+            }
+            mapEngine.vehicleMarker.setLatLng([station.lat, station.lng]);
+            mapEngine.vehicleMarker.setPopupContent('<div class="popup-content"><strong>车辆</strong><br>' + station.name + '站</div>');
+        }
+
+        function removeVehicleMarker() {
+            if (!mapEngine.vehicleMarker) return;
+            if (mapEngine.type === 'gaode') {
+                mapEngine.map.remove(mapEngine.vehicleMarker);
+            } else {
+                mapEngine.map.removeLayer(mapEngine.vehicleMarker);
+            }
+            mapEngine.vehicleMarker = null;
+        }
+
+        function startVehicle() {
+            if (stationData.length < 2) {
+                msg('请先选择一条路线', 0);
+                return;
+            }
+            if (!currentRoute || !currentRoute.id) {
+                msg('当前路线不可用', 5);
+                return;
+            }
+            if (startVehicleWebSocket(currentRoute.id)) {
+                return;
+            }
+            msg('WebSocket不可用，已切换为定时器模拟', 0);
+            startVehicleTimer();
+        }
+
+        function startVehicleWebSocket(routeId) {
+            if (!window.WebSocket) {
+                return false;
+            }
+            stopVehicleTimerOnly();
+            closeVehicleSocketOnly();
+
+            var wsUrl = buildVehicleWsUrl(routeId);
+            var opened = false;
+            isVehicleRunning = true;
+            useWebSocketVehicle = true;
+            vehicleIndex = 0;
+            if (stationData[0]) {
+                createVehicleMarker(stationData[0]);
+            }
+            $('#vehicleBtn').text('停止推送').removeClass('btn-secondary').addClass('btn-danger');
+            refreshEta(0);
+
+            try {
+                vehicleSocket = new WebSocket(wsUrl);
+            } catch (e) {
+                useWebSocketVehicle = false;
+                isVehicleRunning = false;
+                closeVehicleSocketOnly();
+                return false;
+            }
+
+            var connectTimeout = setTimeout(function() {
+                if (!opened && isVehicleRunning && useWebSocketVehicle) {
+                    useWebSocketVehicle = false;
+                    closeVehicleSocketOnly();
+                    msg('实时推送连接超时，已切换定时器模拟', 0);
+                    startVehicleTimer();
+                }
+            }, 3000);
+
+            vehicleSocket.onopen = function() {
+                opened = true;
+                clearTimeout(connectTimeout);
+                msg('已连接实时推送通道', 1);
+            };
+
+            vehicleSocket.onmessage = function(event) {
+                if (!isVehicleRunning || !useWebSocketVehicle) {
+                    return;
+                }
+                try {
+                    var payload = JSON.parse(event.data || '{}');
+                    if (payload.code !== 0 || !payload.data) {
+                        return;
+                    }
+                    var station = {
+                        name: payload.data.stationName || '站点',
+                        lng: Number(payload.data.lng),
+                        lat: Number(payload.data.lat)
+                    };
+                    if (payload.data.stationIndex !== undefined) {
+                        vehicleIndex = Number(payload.data.stationIndex) || 0;
+                    }
+                    if (!mapEngine.vehicleMarker) {
+                        createVehicleMarker(station);
+                    } else {
+                        updateVehicleMarker(station);
+                    }
+                    refreshEta(vehicleIndex);
+                } catch (e) {
+                    console.error('解析WebSocket推送失败', e);
+                }
+            };
+
+            vehicleSocket.onerror = function() {
+                // 错误会由onclose统一处理降级
+            };
+
+            vehicleSocket.onclose = function() {
+                clearTimeout(connectTimeout);
+                if (isVehicleRunning && useWebSocketVehicle) {
+                    useWebSocketVehicle = false;
+                    msg('实时推送中断，已切换定时器模拟', 0);
+                    startVehicleTimer();
+                }
+            };
+
+            return true;
+        }
+
+        function startVehicleTimer() {
+            stopVehicleTimerOnly();
+            isVehicleRunning = true;
+            useWebSocketVehicle = false;
+            vehicleIndex = 0;
+            if (!mapEngine.vehicleMarker) {
+                createVehicleMarker(stationData[0]);
+            }
+            vehicleTimer = setInterval(moveVehicle, 2000);
+            $('#vehicleBtn').text('停止模拟').removeClass('btn-secondary').addClass('btn-danger');
+            refreshEta(0);
+        }
+
+        function stopVehicleTimerOnly() {
+            if (vehicleTimer) {
+                clearInterval(vehicleTimer);
+                vehicleTimer = null;
+            }
+        }
+
+        function closeVehicleSocketOnly() {
+            if (!vehicleSocket) {
+                return;
+            }
+            var ws = vehicleSocket;
+            vehicleSocket = null;
+            try {
+                ws.onopen = null;
+                ws.onmessage = null;
+                ws.onerror = null;
+                ws.onclose = null;
+                if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+                    ws.close();
+                }
+            } catch (e) {
+                // ignore close errors
+            }
+        }
+
         function moveVehicle() {
             vehicleIndex++;
             if (vehicleIndex >= stationData.length) {
                 vehicleIndex = 0;
             }
-
             var station = stationData[vehicleIndex];
-            vehicleMarker.setLatLng([station.lat, station.lng]);
-
-            vehicleMarker.setPopupContent('<div class="popup-content"><strong>车辆</strong><br>' + station.name + '站</div>');
-
+            updateVehicleMarker(station);
+            refreshEta(vehicleIndex);
             if (vehicleIndex === stationData.length - 1) {
                 setTimeout(function() {
                     if (isVehicleRunning) {
@@ -572,14 +1392,166 @@
             }
         }
 
-        // 停止车辆模拟
         function stopVehicle() {
             isVehicleRunning = false;
-            if (vehicleTimer) {
-                clearInterval(vehicleTimer);
-                vehicleTimer = null;
+            useWebSocketVehicle = false;
+            stopVehicleTimerOnly();
+            closeVehicleSocketOnly();
+            removeVehicleMarker();
+            $('#vehicleBtn').text('实时车辆').removeClass('btn-danger').addClass('btn-secondary');
+        }
+
+        function buildAmapWaypoints(stations, maxWaypoints) {
+            if (!stations || stations.length <= 2) {
+                return '';
             }
-            $('#vehicleBtn').text('模拟车辆').removeClass('btn-danger').addClass('btn-secondary');
+            var limit = maxWaypoints || 16;
+            var interior = stations.slice(1, stations.length - 1);
+            if (interior.length <= 0) {
+                return '';
+            }
+            var selected = [];
+            if (interior.length <= limit) {
+                selected = interior;
+            } else {
+                var step = interior.length / limit;
+                for (var i = 0; i < limit; i++) {
+                    var idx = Math.floor(i * step);
+                    selected.push(interior[idx]);
+                }
+            }
+            return selected.map(function(p) {
+                var coord = toAmapLngLat(p.lng, p.lat);
+                return coord[0] + ',' + coord[1];
+            }).join(';');
+        }
+
+        function renderPlannedRoute(pathPoints) {
+            if (!pathPoints || !pathPoints.length) {
+                return false;
+            }
+
+            if (mapEngine.type === 'gaode') {
+                if (mapEngine.plannedRouteOverlay) {
+                    mapEngine.map.remove(mapEngine.plannedRouteOverlay);
+                    mapEngine.plannedRouteOverlay = null;
+                }
+                var amapPath = pathPoints.map(function(p) {
+                    if (Array.isArray(p)) {
+                        return [Number(p[0]), Number(p[1])];
+                    }
+                    return [Number(p.lng), Number(p.lat)];
+                }).filter(function(p) {
+                    return !isNaN(p[0]) && !isNaN(p[1]);
+                });
+
+                if (!amapPath.length) {
+                    return false;
+                }
+                mapEngine.plannedRouteOverlay = new AMap.Polyline({
+                    path: amapPath,
+                    strokeColor: '#FF9800',
+                    strokeWeight: 6,
+                    strokeOpacity: 0.9,
+                    strokeStyle: 'dashed'
+                });
+                mapEngine.map.add(mapEngine.plannedRouteOverlay);
+                var overlays = [mapEngine.routePolyline, mapEngine.plannedRouteOverlay].concat(mapEngine.stationMarkers || []).filter(Boolean);
+                mapEngine.map.setFitView(overlays, false, [60, 60, 60, 60]);
+                return true;
+            }
+
+            if (mapEngine.plannedRouteOverlay && mapEngine.routeLayer) {
+                mapEngine.routeLayer.removeLayer(mapEngine.plannedRouteOverlay);
+                mapEngine.plannedRouteOverlay = null;
+            }
+            var leafletPath = pathPoints.map(function(p) {
+                if (Array.isArray(p)) {
+                    return [Number(p[1]), Number(p[0])];
+                }
+                return [Number(p.lat), Number(p.lng)];
+            }).filter(function(p) {
+                return !isNaN(p[0]) && !isNaN(p[1]);
+            });
+            if (!leafletPath.length) {
+                return false;
+            }
+            mapEngine.plannedRouteOverlay = L.polyline(leafletPath, {
+                color: '#FF9800',
+                weight: 5,
+                opacity: 0.9,
+                dashArray: '10 8'
+            }).addTo(mapEngine.routeLayer);
+            mapEngine.map.fitBounds(mapEngine.routeLayer.getBounds(), { padding: [50, 50] });
+            return true;
+        }
+
+        function planRouteFallbackByJsApi(start, end) {
+            if (mapEngine.type !== 'gaode') {
+                msg('当前为Leaflet模式，后端路径失败且无法调用高德JS插件', 5);
+                return;
+            }
+            AMap.plugin('AMap.Driving', function() {
+                if (!mapEngine.driving) {
+                    mapEngine.driving = new AMap.Driving({
+                        map: mapEngine.map,
+                        policy: AMap.DrivingPolicy.LEAST_TIME,
+                        autoFitView: true,
+                        hideMarkers: false
+                    });
+                } else {
+                    mapEngine.driving.clear();
+                }
+                mapEngine.driving.search(start, end, function(status) {
+                    if (status === 'complete') {
+                        msg('已展示高德JS插件路径（前端兜底）', 1);
+                        setEngineStatus('地图引擎：高德地图（前端插件兜底路径）', '#3c763d');
+                    } else {
+                        msg('路径规划失败', 5);
+                    }
+                });
+            });
+        }
+
+        function planGaodeRoute() {
+            if (!stationData || stationData.length < 2) {
+                msg('请先选择一条路线', 0);
+                return;
+            }
+            var start = toAmapLngLat(stationData[0].lng, stationData[0].lat);
+            var end = toAmapLngLat(stationData[stationData.length - 1].lng, stationData[stationData.length - 1].lat);
+            var waypoints = buildAmapWaypoints(stationData, 16);
+            $.ajax({
+                url: baseURL + '/map/amap/driving',
+                type: 'GET',
+                data: {
+                    origin: start[0] + ',' + start[1],
+                    destination: end[0] + ',' + end[1],
+                    waypoints: waypoints,
+                    strategy: '0'
+                },
+                success: function(res) {
+                    if (res.code === 0 && res.data && res.data.polylinePoints) {
+                        var ok = renderPlannedRoute(res.data.polylinePoints);
+                        if (ok) {
+                            var distance = Number(res.data.distanceKm || 0);
+                            var minutes = Number(res.data.durationMinutes || 0);
+                            msg('后端路径规划完成：约 ' + distance.toFixed(1) + 'km / ' + minutes + '分钟', 1);
+                            setEngineStatus('地图引擎：' + (mapEngine.type === 'gaode' ? '高德' : 'Leaflet') + '（后端路径规划已显示）', '#3c763d');
+                        } else {
+                            msg('后端返回路径点为空，切换前端兜底', 0);
+                            planRouteFallbackByJsApi(start, end);
+                        }
+                    } else {
+                        msg((res && res.msg ? res.msg : '后端路径规划失败') + '，切换前端兜底', 0);
+                        planRouteFallbackByJsApi(start, end);
+                    }
+                },
+                error: function() {
+                    msg('后端路径规划请求失败，切换前端兜底', 0);
+                    planRouteFallbackByJsApi(start, end);
+                }
+            });
         }
 
         $(document).ready(function() {

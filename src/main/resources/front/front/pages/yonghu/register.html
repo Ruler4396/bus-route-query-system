@@ -55,8 +55,14 @@
 				box-sizing: border-box;
 			}
 	    </style>
-	</head>
-	<body>
+	
+		<link rel="stylesheet" href="../../css/transit-business-ui.css">
+
+		<link rel="stylesheet" href="../../css/accessibility-sr-only.css">
+
+		<link rel="stylesheet" href="../../css/accessibility-high-contrast.css">
+</head>
+	<body class="transit-ui transit-page">
 				<div class="register" id="app" style="position:relative">
 			<form class="layui-form login-form" :style='{"padding":"15px","boxShadow":"0 0 0px rgba(255,0,0,.1)","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","borderRadius":"30px","borderWidth":"0","width":"410px","borderStyle":"solid","justifyContent":"center","height":"auto"}'>
             	<p class="title" v-if="true" :style='{"padding":"5px","boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"10px auto 20px","borderColor":"rgba(0,0,0,1)","backgroundColor":"rgba(255, 255, 255, 1)","color":"rgba(77, 79, 54, 1)","isshow":true,"borderRadius":"8px","borderWidth":"0","width":"80%","lineHeight":"50px","fontSize":"24px","borderStyle":"solid"}'>用户注册</p>		
@@ -181,5 +187,7 @@
 				});
 			});
 		</script>
-	</body>
+	
+		<script src="../../js/accessibility.js"></script>
+</body>
 </html>

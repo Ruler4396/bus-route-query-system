@@ -1,0 +1,252 @@
+/**
+ * 高对比度主题样式
+ * 用于无障碍功能
+ */
+
+/* 高对比度主题变量 */
+.high-contrast {
+    --bg-color: #000000;
+    --text-color: #ffffff;
+    --border-color: #ffffff;
+    --link-color: #ffff00;
+    --link-hover-color: #ffff00;
+    --focus-color: #00ffff;
+    --button-bg: #000000;
+    --button-text: #ffffff;
+    --button-border: #ffffff;
+    --input-bg: #000000;
+    --input-text: #ffffff;
+    --input-border: #ffffff;
+    --highlight-bg: #0000ff;
+    --highlight-text: #ffffff;
+    --success-color: #00ff00;
+    --error-color: #ff0000;
+    --warning-color: #ffff00;
+}
+
+/* 基础样式 */
+.high-contrast body {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+.high-contrast * {
+    background-color: transparent !important;
+    color: #ffffff !important;
+    border-color: #ffffff !important;
+}
+
+/* 链接样式 */
+.high-contrast a,
+.high-contrast a:link,
+.high-contrast a:visited {
+    color: #ffff00 !important;
+    text-decoration: underline !important;
+    font-weight: bold !important;
+}
+
+.high-contrast a:hover,
+.high-contrast a:focus {
+    color: #000000 !important;
+    background-color: #ffff00 !important;
+    text-decoration: underline !important;
+}
+
+/* 按钮样式 */
+.high-contrast button,
+.high-contrast .layui-btn,
+.high-contrast input[type="button"],
+.high-contrast input[type="submit"] {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
+    font-weight: bold !important;
+}
+
+.high-contrast button:hover,
+.high-contrast button:focus,
+.high-contrast .layui-btn:hover,
+.high-contrast .layui-btn:focus {
+    background-color: #ffff00 !important;
+    color: #000000 !important;
+    border-color: #000000 !important;
+}
+
+/* 输入框样式 */
+.high-contrast input,
+.high-contrast textarea,
+.high-contrast select,
+.high-contrast .layui-input {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
+}
+
+.high-contrast input:focus,
+.high-contrast textarea:focus,
+.high-contrast select:focus {
+    border-color: #00ffff !important;
+    outline: 3px solid #00ffff !important;
+}
+
+/* 焦点样式 */
+.high-contrast *:focus {
+    outline: 3px solid #00ffff !important;
+    outline-offset: 2px !important;
+}
+
+.high-contrast *:focus-visible {
+    outline: 3px solid #00ffff !important;
+    outline-offset: 2px !important;
+}
+
+/* 导航样式 */
+.high-contrast .navs,
+.high-contrast #header,
+.high-contrast .nav-top {
+    background-color: #000000 !important;
+    border-bottom: 2px solid #ffffff !important;
+}
+
+.high-contrast .navs li {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
+    margin: 2px !important;
+}
+
+.high-contrast .navs li:hover,
+.high-contrast .navs li:focus,
+.high-contrast .navs li.current {
+    background-color: #ffff00 !important;
+    color: #000000 !important;
+}
+
+/* 卡片和列表样式 */
+.high-contrast .list-item,
+.high-contrast .list-item-body,
+.high-contrast .box {
+    background-color: #000000 !important;
+    border: 2px solid #ffffff !important;
+}
+
+.high-contrast .list-item:hover,
+.high-contrast .list-item:focus {
+    background-color: #0000ff !important;
+    border-color: #ffff00 !important;
+}
+
+/* 表格样式 */
+.high-contrast table {
+    border-color: #ffffff !important;
+}
+
+.high-contrast th {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
+    font-weight: bold !important;
+}
+
+.high-contrast td {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border: 1px solid #ffffff !important;
+}
+
+.high-contrast tr:hover,
+.high-contrast tr:focus {
+    background-color: #0000ff !important;
+}
+
+/* 消息提示样式 */
+.high-contrast .layui-layer {
+    background-color: #000000 !important;
+    border: 3px solid #ffffff !important;
+    color: #ffffff !important;
+}
+
+.high-contrast .layui-layer-title {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border-bottom: 2px solid #ffffff !important;
+}
+
+.high-contrast .layui-layer-content {
+    color: #ffffff !important;
+}
+
+/* 分页样式 */
+.high-contrast .layui-laypage a,
+.high-contrast .layui-laypage span {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border: 1px solid #ffffff !important;
+}
+
+.high-contrast .layui-laypage a:hover,
+.high-contrast .layui-laypage .layui-laypage-curr {
+    background-color: #ffff00 !important;
+    color: #000000 !important;
+}
+
+/* 无障碍信息标记 */
+.high-contrast .badge-accessible {
+    background-color: #00ff00 !important;
+    color: #000000 !important;
+    border: 2px solid #000000 !important;
+    font-weight: bold !important;
+    padding: 2px 6px !important;
+}
+
+.high-contrast .badge-partial {
+    background-color: #ffff00 !important;
+    color: #000000 !important;
+    border: 2px solid #000000 !important;
+    font-weight: bold !important;
+    padding: 2px 6px !important;
+}
+
+.high-contrast .badge-inaccessible {
+    background-color: #ff0000 !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
+    font-weight: bold !important;
+    padding: 2px 6px !important;
+}
+
+/* 选中状态 */
+.high-contrast .selected,
+.high-contrast [aria-selected="true"] {
+    background-color: #0000ff !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
+}
+
+/* 禁用状态 */
+.high-contrast [disabled],
+.high-contrast :disabled {
+    opacity: 0.5 !important;
+    border-color: #808080 !important;
+    color: #808080 !important;
+}
+
+/* 滚动条样式 */
+.high-contrast ::-webkit-scrollbar {
+    width: 12px !important;
+    height: 12px !important;
+}
+
+.high-contrast ::-webkit-scrollbar-track {
+    background: #000000 !important;
+    border: 1px solid #ffffff !important;
+}
+
+.high-contrast ::-webkit-scrollbar-thumb {
+    background: #ffffff !important;
+    border: 1px solid #000000 !important;
+}
+
+.high-contrast ::-webkit-scrollbar-thumb:hover {
+    background: #ffff00 !important;
+}

@@ -1,0 +1,486 @@
+<!-- 无障碍设置页面 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes">
+    <title>无障碍设置 - 城市公交查询系统</title>
+    <link rel="stylesheet" href="../../layui/css/layui.css">
+    <link rel="stylesheet" href="../../xznstatic/css/common.css"/>
+    <link rel="stylesheet" href="../../css/accessibility-sr-only.css">
+    <link rel="stylesheet" href="../../css/accessibility-high-contrast.css">
+    <link rel="stylesheet" href="../../css/transit-business-ui.css">
+    <style>
+        body {
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .settings-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .page-title {
+            font-size: 24px;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .page-title i {
+            font-size: 28px;
+            color: #4d4f36;
+        }
+        .setting-group {
+            margin-bottom: 30px;
+        }
+        .setting-group-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .setting-group-title i {
+            font-size: 20px;
+        }
+        .setting-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        .setting-label {
+            flex: 1;
+        }
+        .setting-label h4 {
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .setting-label p {
+            font-size: 13px;
+            color: #666;
+        }
+        .setting-control {
+            margin-left: 20px;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 26px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #4d4f36;
+        }
+        input:focus + .slider {
+            box-shadow: 0 0 3px #4d4f36;
+        }
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+        .font-size-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .font-size-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid #ddd;
+            background: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+        .font-size-btn:hover {
+            background: #f0f0f0;
+        }
+        .font-size-value {
+            font-size: 16px;
+            font-weight: bold;
+            min-width: 50px;
+            text-align: center;
+        }
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #4d4f36;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #3a3c2a;
+        }
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        .keyboard-help {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .keyboard-help h4 {
+            margin-bottom: 15px;
+        }
+        .keyboard-help ul {
+            list-style: none;
+            padding: 0;
+        }
+        .keyboard-help li {
+            padding: 8px 0;
+            border-bottom: 1px dashed #ddd;
+        }
+        .keyboard-help li:last-child {
+            border-bottom: none;
+        }
+        .keyboard-help kbd {
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            padding: 2px 8px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #4d4f36;
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .status-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4d4f36;
+            color: #fff;
+            padding: 15px 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 9999;
+            display: none;
+        }
+        .status-message.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body class="transit-ui page-accessibility-settings">
+    <a href="../../index.html" class="back-link">
+        <i class="layui-icon">&#xe65c;</i> 返回首页
+    </a>
+
+    <div class="settings-container" role="main" aria-label="无障碍设置">
+        <h1 class="page-title">
+            <i class="layui-icon">&#xe716;</i>
+            无障碍设置
+        </h1>
+
+        <!-- 语音播报 -->
+        <div class="setting-group">
+            <h2 class="setting-group-title">
+                <i class="layui-icon">&#xe688;</i>
+                语音播报
+            </h2>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <h4>启用语音播报</h4>
+                    <p>开启后，点击语音按钮可播报路线和站点信息</p>
+                </div>
+                <div class="setting-control">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="speechToggle" aria-label="启用语音播报">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <h4>测试语音</h4>
+                    <p>点击测试当前语音设置</p>
+                </div>
+                <div class="setting-control">
+                    <button class="btn btn-secondary" onclick="testSpeech()" style="padding: 8px 16px;">
+                        <i class="layui-icon">&#xe688;</i> 测试
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 显示设置 -->
+        <div class="setting-group">
+            <h2 class="setting-group-title">
+                <i class="layui-icon">&#xe66e;</i>
+                显示设置
+            </h2>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <h4>高对比度模式</h4>
+                    <p>使用黑白高对比度主题，提高可读性</p>
+                </div>
+                <div class="setting-control">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="contrastToggle" aria-label="高对比度模式">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <h4>字体大小</h4>
+                    <p>调整页面字体大小</p>
+                </div>
+                <div class="setting-control">
+                    <div class="font-size-control">
+                        <button class="font-size-btn" onclick="changeFontSize(-2)" aria-label="减小字体">A-</button>
+                        <span class="font-size-value" id="fontSizeValue">14px</span>
+                        <button class="font-size-btn" onclick="changeFontSize(2)" aria-label="增大字体">A+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 交互设置 -->
+        <div class="setting-group">
+            <h2 class="setting-group-title">
+                <i class="layui-icon">&#xe65b;</i>
+                交互设置
+            </h2>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <h4>键盘导航</h4>
+                    <p>启用键盘快捷键导航（Alt+数字键快速跳转）</p>
+                </div>
+                <div class="setting-control">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="keyboardToggle" aria-label="键盘导航">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <h4>触觉反馈</h4>
+                    <p>启用设备震动反馈（需要设备支持）</p>
+                </div>
+                <div class="setting-control">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="hapticToggle" aria-label="触觉反馈">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- 键盘快捷键帮助 -->
+        <div class="keyboard-help">
+            <h4><i class="layui-icon">&#xe6b2;</i> 键盘快捷键</h4>
+            <ul>
+                <li><kbd>Alt</kbd> + <kbd>1</kbd> 返回首页</li>
+                <li><kbd>Alt</kbd> + <kbd>2</kbd> 路线查询</li>
+                <li><kbd>Alt</kbd> + <kbd>M</kbd> 地图模式</li>
+                <li><kbd>Alt</kbd> + <kbd>S</kbd> 聚焦搜索框</li>
+                <li><kbd>Alt</kbd> + <kbd>A</kbd> 无障碍设置</li>
+                <li><kbd>Tab</kbd> 切换焦点</li>
+                <li><kbd>Enter</kbd> 确认选择</li>
+                <li><kbd>Esc</kbd> 关闭弹窗</li>
+            </ul>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="btn-group">
+            <button class="btn btn-secondary" onclick="resetSettings()">
+                <i class="layui-icon">&#xe669;</i> 恢复默认
+            </button>
+            <button class="btn btn-primary" onclick="saveSettings()">
+                <i class="layui-icon">&#xe605;</i> 保存设置
+            </button>
+        </div>
+    </div>
+
+    <!-- 状态提示 -->
+    <div id="statusMessage" class="status-message" role="status" aria-live="polite"></div>
+
+    <script src="../../layui/layui.js"></script>
+    <script src="../../js/vue.js"></script>
+    <script src="../../js/config.js"></script>
+    <script src="../../js/utils.js"></script>
+    <script src="../../js/accessibility.js"></script>
+    <script src="../../modules/config.js"></script>
+
+    <script>
+        // 初始化设置
+        function initSettings() {
+            var settings = AccessibilityUtils.getSettings();
+
+            document.getElementById('speechToggle').checked = settings.speech;
+            document.getElementById('contrastToggle').checked = settings.highContrast;
+            document.getElementById('keyboardToggle').checked = settings.keyboardNav;
+            document.getElementById('hapticToggle').checked = settings.haptic;
+            document.getElementById('fontSizeValue').textContent = settings.fontSize + 'px';
+        }
+
+        // 测试语音
+        function testSpeech() {
+            if (!AccessibilityUtils.isSpeechEnabled()) {
+                showMessage('请先开启语音播报功能');
+                return;
+            }
+            AccessibilityUtils.speak('语音播报测试成功，欢迎使用城市公交查询系统');
+            showMessage('正在播放测试语音...');
+        }
+
+        // 改变字体大小
+        function changeFontSize(delta) {
+            var currentSize = AccessibilityUtils.getFontSize();
+            var newSize = currentSize + delta;
+
+            if (newSize >= 12 && newSize <= 24) {
+                AccessibilityUtils.setFontSize(newSize);
+                document.getElementById('fontSizeValue').textContent = newSize + 'px';
+            }
+        }
+
+        // 保存设置
+        function saveSettings() {
+            var settings = {
+                speech: document.getElementById('speechToggle').checked,
+                highContrast: document.getElementById('contrastToggle').checked,
+                keyboardNav: document.getElementById('keyboardToggle').checked,
+                haptic: document.getElementById('hapticToggle').checked,
+                fontSize: AccessibilityUtils.getFontSize()
+            };
+
+            AccessibilityUtils.saveSettings(settings);
+            showMessage('设置已保存');
+            AccessibilityUtils.announce('设置已保存');
+        }
+
+        // 恢复默认设置
+        function resetSettings() {
+            var defaultSettings = {
+                speech: false,
+                highContrast: false,
+                keyboardNav: true,
+                haptic: false,
+                fontSize: 14
+            };
+
+            AccessibilityUtils.saveSettings(defaultSettings);
+            initSettings();
+            showMessage('已恢复默认设置');
+            AccessibilityUtils.announce('已恢复默认设置');
+        }
+
+        // 显示消息
+        function showMessage(msg) {
+            var el = document.getElementById('statusMessage');
+            el.textContent = msg;
+            el.classList.add('show');
+
+            setTimeout(function() {
+                el.classList.remove('show');
+            }, 3000);
+        }
+
+        // 监听开关变化
+        document.getElementById('contrastToggle').addEventListener('change', function(e) {
+            if (e.target.checked) {
+                AccessibilityUtils.enableHighContrast();
+            } else {
+                AccessibilityUtils.disableHighContrast();
+            }
+        });
+
+        document.getElementById('speechToggle').addEventListener('change', function(e) {
+            AccessibilityUtils.saveSettings({ speech: !!e.target.checked });
+        });
+
+        document.getElementById('keyboardToggle').addEventListener('change', function(e) {
+            AccessibilityUtils.saveSettings({ keyboardNav: !!e.target.checked });
+        });
+
+        document.getElementById('hapticToggle').addEventListener('change', function(e) {
+            AccessibilityUtils.saveSettings({ haptic: !!e.target.checked });
+        });
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initSettings);
+    </script>
+</body>
+</html>
