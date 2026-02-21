@@ -248,6 +248,11 @@
 <body class="transit-ui transit-page page-route-map">
     <a href="#app" class="skip-link">跳转到主要内容</a>
     <div id="app" role="main" aria-label="公交路线地图页面" tabindex="-1">
+        <section class="map-assist-panel" aria-label="地图页面无障碍说明">
+            <h2>无障碍地图导航</h2>
+            <p>先选路线，再点站点。所有关键状态会同步显示为文本，听障用户无需依赖语音也能掌握进度。</p>
+            <p id="a11yMapStatus" class="map-live-status" role="status" aria-live="polite">等待选择路线。</p>
+        </section>
         <div class="map-container">
             <!-- 左侧边栏 -->
             <div class="sidebar">
@@ -263,7 +268,7 @@
                 <!-- 路线信息 -->
                 <div class="sidebar-panel">
                     <div class="panel-title">路线信息</div>
-                    <div id="routeInfo" class="route-info">
+                    <div id="routeInfo" class="route-info" aria-live="polite">
                         <p style="color: #999; text-align: center; padding: 20px 0;">请选择一条路线查看详情</p>
                     </div>
                 </div>
@@ -311,7 +316,7 @@
                             高德路径
                         </button>
                     </div>
-                    <p id="engineStatus" style="margin: 10px 0 0; font-size: 12px; color: #666;">
+                    <p id="engineStatus" role="status" aria-live="polite" style="margin: 10px 0 0; font-size: 12px; color: #666;">
                         地图引擎：初始化中
                     </p>
                 </div>
@@ -381,6 +386,15 @@
 
         function setEngineStatus(text, color) {
             $('#engineStatus').text(text).css('color', color || '#666');
+            setMapAssistStatus(text, false);
+        }
+
+        function setMapAssistStatus(text, shouldAnnounce) {
+            var safeText = text || '状态更新中';
+            $('#a11yMapStatus').text(safeText);
+            if (shouldAnnounce && window.AccessibilityUtils) {
+                AccessibilityUtils.announce(safeText);
+            }
         }
 
         function shouldUseAmap() {
@@ -591,6 +605,7 @@
                 success: function(res) {
                     if (res.code !== 0) {
                         msg(res.msg || '加载路线失败', 5);
+                        setMapAssistStatus('路线列表加载失败，请稍后重试。', true);
                         return;
                     }
                     var select = $('#routeSelect');
@@ -609,6 +624,7 @@
                 },
                 error: function() {
                     msg('加载路线列表失败，请检查后端服务', 5);
+                    setMapAssistStatus('路线列表加载失败，请检查后端服务。', true);
                 }
             });
         }
@@ -619,6 +635,7 @@
                 clearMap();
                 $('#routeInfo').html('<p style="color: #999; text-align: center; padding: 20px 0;">请选择一条路线查看详情</p>');
                 $('#stationList').html('<p style="color: #999; text-align: center; padding: 20px 0;">加载路线后显示站点</p>');
+                setMapAssistStatus('已清空路线，请重新选择。', false);
                 return;
             }
             $.ajax({
@@ -648,6 +665,7 @@
                 '<p><strong>票价:</strong> ¥' + (route.jiage || 2) + '</p>' +
                 '<p><strong>预计到终点:</strong> <span id="etaValue">计算中...</span></p>'
             );
+            setMapAssistStatus('已加载路线：' + (route.luxianmingcheng || route.luxianbianhao || '未命名路线') + '。', true);
             $.ajax({
                 url: baseURL + '/map/stations/' + route.id,
                 type: 'GET',
@@ -1069,17 +1087,21 @@
         function displayStationList(stations) {
             if (!stations || !stations.length) {
                 $('#stationList').html('<p style="color:#999;text-align:center;padding:20px 0;">暂无站点数据</p>');
+                setMapAssistStatus('当前路线暂无站点数据。', true);
                 return;
             }
             var html = '';
             stations.forEach(function(station, index) {
                 var displayName = String(station.name || ('站点' + (index + 1)));
-                html += '<div class="station-item" onclick="panToStation(' + index + ', this)">';
-                html += '<span class="station-index">' + (index + 1) + '</span>';
-                html += '<span>' + displayName + '</span>';
+                html += '<div class="station-item">';
+                html += '<button type="button" class="station-item-btn" onclick="panToStation(' + index + ', this)" aria-label="定位到第' + (index + 1) + '站，' + displayName + '">';
+                html += '<span class="station-index" aria-hidden="true">' + (index + 1) + '</span>';
+                html += '<span class="station-name">' + displayName + '</span>';
+                html += '</button>';
                 html += '</div>';
             });
             $('#stationList').html(html);
+            setMapAssistStatus('已加载' + stations.length + '个站点，可通过键盘 Tab 逐个选择。', false);
         }
 
         function getRenderedStation(index) {
@@ -1122,15 +1144,20 @@
             }
             showPointPopup(station.lat, station.lng, station.name || ('站点' + (index + 1)));
             $('.station-item').removeClass('active');
-            $(element).addClass('active');
+            $('.station-item-btn').removeAttr('aria-current');
+            $(element).closest('.station-item').addClass('active');
+            $(element).attr('aria-current', 'true');
+            setMapAssistStatus('已定位到第' + (index + 1) + '站：' + (station.name || '未命名站点') + '。', false);
         }
 
         function highlightStation(name) {
             $('.station-item').each(function() {
                 if ($(this).text().indexOf(name) > -1) {
                     $(this).addClass('active');
+                    $(this).find('.station-item-btn').attr('aria-current', 'true');
                 } else {
                     $(this).removeClass('active');
+                    $(this).find('.station-item-btn').removeAttr('aria-current');
                 }
             });
         }
@@ -1237,16 +1264,19 @@
         function startVehicle() {
             if (stationData.length < 2) {
                 msg('请先选择一条路线', 0);
+                setMapAssistStatus('请先选择路线，再开启实时车辆。', true);
                 return;
             }
             if (!currentRoute || !currentRoute.id) {
                 msg('当前路线不可用', 5);
+                setMapAssistStatus('当前路线不可用，请重新选择。', true);
                 return;
             }
             if (startVehicleWebSocket(currentRoute.id)) {
                 return;
             }
             msg('WebSocket不可用，已切换为定时器模拟', 0);
+            setMapAssistStatus('实时推送不可用，已切换模拟车辆。', true);
             startVehicleTimer();
         }
 
@@ -1267,6 +1297,7 @@
             }
             $('#vehicleBtn').text('停止推送').removeClass('btn-secondary').addClass('btn-danger');
             refreshEta(0);
+            setMapAssistStatus('实时车辆推送连接中…', false);
 
             try {
                 vehicleSocket = new WebSocket(wsUrl);
@@ -1282,6 +1313,7 @@
                     useWebSocketVehicle = false;
                     closeVehicleSocketOnly();
                     msg('实时推送连接超时，已切换定时器模拟', 0);
+                    setMapAssistStatus('实时推送连接超时，已切换模拟车辆。', true);
                     startVehicleTimer();
                 }
             }, 3000);
@@ -1290,6 +1322,7 @@
                 opened = true;
                 clearTimeout(connectTimeout);
                 msg('已连接实时推送通道', 1);
+                setMapAssistStatus('已连接实时推送通道。', true);
             };
 
             vehicleSocket.onmessage = function(event) {
@@ -1329,6 +1362,7 @@
                 if (isVehicleRunning && useWebSocketVehicle) {
                     useWebSocketVehicle = false;
                     msg('实时推送中断，已切换定时器模拟', 0);
+                    setMapAssistStatus('实时推送已中断，自动切换模拟车辆。', true);
                     startVehicleTimer();
                 }
             };
@@ -1347,6 +1381,7 @@
             vehicleTimer = setInterval(moveVehicle, 2000);
             $('#vehicleBtn').text('停止模拟').removeClass('btn-secondary').addClass('btn-danger');
             refreshEta(0);
+            setMapAssistStatus('已启动模拟车辆。', false);
         }
 
         function stopVehicleTimerOnly() {
@@ -1399,6 +1434,7 @@
             closeVehicleSocketOnly();
             removeVehicleMarker();
             $('#vehicleBtn').text('实时车辆').removeClass('btn-danger').addClass('btn-secondary');
+            setMapAssistStatus('已停止车辆追踪。', false);
         }
 
         function buildAmapWaypoints(stations, maxWaypoints) {
@@ -1489,6 +1525,7 @@
         function planRouteFallbackByJsApi(start, end) {
             if (mapEngine.type !== 'gaode') {
                 msg('当前为Leaflet模式，后端路径失败且无法调用高德JS插件', 5);
+                setMapAssistStatus('当前为 Leaflet 模式，无法调用高德JS插件兜底。', true);
                 return;
             }
             AMap.plugin('AMap.Driving', function() {
@@ -1506,8 +1543,10 @@
                     if (status === 'complete') {
                         msg('已展示高德JS插件路径（前端兜底）', 1);
                         setEngineStatus('地图引擎：高德地图（前端插件兜底路径）', '#3c763d');
+                        setMapAssistStatus('已展示高德JS插件路径（前端兜底）。', true);
                     } else {
                         msg('路径规划失败', 5);
+                        setMapAssistStatus('路径规划失败，请稍后重试。', true);
                     }
                 });
             });
@@ -1516,6 +1555,7 @@
         function planGaodeRoute() {
             if (!stationData || stationData.length < 2) {
                 msg('请先选择一条路线', 0);
+                setMapAssistStatus('请先选择路线再进行路径规划。', true);
                 return;
             }
             var start = toAmapLngLat(stationData[0].lng, stationData[0].lat);
@@ -1538,17 +1578,21 @@
                             var minutes = Number(res.data.durationMinutes || 0);
                             msg('后端路径规划完成：约 ' + distance.toFixed(1) + 'km / ' + minutes + '分钟', 1);
                             setEngineStatus('地图引擎：' + (mapEngine.type === 'gaode' ? '高德' : 'Leaflet') + '（后端路径规划已显示）', '#3c763d');
+                            setMapAssistStatus('路径规划完成，约' + distance.toFixed(1) + '公里，预计' + minutes + '分钟。', true);
                         } else {
                             msg('后端返回路径点为空，切换前端兜底', 0);
+                            setMapAssistStatus('后端路径为空，正在切换前端兜底。', true);
                             planRouteFallbackByJsApi(start, end);
                         }
                     } else {
                         msg((res && res.msg ? res.msg : '后端路径规划失败') + '，切换前端兜底', 0);
+                        setMapAssistStatus('后端路径规划失败，正在切换前端兜底。', true);
                         planRouteFallbackByJsApi(start, end);
                     }
                 },
                 error: function() {
                     msg('后端路径规划请求失败，切换前端兜底', 0);
+                    setMapAssistStatus('后端路径规划请求失败，正在切换前端兜底。', true);
                     planRouteFallbackByJsApi(start, end);
                 }
             });

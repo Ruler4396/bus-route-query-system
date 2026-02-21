@@ -2,6 +2,7 @@ package com.service;
 
 import com.entity.GongjiaoluxianEntity;
 import com.entity.YonghuEntity;
+import java.util.Map;
 import java.util.List;
 
 /**
@@ -18,6 +19,10 @@ public interface RoutePlanningService {
         private double accessibilityScore;  // 无障碍评分
         private double totalScore;          // 综合评分
         private String recommendationReason; // 推荐理由
+        private String accessibilityLevelText; // 无障碍等级文本
+        private String voiceAnnounceText;      // 语音播报支持文本
+        private String blindPathSupportText;   // 盲道支持文本
+        private String guideDogSupportText;    // 导盲犬支持文本
 
         public GongjiaoluxianEntity getRoute() {
             return route;
@@ -49,6 +54,38 @@ public interface RoutePlanningService {
 
         public void setRecommendationReason(String recommendationReason) {
             this.recommendationReason = recommendationReason;
+        }
+
+        public String getAccessibilityLevelText() {
+            return accessibilityLevelText;
+        }
+
+        public void setAccessibilityLevelText(String accessibilityLevelText) {
+            this.accessibilityLevelText = accessibilityLevelText;
+        }
+
+        public String getVoiceAnnounceText() {
+            return voiceAnnounceText;
+        }
+
+        public void setVoiceAnnounceText(String voiceAnnounceText) {
+            this.voiceAnnounceText = voiceAnnounceText;
+        }
+
+        public String getBlindPathSupportText() {
+            return blindPathSupportText;
+        }
+
+        public void setBlindPathSupportText(String blindPathSupportText) {
+            this.blindPathSupportText = blindPathSupportText;
+        }
+
+        public String getGuideDogSupportText() {
+            return guideDogSupportText;
+        }
+
+        public void setGuideDogSupportText(String guideDogSupportText) {
+            this.guideDogSupportText = guideDogSupportText;
         }
     }
 
@@ -91,4 +128,10 @@ public interface RoutePlanningService {
      * @return 路线列表
      */
     List<GongjiaoluxianEntity> getAllPossibleRoutes(String startStation, String endStation);
+
+    /**
+     * 获取当前评分规则引擎配置元数据
+     * @return 规则引擎信息（规则管线、权重等）
+     */
+    Map<String, Object> getRuleEngineMeta();
 }

@@ -997,176 +997,90 @@
 		</div>
 	</section>
 
-    <div id="content">
-	<!-- 商品推荐 -->
-	<!-- 样式一 -->
-	<div class="recommend index-pv1" :style='{"padding":"120px 0 50px 0","boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"0","borderColor":"rgba(0,0,0,.3)","borderRadius":"0","borderWidth":"0","background":"#fff url(\"http://codegen.caihongy.cn/20211217/ac720d1bd38d473a83c977193ee34526.jpg\") no-repeat top","borderStyle":"solid"}'>
-	  <div class="box" style='width:1200px'>
-		<div v-if="false && 1 == 1" class="idea recommendIdea" :style='{"padding":"10px 5px","boxShadow":"0 0 6px rgba(0,0,0,0)","margin":"10px 0","borderColor":"#ccc","borderRadius":"0","borderWidth":"0","background":"rgba(0,0,0,.3)","width":"100%","borderStyle":"solid","height":"auto"}'>
-			<div class="box1"></div>
-			<div class="box2"></div>
-			<div class="box3"></div>
-			<div class="box4"></div>
-			<div class="box5"></div>
-			<div class="box6"></div>
-			<div class="box7"></div>
-			<div class="box8"></div>
-			<div class="box9"></div>
-			<div class="box10"></div>
+    <div id="content" class="home-unified-sections">
+	<section class="home-unified-section" aria-labelledby="route-recommend-title">
+		<div class="home-unified-header">
+			<h2 id="route-recommend-title">公交路线推荐</h2>
+			<p>统一卡片布局，支持键盘 Enter / Space 打开详情，降低操作负担。</p>
 		</div>
-	    <div class="title" :style='{"padding":"5px","boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"0px 80% 30px 0","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"rgba(247, 247, 247, 0)","color":"rgba(77, 79, 54, 1)","borderRadius":"0","alignItems":"center","borderWidth":"8px 4px","fontSize":"20px","borderStyle":"dashed solid"}'>
-	      <span>Recommend</span><span>公交路线推荐</span>
-	    </div>
-		<div v-if="false && 1 == 2" class="idea recommendIdea" :style='{"padding":"10px 5px","boxShadow":"0 0 6px rgba(0,0,0,0)","margin":"10px 0","borderColor":"#ccc","borderRadius":"0","borderWidth":"0","background":"rgba(0,0,0,.3)","width":"100%","borderStyle":"solid","height":"auto"}'>
-			<div class="box1"></div>
-			<div class="box2"></div>
-			<div class="box3"></div>
-			<div class="box4"></div>
-			<div class="box5"></div>
-			<div class="box6"></div>
-			<div class="box7"></div>
-			<div class="box8"></div>
-			<div class="box9"></div>
-			<div class="box10"></div>
+		<div class="home-unified-grid" role="list">
+			<article
+				v-for="(item,index) in gongjiaoluxianRecommend"
+				:key="'route-'+index"
+				class="home-unified-card"
+				role="listitem"
+				tabindex="0"
+				:aria-label="'查看推荐路线：' + item.luxianmingcheng"
+				@click="jump('../gongjiaoluxian/detail.html?id='+item.id)"
+				@keydown="openCardByKeyboard($event, '../gongjiaoluxian/detail.html?id='+item.id)"
+			>
+				<img :src="getCover(item, 'fengmian')" :alt="item.luxianmingcheng + '封面'" />
+				<div class="card-body">
+					<h3>{{item.luxianmingcheng || '未命名路线'}}</h3>
+					<p>起点：{{item.qidianzhanming || '暂无'}} | 终点：{{item.zhongdianzhanming || '暂无'}}</p>
+				</div>
+			</article>
 		</div>
-	    <div class="list">
-	      <div v-for="(item,index) in gongjiaoluxianRecommend" :key="index" @click="jump('../gongjiaoluxian/detail.html?id='+item.id)" class="list-item" :class="4=='3'?'list-item3':4=='5'?'list-item5':''">
-	        <div class="list-item-body animation-box" :style='{"padding":"0 10px 10px 10px","boxShadow":"0px 0px 0px 10px rgba(183, 186, 107,1)","margin":"0 20px 10px 0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(255, 255, 255, 1)","borderRadius":"50%","borderWidth":"0","borderStyle":"solid"}'>
-				<img :style='{"boxShadow":"0 0 0px rgba(255,0,0,.8)","borderColor":"rgba(0,0,0,.3)","borderRadius":"50%","borderWidth":"0","width":"200px","borderStyle":"solid","height":"190px"}' :src="item.fengmian?baseurl+item.fengmian.split(',')[0]:''" alt="" />
-				<div  class="line1" v-if='true' :style='{"isshow":true,"padding":"20px 50px","margin":"5px 0 0 0","backgroundColor":"rgba(255, 255, 255, 0)","color":"rgba(77, 79, 54, 1)","borderRadius":"0 0 6px 6px","textAlign":"center","fontSize":"18px"}' class="name">{{item.luxianmingcheng}}</div>
-	        </div>
-	      </div>
-	    </div>
-	    <div class="clear"></div>
-	    <div style="text-align: center;">
-    <button @click="jump('../gongjiaoluxian/list.html')" style="display: block;cursor: pointer;" type="button" :style='{"padding":"0 50px","boxShadow":"0 0 0px rgba(255,0,0,0)","margin":"15px auto 0","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"rgba(77, 79, 54, 1)","borderRadius":"6px","borderWidth":"5px 3px","width":"auto","fontSize":"14px","borderStyle":"dashed solid","height":"34px"}'>查看更多<i v-if="true" :style='{"isshow":true,"padding":"0 0 0 1px","fontSize":"14px","color":"rgba(77, 79, 54, 1)"}' class="layui-icon layui-icon-next"></i></el-button>
-	    </div>
-		<div v-if="false && 1 == 3" class="idea recommendIdea" :style='{"padding":"10px 5px","boxShadow":"0 0 6px rgba(0,0,0,0)","margin":"10px 0","borderColor":"#ccc","borderRadius":"0","borderWidth":"0","background":"rgba(0,0,0,.3)","width":"100%","borderStyle":"solid","height":"auto"}'>
-			<div class="box1"></div>
-			<div class="box2"></div>
-			<div class="box3"></div>
-			<div class="box4"></div>
-			<div class="box5"></div>
-			<div class="box6"></div>
-			<div class="box7"></div>
-			<div class="box8"></div>
-			<div class="box9"></div>
-			<div class="box10"></div>
+		<div class="home-unified-footer">
+			<button type="button" @click="jump('../gongjiaoluxian/list.html')">查看更多路线</button>
 		</div>
-	  </div>
-	</div>
-	<!-- 样式一 -->
-	<div class="recommend index-pv1" :style='{"padding":"120px 0 50px 0","boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"0","borderColor":"rgba(0,0,0,.3)","borderRadius":"0","borderWidth":"0","background":"#fff url(\"http://codegen.caihongy.cn/20211217/ac720d1bd38d473a83c977193ee34526.jpg\") no-repeat top","borderStyle":"solid"}'>
-	  <div class="box" style='width:1200px'>
-		<div v-if="false && 1 == 1" class="idea recommendIdea" :style='{"padding":"10px 5px","boxShadow":"0 0 6px rgba(0,0,0,0)","margin":"10px 0","borderColor":"#ccc","borderRadius":"0","borderWidth":"0","background":"rgba(0,0,0,.3)","width":"100%","borderStyle":"solid","height":"auto"}'>
-			<div class="box1"></div>
-			<div class="box2"></div>
-			<div class="box3"></div>
-			<div class="box4"></div>
-			<div class="box5"></div>
-			<div class="box6"></div>
-			<div class="box7"></div>
-			<div class="box8"></div>
-			<div class="box9"></div>
-			<div class="box10"></div>
+	</section>
+
+	<section class="home-unified-section" aria-labelledby="notice-recommend-title">
+		<div class="home-unified-header">
+			<h2 id="notice-recommend-title">网站公告推荐</h2>
+			<p>优先展示与出行服务相关的公告，减少信息搜索时间。</p>
 		</div>
-	    <div class="title" :style='{"padding":"5px","boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"0px 80% 30px 0","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"rgba(247, 247, 247, 0)","color":"rgba(77, 79, 54, 1)","borderRadius":"0","alignItems":"center","borderWidth":"8px 4px","fontSize":"20px","borderStyle":"dashed solid"}'>
-	      <span>Recommend</span><span>网站公告推荐</span>
-	    </div>
-		<div v-if="false && 1 == 2" class="idea recommendIdea" :style='{"padding":"10px 5px","boxShadow":"0 0 6px rgba(0,0,0,0)","margin":"10px 0","borderColor":"#ccc","borderRadius":"0","borderWidth":"0","background":"rgba(0,0,0,.3)","width":"100%","borderStyle":"solid","height":"auto"}'>
-			<div class="box1"></div>
-			<div class="box2"></div>
-			<div class="box3"></div>
-			<div class="box4"></div>
-			<div class="box5"></div>
-			<div class="box6"></div>
-			<div class="box7"></div>
-			<div class="box8"></div>
-			<div class="box9"></div>
-			<div class="box10"></div>
+		<div class="home-unified-grid" role="list">
+			<article
+				v-for="(item,index) in wangzhangonggaoRecommend"
+				:key="'notice-'+index"
+				class="home-unified-card"
+				role="listitem"
+				tabindex="0"
+				:aria-label="'查看公告：' + item.biaoti"
+				@click="jump('../wangzhangonggao/detail.html?id='+item.id)"
+				@keydown="openCardByKeyboard($event, '../wangzhangonggao/detail.html?id='+item.id)"
+			>
+				<img :src="getCover(item, 'fengmian')" :alt="item.biaoti + '封面'" />
+				<div class="card-body">
+					<h3>{{item.biaoti || '未命名公告'}}</h3>
+					<p>发布时间：{{item.addtime || '暂无时间信息'}}</p>
+				</div>
+			</article>
 		</div>
-	    <div class="list">
-	      <div v-for="(item,index) in wangzhangonggaoRecommend" :key="index" @click="jump('../wangzhangonggao/detail.html?id='+item.id)" class="list-item" :class="4=='3'?'list-item3':4=='5'?'list-item5':''">
-	        <div class="list-item-body animation-box" :style='{"padding":"0 10px 10px 10px","boxShadow":"0px 0px 0px 10px rgba(183, 186, 107,1)","margin":"0 20px 10px 0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(255, 255, 255, 1)","borderRadius":"50%","borderWidth":"0","borderStyle":"solid"}'>
-				<img :style='{"boxShadow":"0 0 0px rgba(255,0,0,.8)","borderColor":"rgba(0,0,0,.3)","borderRadius":"50%","borderWidth":"0","width":"200px","borderStyle":"solid","height":"190px"}' :src="item.fengmian?baseurl+item.fengmian.split(',')[0]:''" alt="" />
-				<div  class="line1" v-if='true' :style='{"isshow":true,"padding":"20px 50px","margin":"5px 0 0 0","backgroundColor":"rgba(255, 255, 255, 0)","color":"rgba(77, 79, 54, 1)","borderRadius":"0 0 6px 6px","textAlign":"center","fontSize":"18px"}' class="name">{{item.biaoti}}</div>
-	        </div>
-	      </div>
-	    </div>
-	    <div class="clear"></div>
-	    <div style="text-align: center;">
-    <button @click="jump('../wangzhangonggao/list.html')" style="display: block;cursor: pointer;" type="button" :style='{"padding":"0 50px","boxShadow":"0 0 0px rgba(255,0,0,0)","margin":"15px auto 0","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"rgba(77, 79, 54, 1)","borderRadius":"6px","borderWidth":"5px 3px","width":"auto","fontSize":"14px","borderStyle":"dashed solid","height":"34px"}'>查看更多<i v-if="true" :style='{"isshow":true,"padding":"0 0 0 1px","fontSize":"14px","color":"rgba(77, 79, 54, 1)"}' class="layui-icon layui-icon-next"></i></el-button>
-	    </div>
-		<div v-if="false && 1 == 3" class="idea recommendIdea" :style='{"padding":"10px 5px","boxShadow":"0 0 6px rgba(0,0,0,0)","margin":"10px 0","borderColor":"#ccc","borderRadius":"0","borderWidth":"0","background":"rgba(0,0,0,.3)","width":"100%","borderStyle":"solid","height":"auto"}'>
-			<div class="box1"></div>
-			<div class="box2"></div>
-			<div class="box3"></div>
-			<div class="box4"></div>
-			<div class="box5"></div>
-			<div class="box6"></div>
-			<div class="box7"></div>
-			<div class="box8"></div>
-			<div class="box9"></div>
-			<div class="box10"></div>
+		<div class="home-unified-footer">
+			<button type="button" @click="jump('../wangzhangonggao/list.html')">查看更多公告</button>
 		</div>
-	  </div>
-	</div>
-	<!-- 样式一 -->
-	<div class="recommend index-pv1" :style='{"padding":"120px 0 50px 0","boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"0","borderColor":"rgba(0,0,0,.3)","borderRadius":"0","borderWidth":"0","background":"#fff url(\"http://codegen.caihongy.cn/20211217/ac720d1bd38d473a83c977193ee34526.jpg\") no-repeat top","borderStyle":"solid"}'>
-	  <div class="box" style='width:1200px'>
-		<div v-if="false && 1 == 1" class="idea recommendIdea" :style='{"padding":"10px 5px","boxShadow":"0 0 6px rgba(0,0,0,0)","margin":"10px 0","borderColor":"#ccc","borderRadius":"0","borderWidth":"0","background":"rgba(0,0,0,.3)","width":"100%","borderStyle":"solid","height":"auto"}'>
-			<div class="box1"></div>
-			<div class="box2"></div>
-			<div class="box3"></div>
-			<div class="box4"></div>
-			<div class="box5"></div>
-			<div class="box6"></div>
-			<div class="box7"></div>
-			<div class="box8"></div>
-			<div class="box9"></div>
-			<div class="box10"></div>
+	</section>
+
+	<section class="home-unified-section" aria-labelledby="link-recommend-title">
+		<div class="home-unified-header">
+			<h2 id="link-recommend-title">友情链接推荐</h2>
+			<p>集中展示出行相关服务入口，帮助用户快速到达目标站点。</p>
 		</div>
-	    <div class="title" :style='{"padding":"5px","boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"0px 80% 30px 0","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"rgba(247, 247, 247, 0)","color":"rgba(77, 79, 54, 1)","borderRadius":"0","alignItems":"center","borderWidth":"8px 4px","fontSize":"20px","borderStyle":"dashed solid"}'>
-	      <span>Recommend</span><span>友情链接推荐</span>
-	    </div>
-		<div v-if="false && 1 == 2" class="idea recommendIdea" :style='{"padding":"10px 5px","boxShadow":"0 0 6px rgba(0,0,0,0)","margin":"10px 0","borderColor":"#ccc","borderRadius":"0","borderWidth":"0","background":"rgba(0,0,0,.3)","width":"100%","borderStyle":"solid","height":"auto"}'>
-			<div class="box1"></div>
-			<div class="box2"></div>
-			<div class="box3"></div>
-			<div class="box4"></div>
-			<div class="box5"></div>
-			<div class="box6"></div>
-			<div class="box7"></div>
-			<div class="box8"></div>
-			<div class="box9"></div>
-			<div class="box10"></div>
+		<div class="home-unified-grid" role="list">
+			<article
+				v-for="(item,index) in youqinglianjieRecommend"
+				:key="'link-'+index"
+				class="home-unified-card"
+				role="listitem"
+				tabindex="0"
+				:aria-label="'查看友情链接：' + item.lianjiemingcheng"
+				@click="jump('../youqinglianjie/detail.html?id='+item.id)"
+				@keydown="openCardByKeyboard($event, '../youqinglianjie/detail.html?id='+item.id)"
+			>
+				<img :src="getCover(item, 'tupian')" :alt="item.lianjiemingcheng + '图标'" />
+				<div class="card-body">
+					<h3>{{item.lianjiemingcheng || '未命名链接'}}</h3>
+					<p>{{item.lianjieurl || '详情页可查看完整链接地址'}}</p>
+				</div>
+			</article>
 		</div>
-	    <div class="list">
-	      <div v-for="(item,index) in youqinglianjieRecommend" :key="index" @click="jump('../youqinglianjie/detail.html?id='+item.id)" class="list-item" :class="4=='3'?'list-item3':4=='5'?'list-item5':''">
-	        <div class="list-item-body animation-box" :style='{"padding":"0 10px 10px 10px","boxShadow":"0px 0px 0px 10px rgba(183, 186, 107,1)","margin":"0 20px 10px 0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(255, 255, 255, 1)","borderRadius":"50%","borderWidth":"0","borderStyle":"solid"}'>
-				<img :style='{"boxShadow":"0 0 0px rgba(255,0,0,.8)","borderColor":"rgba(0,0,0,.3)","borderRadius":"50%","borderWidth":"0","width":"200px","borderStyle":"solid","height":"190px"}' :src="item.tupian?baseurl+item.tupian.split(',')[0]:''" alt="" />
-				<div  class="line1" v-if='true' :style='{"isshow":true,"padding":"20px 50px","margin":"5px 0 0 0","backgroundColor":"rgba(255, 255, 255, 0)","color":"rgba(77, 79, 54, 1)","borderRadius":"0 0 6px 6px","textAlign":"center","fontSize":"18px"}' class="name">{{item.lianjiemingcheng}}</div>
-	        </div>
-	      </div>
-	    </div>
-	    <div class="clear"></div>
-	    <div style="text-align: center;">
-    <button @click="jump('../youqinglianjie/list.html')" style="display: block;cursor: pointer;" type="button" :style='{"padding":"0 50px","boxShadow":"0 0 0px rgba(255,0,0,0)","margin":"15px auto 0","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"rgba(77, 79, 54, 1)","borderRadius":"6px","borderWidth":"5px 3px","width":"auto","fontSize":"14px","borderStyle":"dashed solid","height":"34px"}'>查看更多<i v-if="true" :style='{"isshow":true,"padding":"0 0 0 1px","fontSize":"14px","color":"rgba(77, 79, 54, 1)"}' class="layui-icon layui-icon-next"></i></el-button>
-	    </div>
-		<div v-if="false && 1 == 3" class="idea recommendIdea" :style='{"padding":"10px 5px","boxShadow":"0 0 6px rgba(0,0,0,0)","margin":"10px 0","borderColor":"#ccc","borderRadius":"0","borderWidth":"0","background":"rgba(0,0,0,.3)","width":"100%","borderStyle":"solid","height":"auto"}'>
-			<div class="box1"></div>
-			<div class="box2"></div>
-			<div class="box3"></div>
-			<div class="box4"></div>
-			<div class="box5"></div>
-			<div class="box6"></div>
-			<div class="box7"></div>
-			<div class="box8"></div>
-			<div class="box9"></div>
-			<div class="box10"></div>
+		<div class="home-unified-footer">
+			<button type="button" @click="jump('../youqinglianjie/list.html')">查看更多链接</button>
 		</div>
-	  </div>
-	</div>
+	</section>
 
 	<!-- 新闻资讯 -->
 
@@ -1214,6 +1128,21 @@
         jump(url) {
           	jump(url)
         },
+        openCardByKeyboard(event, url) {
+          if (!event) return;
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            this.jump(url);
+          }
+        },
+        getCover(item, field) {
+          if (!item || !item[field]) {
+            return '../../img/banner.jpg';
+          }
+          var value = String(item[field]);
+          var first = value.split(',')[0];
+          return this.baseurl + first;
+        }
       }
     });
 

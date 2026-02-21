@@ -251,6 +251,28 @@
             无障碍设置
         </h1>
 
+        <div class="setting-group" aria-label="场景预设">
+            <h2 class="setting-group-title">
+                <i class="layui-icon">&#xe7a0;</i>
+                一键场景预设
+            </h2>
+            <p style="margin:0;color:#5a635f;">可先选择最接近自身需求的预设，再按需要微调。</p>
+            <div class="preset-grid">
+                <button class="preset-btn" type="button" onclick="applyPreset('lowVision')" aria-label="应用低视力预设">
+                    低视力预设
+                    <small>高对比 + 大字号 + 键盘导航</small>
+                </button>
+                <button class="preset-btn" type="button" onclick="applyPreset('hearing')" aria-label="应用听障预设">
+                    听障预设
+                    <small>文字反馈优先 + 保持键盘操作</small>
+                </button>
+                <button class="preset-btn" type="button" onclick="applyPreset('mobility')" aria-label="应用行动不便预设">
+                    行动不便预设
+                    <small>大字号 + 键盘导航 + 触觉反馈</small>
+                </button>
+            </div>
+        </div>
+
         <!-- 语音播报 -->
         <div class="setting-group">
             <h2 class="setting-group-title">
@@ -414,6 +436,49 @@
                 AccessibilityUtils.setFontSize(newSize);
                 document.getElementById('fontSizeValue').textContent = newSize + 'px';
             }
+        }
+
+        function applyPreset(presetKey) {
+            var presetMap = {
+                lowVision: {
+                    speech: false,
+                    highContrast: true,
+                    keyboardNav: true,
+                    haptic: false,
+                    fontSize: 20,
+                    message: '已应用低视力预设'
+                },
+                hearing: {
+                    speech: false,
+                    highContrast: false,
+                    keyboardNav: true,
+                    haptic: false,
+                    fontSize: 16,
+                    message: '已应用听障预设（文字反馈优先）'
+                },
+                mobility: {
+                    speech: true,
+                    highContrast: true,
+                    keyboardNav: true,
+                    haptic: true,
+                    fontSize: 18,
+                    message: '已应用行动不便预设'
+                }
+            };
+            var preset = presetMap[presetKey];
+            if (!preset) {
+                return;
+            }
+            AccessibilityUtils.saveSettings({
+                speech: preset.speech,
+                highContrast: preset.highContrast,
+                keyboardNav: preset.keyboardNav,
+                haptic: preset.haptic,
+                fontSize: preset.fontSize
+            });
+            initSettings();
+            showMessage(preset.message);
+            AccessibilityUtils.announce(preset.message);
         }
 
         // 保存设置

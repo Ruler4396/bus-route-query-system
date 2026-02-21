@@ -62,3 +62,15 @@ amap:
     key: 116043f95f5218e800db21bda1cafd00
     security-key: 8526d37e3fd9de964efaf654fe296f9e
     timeout-ms: 8000
+
+# 无障碍外部数据连接器（OSM/Overpass + 开放广东）
+accessibility:
+  connector:
+    cache-ttl-ms: 600000
+    overpass:
+      endpoint: https://overpass-api.de/api/interpreter
+      timeout-ms: 25000
+      default-area-name: 广州市
+    open-gd:
+      base-url: https://gddata.gd.gov.cn/backOpen/open/data
+      timeout-ms: 20000
