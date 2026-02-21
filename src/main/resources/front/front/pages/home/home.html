@@ -915,27 +915,6 @@
 <body class="transit-ui transit-page page-home">
   <a href="#app" class="skip-link">跳转到主要内容</a>
   <div id="app" role="main" aria-label="首页主要内容" tabindex="-1">
-    <div class="banner">
-		<div class="layui-carousel" id="test1" :style='{"boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"0 auto","borderColor":"rgba(0,0,0,.3)","borderRadius":"0","borderWidth":"0","width":"100%","borderStyle":"solid"}'>
-		  <div carousel-item>
-			<div v-for="(item,index) in swiperList" :key="index">
-				<img style="width: 100%;height: 100%;object-fit:cover;" :src="item.img" />
-			</div>
-		  </div>
-		</div>
-      <!-- <div class="bd">
-        <ul>
-          <li v-for="(item,index) in swiperList" v-bind:key="index"><img style="width: 1920px;height: 492px;" :src="item.img" /></li>
-        </ul>
-        <div class="hd">
-          <ul>
-            <li v-for="(item,index) in swiperList" v-bind:key="index"></li>
-          </ul>
-        </div>
-      </div> -->
-    </div>
-
-
 	<section class="hero-command-center" aria-label="无障碍公交出行指挥台">
 		<div class="hero-main">
 			<span class="hero-eyebrow">Inclusive Transit Intelligence</span>
@@ -1014,10 +993,10 @@
 				@click="jump('../gongjiaoluxian/detail.html?id='+item.id)"
 				@keydown="openCardByKeyboard($event, '../gongjiaoluxian/detail.html?id='+item.id)"
 			>
-				<img :src="getCover(item, 'fengmian')" :alt="item.luxianmingcheng + '封面'" />
 				<div class="card-body">
 					<h3>{{item.luxianmingcheng || '未命名路线'}}</h3>
 					<p>起点：{{item.qidianzhanming || '暂无'}} | 终点：{{item.zhongdianzhanming || '暂无'}}</p>
+					<p>无障碍等级：{{['完全无障碍','较高无障碍','部分无障碍','障碍较多'][Number(item.wuzhangaijibie)] || '暂无'}}</p>
 				</div>
 			</article>
 		</div>
@@ -1042,7 +1021,6 @@
 				@click="jump('../wangzhangonggao/detail.html?id='+item.id)"
 				@keydown="openCardByKeyboard($event, '../wangzhangonggao/detail.html?id='+item.id)"
 			>
-				<img :src="getCover(item, 'fengmian')" :alt="item.biaoti + '封面'" />
 				<div class="card-body">
 					<h3>{{item.biaoti || '未命名公告'}}</h3>
 					<p>发布时间：{{item.addtime || '暂无时间信息'}}</p>
@@ -1070,7 +1048,6 @@
 				@click="jump('../youqinglianjie/detail.html?id='+item.id)"
 				@keydown="openCardByKeyboard($event, '../youqinglianjie/detail.html?id='+item.id)"
 			>
-				<img :src="getCover(item, 'tupian')" :alt="item.lianjiemingcheng + '图标'" />
 				<div class="card-body">
 					<h3>{{item.lianjiemingcheng || '未命名链接'}}</h3>
 					<p>{{item.lianjieurl || '详情页可查看完整链接地址'}}</p>
@@ -1104,8 +1081,6 @@
         wangzhangonggaoRecommend: [],
         youqinglianjieRecommend: [],
 
-        swiperList: [],
-        // 新闻资讯
         newsList: [],
         leftNewsList: [],
         rightNewsList: [],
@@ -1134,62 +1109,17 @@
             event.preventDefault();
             this.jump(url);
           }
-        },
-        getCover(item, field) {
-          if (!item || !item[field]) {
-            return '../../img/banner.jpg';
-          }
-          var value = String(item[field]);
-          var first = value.split(',')[0];
-          return this.baseurl + first;
         }
       }
     });
 
-    layui.use(['layer', 'form', 'element', 'carousel', 'http', 'jquery'], function() {
+    layui.use(['layer', 'form', 'element', 'http', 'jquery'], function() {
 		var layer = layui.layer;
 		var element = layui.element;
 		var form = layui.form;
-		var carousel = layui.carousel;
 		var http = layui.http;
 		var jquery = layui.jquery;
 	vue.baseurl=http.baseurl;
-      // 获取轮播图 数据
-      http.request('config/list', 'get', {
-        page: 1,
-        limit: 5
-      }, function(res) {
-        if (res.data.list.length > 0) {
-          let swiperList = [];
-          res.data.list.forEach(element => {
-            if (element.value != null) {
-              swiperList.push({
-                img: http.baseurl + element.value
-              });
-            }
-          });
-
-		  vue.swiperList = swiperList;
-
-		  vue.$nextTick(() => {
-		    carousel.render({
-		    	elem: '#test1',
-				width: '100%',
-		    	height: '550px',
-		    	arrow: 'hover',
-		    	anim: 'default',
-		    	autoplay: 'true',
-		    	interval: '3000',
-		    	indicator: 'inside'
-		    });
-
-		  })
-
-          // vue.$nextTick(()=>{
-          //   window.xznSlide();
-          // });
-        }
-      });
 
 
       // 获取推荐信息

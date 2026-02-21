@@ -253,15 +253,6 @@ width: 100%;
 <body class="transit-ui transit-page page-route-list">
   <a href="#app" class="skip-link">跳转到主要内容</a>
   <div id="app" role="main" aria-label="公交路线查询" tabindex="-1">
-    <div class="banner">
-      <div class="layui-carousel" id="test1" :style='{"boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"0 auto","borderColor":"rgba(0,0,0,.3)","borderRadius":"0","borderWidth":"0","width":"100%","borderStyle":"solid"}'>
-      		  <div carousel-item>
-      			<div v-for="(item,index) in swiperList" :key="index">
-      				<img style="width: 100%;height: 100%;object-fit:cover;" :src="item.img" />
-      			</div>
-      		  </div>
-      		</div>
-    </div>
 	<div class="recommend index-pv1" :style='{"padding":"10px","boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"0","borderColor":"rgba(0,0,0,.3)","borderRadius":"0","borderWidth":"0","background":"#fff","borderStyle":"solid"}'>
 		<div class="box" style='width:1200px'>
 	    <div class="title" :style='{"padding":"10px","boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"10px 0 10px 0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(46, 58, 31, 1)","borderRadius":"4px","borderWidth":"0","borderStyle":"solid","justifyContent":"space-between","height":"54px"}'>
@@ -336,7 +327,6 @@ width: 100%;
 				@keydown="onRouteCardKeydown($event, item)"
 			  >
 		        <div class="list-item-body animation-box" :style='{"padding":"10px","boxShadow":"0px 0px 0px 10px rgba(183, 186, 107, 1)","margin":"0 50px 50px 70px","borderColor":"rgba(183, 186, 107, 1)","backgroundColor":"#fff","borderRadius":"50%","borderWidth":"0","borderStyle":"solid"}'>
-				<img :style='{"boxShadow":"0 0 0px rgba(77, 79, 54,.8)","borderColor":"rgba(0,0,0,.3)","borderRadius":"50% ","borderWidth":"0","width":"180px","borderStyle":"solid","height":"180px"}' :src="item.fengmian?baseurl+item.fengmian.split(',')[0]:''" :alt="item.luxianmingcheng + '路线封面'">
 				<div class="info">
 					<div v-if="item.price" :style='{"padding":"5px","margin":"10px 0 0 0","backgroundColor":"rgba(0,0,0,0)","color":"rgba(183, 186, 107, 1)","borderRadius":"0","textAlign":"center","width":"100%","fontSize":"18px"}' class="price"><span :style='{"fontSize":"12px"}'>￥</span>{{Number(item.price).toFixed(2)}}</div>
 						<div v-if="item.vipprice&&item.vipprice>0" :style='{"padding":"5px","margin":"10px 0 0 0","backgroundColor":"rgba(0,0,0,0)","color":"rgba(183, 186, 107, 1)","borderRadius":"0","textAlign":"center","width":"100%","fontSize":"18px"}' class="price"><span :style='{"fontSize":"12px"}'>￥</span>{{Number(item.vipprice).toFixed(2)}} <span :style='{"fontSize":"12px"}'>会员价</span></div>
@@ -381,13 +371,12 @@ width: 100%;
 	  <script src="../../js/config.js"></script>
 	  <script src="../../modules/config.js"></script>
 	  <script src="../../js/utils.js"></script>
-	  <script src="../../js/accessibility.js"></script>
+  <script src="../../js/accessibility.js"></script>
 
   <script type="text/javascript">
     var vue = new Vue({
       el: '#app',
 	      data: {
-	        swiperList: [],
 	        dataList: [],
 	baseurl:'',
 	swiperIndex: '-1',
@@ -440,10 +429,9 @@ width: 100%;
       }
     });
 
-    layui.use(['layer', 'element', 'carousel', 'laypage', 'http', 'jquery','laydate'], function() {
+    layui.use(['layer', 'element', 'laypage', 'http', 'jquery','laydate'], function() {
 	var layer = layui.layer;
 	var element = layui.element;
-	var carousel = layui.carousel;
 	var laypage = layui.laypage;
 	var http = layui.http;
 	var jquery = layui.jquery;
@@ -452,43 +440,6 @@ width: 100%;
 	var limit = 8;
     limit = 3 * 2;
 	vue.baseurl = http.baseurl;
-      // 获取轮播图 数据
-      http.request('config/list', 'get', {
-        page: 1,
-        limit: 5
-      }, function(res) {
-        if (res.data.list.length > 0) {
-          let swiperList = [];
-          res.data.list.forEach(element => {
-            if (element.value != null) {
-              swiperList.push({
-                img: http.baseurl+element.value
-              });
-            }
-          });
-          vue.swiperList = swiperList;
-
-		  vue.$nextTick(() => {
-		    carousel.render({
-		    	elem: '#test1',
-		  				width: '100%',
-		    	height: '550px',
-		    	arrow: 'hover',
-		    	anim: 'default',
-		    	autoplay: 'true',
-		    	interval: '3000',
-		    	indicator: 'inside'
-		    });
-
-		  })
-          // vue.$nextTick(()=>{
-          //   window.xznSlide();
-          // });
-        }
-      });
-
-
-
       // 分页列表
       pageList();
 

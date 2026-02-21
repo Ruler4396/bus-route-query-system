@@ -47,6 +47,12 @@ body {
   line-height: 1.6;
 }
 
+body.transit-shell {
+  overflow-x: hidden;
+  overflow-y: hidden;
+  height: 100vh;
+}
+
 h1,
 h2,
 h3,
@@ -84,7 +90,11 @@ a:focus {
 
 /* Global shell */
 #header {
+  height: auto !important;
+  overflow: visible !important;
+  background: #1e2724 !important;
   border-bottom: 0 !important;
+  border: 0 !important;
   box-shadow: var(--ux-shadow-md) !important;
 }
 
@@ -122,15 +132,23 @@ a:focus {
   margin: 0 !important;
   height: 42px !important;
   line-height: 42px !important;
-  padding: 0 16px !important;
+  padding: 0 !important;
   border-radius: 999px !important;
   color: #ddd3c5 !important;
   transition: transform 0.2s ease, background-color 0.2s ease;
+  overflow: hidden;
 }
 
 #header .navs li a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0 16px;
   color: inherit !important;
   font-weight: 600;
+  text-decoration: none;
 }
 
 #header .navs li.current,
@@ -287,26 +305,45 @@ a:focus {
 #main-content {
   max-width: 1480px;
   margin: 0 auto;
-  padding: 4px 14px 26px;
+  padding: 8px 14px 26px;
 }
 
 #iframe {
   width: 100% !important;
-  margin: 202px auto 14px !important;
+  margin: 0 auto 14px !important;
   border: 0 !important;
   border-radius: var(--ux-radius-lg);
   background: var(--ux-surface);
   box-shadow: var(--ux-shadow-lg);
 }
 
-.accessibility-btn {
+.assist-entry-btn {
+  position: fixed;
+  right: 16px;
+  bottom: 18px;
+  z-index: 45;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
   background: linear-gradient(140deg, var(--ux-accent), var(--ux-accent-strong)) !important;
   color: #fff !important;
   box-shadow: var(--ux-shadow-md) !important;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
-.accessibility-btn:hover,
-.accessibility-btn:focus {
+.assist-entry-btn .assist-entry-icon {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.assist-entry-btn:hover,
+.assist-entry-btn:focus {
   filter: brightness(1.04);
   transform: translateY(-2px);
 }
@@ -1045,10 +1082,6 @@ body.page-accessibility-settings {
     width: calc(100% - 14px);
   }
 
-  #iframe {
-    margin-top: 236px !important;
-  }
-
   .recommend .box,
   .news .box {
     width: 100% !important;
@@ -1086,8 +1119,12 @@ body.page-accessibility-settings {
   #header .navs li {
     height: 38px !important;
     line-height: 38px !important;
-    padding: 0 12px !important;
+    padding: 0 !important;
     font-size: 13px;
+  }
+
+  #header .navs li a {
+    padding: 0 12px;
   }
 
   .transit-assist-strip {
@@ -1106,7 +1143,6 @@ body.page-accessibility-settings {
   #iframe {
     min-height: 720px;
     border-radius: 14px;
-    margin-top: 286px !important;
   }
 
   .map-container,
@@ -1125,8 +1161,15 @@ body.page-accessibility-settings {
     padding: 0 8px 16px;
   }
 
+  .assist-entry-btn {
+    right: 10px;
+    bottom: 12px;
+    height: 40px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+
   #iframe {
-    margin-top: 330px !important;
     min-height: 620px;
   }
 
@@ -1154,8 +1197,12 @@ body.page-accessibility-settings {
   }
 
   #header .navs li {
-    padding: 0 10px !important;
+    padding: 0 !important;
     font-size: 12px;
+  }
+
+  #header .navs li a {
+    padding: 0 10px;
   }
 
   #header .nav-support-group .utility-link,
@@ -1646,8 +1693,8 @@ body.page-accessibility-settings {
 
 .page-route-map .sidebar {
   width: auto !important;
-  max-height: 76vh;
-  overflow: auto;
+  max-height: none;
+  overflow: visible;
   padding-right: 4px;
 }
 
@@ -1820,3 +1867,31 @@ body.page-accessibility-settings {
     min-height: 420px;
   }
 }
+
+/* ui-heal-emergency-start */
+body.transit-shell #header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 30 !important;
+  height: auto !important;
+  overflow: visible !important;
+  background: #1e2724 !important;
+  border-bottom: 0 !important;
+  border: 0 !important;
+}
+
+body.transit-shell #main-content {
+  min-height: 560px !important;
+}
+
+body.transit-shell #iframe {
+  min-height: 560px !important;
+  display: block !important;
+  overflow: auto !important;
+}
+
+.page-route-map #app {
+  min-height: 0 !important;
+  padding-bottom: 10px !important;
+}
+/* ui-heal-emergency-end */

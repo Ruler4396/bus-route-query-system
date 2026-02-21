@@ -29,3 +29,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### UI automation ###
+ui-automation/node_modules/
+ui-automation/playwright-report/
+ui-automation/test-results/
+ui-automation/reports/
+ui-automation/logs/

@@ -17,13 +17,12 @@
 
     <style>
         html, body {
-            height: 100%;
             margin: 0;
             padding: 0;
         }
 
         #app {
-            min-height: 100%;
+            min-height: 0;
             background: #f5f5f5;
         }
 
@@ -359,7 +358,27 @@
         var stationData = [];
         var vehicleIndex = 0;
         var isVehicleRunning = false;
-        var baseURL = 'http://localhost:8080/springbootmf383';
+        function resolveMapContextPath() {
+            if (window.__APP_CONTEXT_PATH__) {
+                return window.__APP_CONTEXT_PATH__;
+            }
+            var pathname = window.location.pathname || '';
+            var frontIdx = pathname.indexOf('/front/');
+            if (frontIdx > 0) {
+                return pathname.substring(0, frontIdx);
+            }
+            return '/springbootmf383';
+        }
+
+        function resolveMapBaseUrl() {
+            if (window.__API_BASE_URL__) {
+                return window.__API_BASE_URL__.replace(/\/$/, '');
+            }
+            return (window.location.protocol + '//' + window.location.host + resolveMapContextPath());
+        }
+
+        var mapContextPath = resolveMapContextPath();
+        var baseURL = resolveMapBaseUrl();
         var mapSettings = window.mapEngineConfig || {};
         mapSettings.provider = (mapSettings.provider || 'auto').toLowerCase();
         mapSettings.amapVersion = mapSettings.amapVersion || '2.0';
@@ -370,7 +389,7 @@
         mapSettings.leafletTileMode = (mapSettings.leafletTileMode || 'online').toLowerCase();
         mapSettings.leafletTileUrl = mapSettings.leafletTileUrl || 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
         mapSettings.leafletOnlineTileUrl = mapSettings.leafletOnlineTileUrl || mapSettings.leafletTileUrl;
-        mapSettings.leafletOfflineTileUrl = mapSettings.leafletOfflineTileUrl || '/springbootmf383/front/tiles/{z}/{x}/{y}.png';
+        mapSettings.leafletOfflineTileUrl = mapSettings.leafletOfflineTileUrl || (mapContextPath + '/front/tiles/{z}/{x}/{y}.png');
         mapSettings.leafletOnlineAttribution = mapSettings.leafletOnlineAttribution || '&copy; OpenStreetMap contributors';
         mapSettings.leafletOfflineAttribution = mapSettings.leafletOfflineAttribution || 'Local Tiles';
         mapSettings.leafletMinZoom = Number(mapSettings.leafletMinZoom || 3);

@@ -609,6 +609,59 @@ git add . && git commit       # 提交更改
 
 ---
 
+## UI自动巡检与自愈（106服务器）
+
+项目内置了 UI 自动巡检与规则化自愈能力：
+
+- `ui-automation/`：Playwright + axe 巡检与自动修复执行器
+- `scripts/ui-guardian-cron.sh`：定时巡检入口
+- `src/main/resources/front/front/js/accessibility.js`：运行时 UI 自愈规则引擎
+
+### 一次性安装
+
+```bash
+cd /root/dev/bus-route-query-system/ui-automation
+npm install
+npx playwright install chromium
+```
+
+### 手动执行（巡检 + 自动修复 + 复检）
+
+```bash
+cd /root/dev/bus-route-query-system/ui-automation
+export PROJECT_ROOT=/root/dev/bus-route-query-system
+export UI_BASE_URL=http://127.0.0.1:8133/springbootmf383/front/
+node scripts/ui-guard.mjs
+```
+
+执行流程：
+
+1. 先跑 UI 巡检。
+2. 失败时执行 `auto-fix-known-issues.mjs`（仅低风险修复）。
+3. 若有代码变更，自动构建并重启 8133 服务。
+4. 自动二次巡检确认修复是否生效。
+
+### 配置定时任务（建议每 15 分钟）
+
+```bash
+chmod +x /root/dev/bus-route-query-system/scripts/ui-guardian-cron.sh
+crontab -e
+```
+
+新增：
+
+```cron
+*/15 * * * * /root/dev/bus-route-query-system/scripts/ui-guardian-cron.sh
+```
+
+产物目录：
+
+- 日志：`ui-automation/logs/ui-guardian.log`
+- 报告：`ui-automation/reports/ui-check-report.json`
+- 失败截图和 trace：`ui-automation/test-results/`
+
+---
+
 ## 许可证
 
 本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件

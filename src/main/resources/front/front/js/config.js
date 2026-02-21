@@ -1,5 +1,37 @@
 
 var projectName = '公交线路查询系统';
+
+function resolveAppRuntimeContextPath() {
+	try {
+		var pathname = window.location.pathname || '';
+		var frontIdx = pathname.indexOf('/front/');
+		if (frontIdx > 0) {
+			return pathname.substring(0, frontIdx);
+		}
+		var adminIdx = pathname.indexOf('/admin/');
+		if (adminIdx > 0) {
+			return pathname.substring(0, adminIdx);
+		}
+		var parts = pathname.split('/').filter(function(part) { return !!part; });
+		if (parts.length > 0) {
+			return '/' + parts[0];
+		}
+	} catch (e) {
+		console.warn('解析运行上下文失败，回退默认contextPath', e);
+	}
+	return '/springbootmf383';
+}
+
+function resolveAppRuntimeBaseUrl() {
+	var origin = window.location.protocol + '//' + window.location.host;
+	var contextPath = resolveAppRuntimeContextPath();
+	return origin + contextPath + '/';
+}
+
+var appContextPath = resolveAppRuntimeContextPath();
+var appBaseUrl = resolveAppRuntimeBaseUrl();
+window.__APP_CONTEXT_PATH__ = appContextPath;
+window.__API_BASE_URL__ = appBaseUrl;
 /**
  * 轮播图配置
  */
@@ -63,7 +95,7 @@ var indexNav = [
 }
 ]
 
-var adminurl =  "http://localhost:8080/springbootmf383/admin/dist/index.html";
+var adminurl = appBaseUrl + "admin/dist/index.html";
 
 /**
  * 地图引擎配置
@@ -89,7 +121,7 @@ var mapEngineConfig = {
 	leafletTileMode: 'online',
 	leafletTileUrl: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 	leafletOnlineTileUrl: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-	leafletOfflineTileUrl: '/springbootmf383/front/tiles/{z}/{x}/{y}.png',
+	leafletOfflineTileUrl: (appContextPath || '/springbootmf383') + '/front/tiles/{z}/{x}/{y}.png',
 	leafletOnlineAttribution: '&copy; OpenStreetMap contributors',
 	leafletOfflineAttribution: 'Local Tiles',
 	leafletMinZoom: 3,
