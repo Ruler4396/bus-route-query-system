@@ -607,9 +607,28 @@ git pull origin main          # 拉取更新
 git add . && git commit       # 提交更改
 ```
 
+## 开发与部署目标服务器（固定）
+
+为避免新旧服务器混用，项目默认目标机固定为：
+
+- `8.134.206.52`（root）
+- SSH 私钥：`/root/dev/sf.pem`
+- 项目路径：`/root/dev/bus-route-query-system`
+- 服务端口：`8133`
+
+建议统一使用以下脚本进行远程操作：
+
+```bash
+# 连接固定目标服务器
+bash scripts/remote-ssh.sh
+
+# 在固定目标服务器执行拉代码+构建+重启+健康检查
+bash scripts/remote-deploy.sh
+```
+
 ---
 
-## UI自动巡检与自愈（106服务器）
+## UI自动巡检与自愈（8.134.206.52）
 
 项目内置了 UI 自动巡检与规则化自愈能力：
 
