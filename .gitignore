@@ -29,3 +29,15 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Runtime / remote development artifacts
+runtime/
+*.log
+*.pid
+data/*.mv.db
+data/*.lock.db
+ui-automation/logs/
+ui-automation/reports/
+ui-automation/test-results/
+ui-automation/playwright-report/
+ui-automation/node_modules/

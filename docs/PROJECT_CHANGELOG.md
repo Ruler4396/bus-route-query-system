@@ -16,7 +16,9 @@
 - 已完成低冲击验证：`remote-dev-build.sh` 通过，`8134` 首页返回 `HTTP 200`。
 
 ## 2026-03-07 · CHG-20260307-001C · 运行产物治理
-- 待补充：日志、PID、H2 本地库、Playwright 依赖与报告产物的忽略规则与工作区清理。
+- 根级 `.gitignore` 增加 `runtime/`、日志、PID、H2 本地库与 Playwright 产物忽略规则，避免运行文件污染源码工作区。
+- 新增 `ui-automation/.gitignore`，单独忽略 `node_modules/`、`logs/`、`reports/`、`test-results/`、`playwright-report/`。
+- 运行产物治理完成后，源码工作区恢复为“仅显示源码改动”，便于后续继续开发与提交。
 
 ## 2026-03-04
 - 决策将服务迁移到 `8.134.206.52`，保持 Java + MySQL 兼容形态。
