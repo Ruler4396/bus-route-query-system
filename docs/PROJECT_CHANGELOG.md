@@ -6,7 +6,7 @@
 - 无障碍设置页新增 `视觉字幕提示面板`、`减少动态效果` 开关，并更新听障/行动不便预设。
 - 新增 `ui-automation/tests/ui-accessibility-interaction.spec.js`，验证键盘导航、视觉字幕提示、高对比/大字号/减少动态预设。
 - 本轮完成 `ACCESSIBILITY_READINESS_TODO.md` 中的 `C01`、`C03`、`C04`。
-- 对应提交：`1cf4b3f`
+- 对应提交：`33671e8`
 
 ## 2026-03-07 · CHG-20260307-006 · 页面状态治理 + 演示数据补充
 - 新增 `src/main/resources/front/front/js/page-state.js`，统一前台页面的 loading / empty / error / sparse 状态表达。
