@@ -157,23 +157,23 @@
 				</form>
 				<div class="message-list" v-if="dataList.length" :style='{"padding":"0 20px 20px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"0","borderColor":"rgba(255,0,0,.3)","backgroundColor":"#fff","borderRadius":"4px","borderWidth":"0","borderStyle":"solid"}'>
 					<div :style='{"padding":"20px 0","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","borderRadius":"0","borderWidth":"0 0 1px 0","borderStyle":"solid"}'  class="message-item" v-for="(item,index) in dataList" v-bind:key="index" >
-						<div class="username-container" style="display: flex;align-items: center;">
+						<div class="username-container feedback-header" style="display: flex;align-items: center;">
 							<img :style='{"boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"0 10px 0 0","borderColor":"rgba(0,0,0,.3)","borderRadius":"100%","borderWidth":"0","width":"40px","borderStyle":"solid","height":"40px"}' class="avator" src="../../img/avator.png">
 							<span style="display: inline-block;" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"#333","borderRadius":"4px","borderWidth":"0","width":"auto","lineHeight":"28px","fontSize":"14px","borderStyle":"solid"}' class="username">用户：{{item.username || "匿名用户"}}</span>
                                                         <span class="route-tag feedback-chip" :class="item.severityLevel==='HIGH' ? 'danger' : (item.severityLevel==='MEDIUM' ? 'warn' : 'good')">{{formatSeverity(item.severityLevel)}}</span>
                                                         <span class="route-tag feedback-chip" :class="item.handleStatus==='RESOLVED' ? 'good' : (item.handleStatus==='IN_REVIEW' ? 'warn' : 'danger')">{{formatHandleStatus(item.handleStatus)}}</span>
 						</div>
 						<div class="content" class="content" style="margin: 0;flex: 1;">
-							<span style="display: inline-block;" :style='{"padding":"8px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"8px 0 0 50px","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(183, 186, 107, 0.71)","color":"#fff","borderRadius":"4px","borderWidth":"0","fontSize":"14px","borderStyle":"solid"}' class="message">
+							<span style="display: inline-block;" :style='{"padding":"8px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"8px 0 0 50px","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(183, 186, 107, 0.71)","color":"#fff","borderRadius":"4px","borderWidth":"0","fontSize":"14px","borderStyle":"solid"}' class="message feedback-message-body">
 								{{item.content}}
-                                                                <br><small>类型：{{item.feedbackType || "OTHER"}} ｜ 路线：{{item.routeName || "未关联"}} ｜ 站点：{{item.stationName || "未关联"}}</small>
+                                                                <br><small class="feedback-meta-line"><span class="feedback-meta-chip type">{{formatFeedbackType(item.feedbackType)}}</span><span class="feedback-meta-chip">路线：{{item.routeName || "未关联"}}</span><span class="feedback-meta-chip">站点：{{item.stationName || "未关联"}}</span></small>
 							</span>
 						</div>
                                                 <div v-if="item.cpicture" class="content" style="margin: 0;flex: 1;">
                                                         <img style="max-width: 600px;max-height: 600px;border: 2px solid #EEEEEE;margin:8px 0 0 50px;" :src="baseurl+item.cpicture">
                                                 </div>
 						<div v-if="item.reply" class="replay" style="margin: 0;flex: 1;background: transparent;padding: 0;">
-							<span style="display: inline-block;" :style='{"padding":"8px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"8px 0 0 50px","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(183, 186, 107, 0.71)","color":"#fff","borderRadius":"4px","borderWidth":"0","fontSize":"14px","borderStyle":"solid"}' class="label">回复：{{item.reply}}
+							<span style="display: inline-block;" :style='{"padding":"8px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"8px 0 0 50px","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(183, 186, 107, 0.71)","color":"#fff","borderRadius":"4px","borderWidth":"0","fontSize":"14px","borderStyle":"solid"}' class="label feedback-reply-body">回复：{{item.reply}}
                                                                 <br><small v-if="item.auditOwner || item.reviewNotes">审核：{{item.auditOwner || "未指派"}} ｜ 备注：{{item.reviewNotes || "无"}}</small></span>
 							<!-- <span class="message">
 								{{item.reply}}
@@ -235,6 +235,16 @@
 					formatHandleStatus(value) {
 						var map = { PENDING: '待核查', IN_REVIEW: '核查中', RESOLVED: '已处理' };
 						return map[value] || '待核查';
+					},
+					formatFeedbackType(value) {
+						var map = {
+							ROUTE_INACCURATE: '路线不准确',
+							FACILITY_ABNORMAL: '设施异常',
+							ENTRANCE_MISSING: '入口信息缺失',
+							PAGE_USABILITY: '页面可用性',
+							OTHER: '其他反馈'
+						};
+						return map[value] || '其他反馈';
 					}
 				}
 			})

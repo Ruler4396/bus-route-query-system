@@ -60,6 +60,12 @@ test.describe('Frontend Polish', () => {
       expect(info.usernameText).not.toContain('null');
     }
     expect(info.buttonTopSpread).toBeLessThanOrEqual(6);
+    const metaCount = await frame.locator('.feedback-meta-line').count();
+    if (metaCount > 0) {
+      const metaLine = await frame.locator('.feedback-meta-line').first().innerText();
+      expect(metaLine).not.toContain('FACILITY_ABNORMAL');
+      expect(metaLine).not.toContain('ROUTE_INACCURATE');
+    }
   });
 
   test('Login page should render redesigned intro panel and visible submit button', async ({ page }) => {

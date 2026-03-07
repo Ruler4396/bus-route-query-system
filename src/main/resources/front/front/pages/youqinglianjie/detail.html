@@ -77,7 +77,7 @@ padding-bottom: 20px;
 color: rgba(255, 255, 255, 1) !important;
 }
 </style>
-<body class="transit-ui transit-page">
+<body class="transit-ui transit-page page-links-detail">
 
 	<div id="app">
 
@@ -88,10 +88,10 @@ color: rgba(255, 255, 255, 1) !important;
 					<a><cite :style='{"padding":"8px 15px","boxShadow":"0 0 0px rgba(255,0,0,.3)","margin":"0 15px","borderColor":"rgba(255,0,0,.3)","backgroundColor":"rgba(255, 255, 255, 0)","color":"rgba(218, 218, 218, 1)","borderRadius":"4px","borderWidth":"0","fontSize":"16px","borderStyle":"solid"}'>{{title}}</cite></a>
 				</span>
 				
-	     <a v-if='storeupFlag' :style='{"padding":"0 12px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","borderColor":"rgba(255,0,0,.3)","backgroundColor":"rgba(255, 255, 255, 1)","color":"rgba(77, 79, 54, 1)","borderRadius":"4px","borderWidth":"0","fontSize":"16px","lineHeight":"34px","borderStyle":"solid"}' @click="storeUp()" href="javascript:void(0)">
+	     <a v-if='authReady && storeupFlag' :style='{"padding":"0 12px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","borderColor":"rgba(255,0,0,.3)","backgroundColor":"rgba(255, 255, 255, 1)","color":"rgba(77, 79, 54, 1)","borderRadius":"4px","borderWidth":"0","fontSize":"16px","lineHeight":"34px","borderStyle":"solid"}' @click="storeUp()" href="javascript:void(0)">
 		<i class="layui-icon" style="font-size: 20px;color: red;" v-if='true' :style='{"color":"rgba(77, 79, 54, 1)","padding":"0 2px 0 0","fontSize":"18px"}'>&#xe67a;</i>取消收藏
 	     </a>
-	     <a v-if='!storeupFlag' :style='{"padding":"0 12px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","borderColor":"rgba(255,0,0,.3)","backgroundColor":"rgba(255, 255, 255, 1)","color":"rgba(77, 79, 54, 1)","borderRadius":"4px","borderWidth":"0","fontSize":"16px","lineHeight":"34px","borderStyle":"solid"}' @click="storeUp()" href="javascript:void(0)">
+	     <a v-if='authReady && !storeupFlag' :style='{"padding":"0 12px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","borderColor":"rgba(255,0,0,.3)","backgroundColor":"rgba(255, 255, 255, 1)","color":"rgba(77, 79, 54, 1)","borderRadius":"4px","borderWidth":"0","fontSize":"16px","lineHeight":"34px","borderStyle":"solid"}' @click="storeUp()" href="javascript:void(0)">
 		<i class="layui-icon" style="font-size: 20px;color: red;" v-if='true' :style='{"color":"rgba(77, 79, 54, 1)","padding":"0 2px 0 0","fontSize":"18px"}'>&#xe67b;</i>点我收藏
 	     </a>
 				
@@ -218,6 +218,8 @@ color: rgba(255, 255, 255, 1) !important;
 				// 评论列表
 				dataList: [],
 				storeupFlag: 0,
+				authReady: false,
+				authReady: false,
 				// 选座座位列表
 				numberList: []
 			},
@@ -315,6 +317,39 @@ color: rgba(255, 255, 255, 1) !important;
 					}
 				},
 				
+				storeUp() {
+					if (!this.authReady) {
+						layer.msg('登录后可使用收藏功能', { time: 1200, icon: 0 });
+						return;
+					}
+					layui.http.request('storeup/list', 'get', {
+						page: 1,
+						limit: 1,
+						type:1,
+						refid : this.detail.id,
+						tablename : this.detailTable,
+						userid: localStorage.getItem('userid'),
+					}, (res) => {
+						vue.dataList = res.data.list
+						if(res.data.list.length==1) {
+							layui.http.requestJson(`storeup/delete`, 'post', [res.data.list[0].id], function(res) {
+								layer.msg('取消成功', { time: 1000, icon: 5 }, function() { window.location.reload(); });
+							});
+							return;
+						}
+						layui.http.requestJson('storeup/save', 'post', {
+							userid: localStorage.getItem('userid'),
+							name: this.title,
+							type:1,
+							picture:vue.detail.tupian,
+							refid: this.detail.id,
+							tablename: this.detailTable
+						}, function(res) {
+							layer.msg('收藏成功', { time: 1000, icon: 6 }, function() { window.location.reload(); });
+						});
+					});
+				},
+
 				// 下载文件
 				downFile(url) {
 					var download = $("#download");
@@ -351,44 +386,6 @@ color: rgba(255, 255, 255, 1) !important;
 
 
 	    // 收藏商品
-				storeUp() {
-					layui.http.request('storeup/list', 'get', {
-						page: 1,
-						limit: 1,
-						type:1,
-						refid : this.detail.id,
-						tablename : this.detailTable,
-						userid: localStorage.getItem('userid'),
-					}, (res) => {
-						vue.dataList = res.data.list
-						if(res.data.list.length==1) {
-							layui.http.requestJson(`storeup/delete`, 'post', [res.data.list[0].id], function(res) {
-								layer.msg('取消成功', {
-									time: 1000,
-									icon: 5
-								}, function() {
-									window.location.reload();
-								});
-							});
-							return;
-						}
-						layui.http.requestJson('storeup/save', 'post', {
-							userid: localStorage.getItem('userid'),
-							name: this.title,
-						    type:1,
-							picture:vue.detail.tupian,
-							refid: this.detail.id,
-							tablename: this.detailTable
-						}, function(res) {
-							layer.msg('收藏成功', {
-								time: 1000,
-								icon: 6
-							}, function() {
-								window.location.reload();
-							});
-						});
-					});
-				},
 
 
 			}
@@ -409,6 +406,8 @@ color: rgba(255, 255, 255, 1) !important;
 			var id = http.getParam('id');
 			vue.detail.id = id;
 			vue.baseurl = http.baseurl;
+			vue.authReady = !!(localStorage.getItem('userid') && localStorage.getItem('Token'));
+			vue.authReady = !!(localStorage.getItem('userid') && localStorage.getItem('Token'));
 
 			// 商品信息
 			http.request(`${vue.detailTable}/detail/` + id, 'get', {}, function(res) {
@@ -451,7 +450,7 @@ color: rgba(255, 255, 255, 1) !important;
 
 
 			});
-			if(localStorage.getItem('userid')){
+			if(vue.authReady){
 				http.request(`storeup/list`, 'get', {
 					page: 1,
 					limit: 1,
