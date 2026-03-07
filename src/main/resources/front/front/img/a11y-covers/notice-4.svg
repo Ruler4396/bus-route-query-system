@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600" role="img" aria-label="Community update cover">
+  <rect width="960" height="600" fill="#27332f"/>
+  <rect x="64" y="64" width="832" height="472" rx="28" fill="#fff7eb" fill-opacity="0.1"/>
+  <circle cx="214" cy="300" r="118" fill="#fff7eb" fill-opacity="0.2"/>
+  <circle cx="214" cy="300" r="70" fill="#b58a53"/>
+  <rect x="386" y="162" width="440" height="68" rx="12" fill="#fff7eb" fill-opacity="0.24"/>
+  <rect x="386" y="250" width="388" height="50" rx="10" fill="#fff7eb" fill-opacity="0.2"/>
+  <rect x="386" y="322" width="346" height="50" rx="10" fill="#fff7eb" fill-opacity="0.18"/>
+  <rect x="386" y="394" width="292" height="50" rx="10" fill="#fff7eb" fill-opacity="0.16"/>
+  <text x="130" y="500" fill="#efe1ce" font-size="40" font-family="Arial, sans-serif" font-weight="700">COMMUNITY UPDATE</text>
+</svg>

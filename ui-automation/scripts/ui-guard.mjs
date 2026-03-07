@@ -4,10 +4,9 @@ import { spawnSync } from 'child_process';
 
 const projectRoot = process.env.PROJECT_ROOT || '/root/dev/bus-route-query-system';
 const automationRoot = process.env.UI_AUTOMATION_ROOT || path.join(projectRoot, 'ui-automation');
-const appPort = process.env.UI_APP_PORT || '8133';
-const jarPath = process.env.UI_JAR_PATH || path.join(projectRoot, 'target', 'springbootmf383-0.0.1-SNAPSHOT.jar');
-const serverLog = process.env.UI_SERVER_LOG || path.join(projectRoot, 'server-8133.log');
+const appPort = process.env.UI_APP_PORT || '8134';
 const reportPath = process.env.UI_REPORT_PATH || path.join(automationRoot, 'reports', 'ui-check-report.json');
+const maxAutofixRounds = Math.max(0, Number(process.env.UI_GUARD_MAX_AUTOFIX_ROUNDS || 1));
 
 function runCmd(cmd, args, cwd, env, inherit = true) {
   const result = spawnSync(cmd, args, {
@@ -21,6 +20,10 @@ function runCmd(cmd, args, cwd, env, inherit = true) {
 function ensureDirs() {
   fs.mkdirSync(path.join(automationRoot, 'reports'), { recursive: true });
   fs.mkdirSync(path.join(automationRoot, 'logs'), { recursive: true });
+}
+
+function ensureDevServer(env) {
+  return runCmd('bash', ['scripts/remote-dev-start.sh'], projectRoot, env, true);
 }
 
 function runUiCheck(env) {
@@ -47,29 +50,19 @@ function runAutoFix(env) {
     try {
       payload = JSON.parse(stdout);
     } catch (err) {
-      payload.raw = stdout;
+      payload = { changed: false, changes: [], raw: stdout };
     }
   }
   return { fixRun, payload };
 }
 
-function buildAndRestart() {
-  const env = process.env;
-  const build = runCmd('mvn', ['-DskipTests', 'package', '-q'], projectRoot, env, true);
+function buildAndRestartDev(env) {
+  const build = runCmd('bash', ['scripts/remote-dev-build.sh'], projectRoot, env, true);
   if (build.status !== 0) {
     return build.status || 2;
   }
-
-  const restartScript = [
-    "PIDS=$(ps -ef | grep '[j]ava .*springbootmf383-0.0.1-SNAPSHOT.jar' | awk '{print $2}')",
-    'if [ -n "$PIDS" ]; then kill $PIDS; sleep 2; fi',
-    `cd ${projectRoot}`,
-    `nohup /usr/bin/java -Xms128m -Xmx512m -Dserver.port=${appPort} -Dvehicle.ws.push-interval-ms=10000 -Djava.awt.headless=true -jar ${jarPath} >${serverLog} 2>&1 < /dev/null & disown`,
-    `for i in $(seq 1 30); do ss -ltnp | grep :${appPort} >/dev/null && break; sleep 1; done`,
-    `ss -ltnp | grep :${appPort}`
-  ].join('\n');
-
-  const restart = runCmd('bash', ['-lc', restartScript], projectRoot, env, true);
+  runCmd('bash', ['scripts/remote-dev-stop.sh'], projectRoot, env, true);
+  const restart = runCmd('bash', ['scripts/remote-dev-start.sh'], projectRoot, env, true);
   return restart.status || 0;
 }
 
@@ -78,8 +71,17 @@ function main() {
   const env = {
     ...process.env,
     PROJECT_ROOT: projectRoot,
-    UI_REPORT_PATH: reportPath
+    UI_APP_PORT: appPort,
+    UI_REPORT_PATH: reportPath,
+    REMOTE_DEV_PORT: appPort
   };
+
+  console.log('[ui-guard] step=ensure_dev_server port=' + appPort);
+  const start = ensureDevServer(env);
+  if (start.status !== 0) {
+    console.error('[ui-guard] ensure_dev_server failed code=' + start.status);
+    process.exit(start.status || 2);
+  }
 
   console.log('[ui-guard] step=check phase=first');
   const first = runUiCheck(env);
@@ -89,31 +91,38 @@ function main() {
   }
 
   console.log('[ui-guard] result=fail phase=first');
-  console.log('[ui-guard] step=auto_fix');
-  const { payload } = runAutoFix(env);
-  console.log('[ui-guard] auto_fix_payload=' + JSON.stringify(payload));
-
-  if (!payload.changed) {
-    console.error('[ui-guard] no safe autofix available');
+  if (maxAutofixRounds <= 0) {
+    console.error('[ui-guard] autofix disabled by UI_GUARD_MAX_AUTOFIX_ROUNDS=0');
     process.exit(first.status || 1);
   }
 
-  console.log('[ui-guard] step=build_restart');
-  const restartStatus = buildAndRestart();
-  if (restartStatus !== 0) {
-    console.error('[ui-guard] build/restart failed with code=' + restartStatus);
-    process.exit(restartStatus);
+  for (let round = 1; round <= maxAutofixRounds; round += 1) {
+    console.log('[ui-guard] step=auto_fix round=' + round + '/' + maxAutofixRounds);
+    const { payload } = runAutoFix(env);
+    console.log('[ui-guard] auto_fix_payload=' + JSON.stringify(payload));
+
+    if (!payload.changed) {
+      console.error('[ui-guard] no safe autofix available');
+      process.exit(first.status || 1);
+    }
+
+    console.log('[ui-guard] step=build_restart_dev round=' + round);
+    const restartStatus = buildAndRestartDev(env);
+    if (restartStatus !== 0) {
+      console.error('[ui-guard] build/restart dev failed with code=' + restartStatus);
+      process.exit(restartStatus);
+    }
+
+    console.log('[ui-guard] step=check phase=retry round=' + round);
+    const retry = runUiCheck(env);
+    if (retry.status === 0) {
+      console.log('[ui-guard] result=pass phase=retry round=' + round);
+      process.exit(0);
+    }
   }
 
-  console.log('[ui-guard] step=check phase=second');
-  const second = runUiCheck(env);
-  if (second.status === 0) {
-    console.log('[ui-guard] result=pass phase=second');
-    process.exit(0);
-  }
-
-  console.error('[ui-guard] result=fail phase=second');
-  process.exit(second.status || 1);
+  console.error('[ui-guard] result=fail after max autofix rounds=' + maxAutofixRounds);
+  process.exit(1);
 }
 
 main();

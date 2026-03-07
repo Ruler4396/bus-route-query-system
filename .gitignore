@@ -36,3 +36,10 @@ ui-automation/playwright-report/
 ui-automation/test-results/
 ui-automation/reports/
 ui-automation/logs/
+
+# Runtime / remote development artifacts
+runtime/
+*.log
+*.pid
+data/*.mv.db
+data/*.lock.db

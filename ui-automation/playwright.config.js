@@ -1,7 +1,7 @@
 const { defineConfig } = require('@playwright/test');
 const fs = require('fs');
 
-let baseURL = process.env.UI_BASE_URL || 'http://127.0.0.1:8133/springbootmf383/front/';
+let baseURL = process.env.UI_BASE_URL || 'http://127.0.0.1:8134/springbootmf383/front/';
 if (!baseURL.endsWith('/')) {
   baseURL += '/';
 }

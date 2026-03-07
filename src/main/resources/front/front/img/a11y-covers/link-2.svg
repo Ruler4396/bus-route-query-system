@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600" role="img" aria-label="Public service link cover">
+  <rect width="960" height="600" fill="#1f2b27"/>
+  <path d="M0 540 L960 430 L960 600 L0 600 Z" fill="#b58a53" fill-opacity="0.24"/>
+  <rect x="62" y="68" width="836" height="464" rx="26" fill="#fff8ef" fill-opacity="0.1"/>
+  <rect x="130" y="134" width="702" height="90" rx="14" fill="#fff8ef" fill-opacity="0.2"/>
+  <rect x="130" y="248" width="340" height="238" rx="18" fill="#fff8ef" fill-opacity="0.14"/>
+  <rect x="500" y="264" width="292" height="56" rx="10" fill="#fff8ef" fill-opacity="0.2"/>
+  <rect x="500" y="340" width="252" height="56" rx="10" fill="#fff8ef" fill-opacity="0.18"/>
+  <rect x="500" y="416" width="212" height="56" rx="10" fill="#fff8ef" fill-opacity="0.16"/>
+  <text x="154" y="192" fill="#f0e2cf" font-size="40" font-family="Arial, sans-serif" font-weight="700">PUBLIC SERVICE LINK</text>
+</svg>

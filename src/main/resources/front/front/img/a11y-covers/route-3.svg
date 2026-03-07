@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600" role="img" aria-label="Voice guidance route cover">
+  <rect width="960" height="600" fill="#24342e"/>
+  <rect x="68" y="60" width="824" height="480" rx="28" fill="#ffffff" fill-opacity="0.1"/>
+  <circle cx="252" cy="302" r="126" fill="#fff9ef" fill-opacity="0.9"/>
+  <path d="M248 240 L248 364 M304 254 C340 278 340 326 304 350 M342 232 C394 272 394 332 342 372" stroke="#b58a53" stroke-width="16" stroke-linecap="round" fill="none"/>
+  <rect x="452" y="196" width="346" height="72" rx="12" fill="#fff9ef" fill-opacity="0.24"/>
+  <rect x="452" y="290" width="300" height="52" rx="10" fill="#fff9ef" fill-opacity="0.2"/>
+  <rect x="452" y="364" width="252" height="52" rx="10" fill="#fff9ef" fill-opacity="0.2"/>
+  <text x="110" y="520" fill="#f3e7d6" font-size="44" font-family="Arial, sans-serif" font-weight="700">VOICE CUE SUPPORT</text>
+</svg>

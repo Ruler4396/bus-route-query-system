@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600" role="img" aria-label="Tactile path route cover">
+  <rect width="960" height="600" fill="#1d2924"/>
+  <path d="M0 520 L960 420 L960 600 L0 600 Z" fill="#b58a53" fill-opacity="0.28"/>
+  <rect x="54" y="48" width="852" height="500" rx="30" fill="#fef8ee" fill-opacity="0.1"/>
+  <rect x="110" y="118" width="740" height="100" rx="16" fill="#fef8ee" fill-opacity="0.22"/>
+  <rect x="110" y="244" width="420" height="244" rx="20" fill="#fef8ee" fill-opacity="0.16"/>
+  <rect x="558" y="244" width="292" height="76" rx="10" fill="#fef8ee" fill-opacity="0.18"/>
+  <rect x="558" y="340" width="220" height="60" rx="10" fill="#fef8ee" fill-opacity="0.16"/>
+  <text x="136" y="184" fill="#f3e7d6" font-size="44" font-family="Arial, sans-serif" font-weight="700">TACTILE PATH READY</text>
+  <text x="136" y="430" fill="#decfbb" font-size="28" font-family="Arial, sans-serif">Low-vision friendly station guidance</text>
+</svg>
