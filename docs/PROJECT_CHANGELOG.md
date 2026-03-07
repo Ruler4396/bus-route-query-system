@@ -1,5 +1,12 @@
 # PJT-0001 · PROJECT_CHANGELOG
 
+## 2026-03-07 · CHG-20260307-016 · 最终复审复跑补记（反馈闭环回归未稳定）
+- 在 `8134` 开发实例上重新执行 `bash scripts/remote-dev-check.sh`，编译检查通过。
+- 重新执行 `UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npm run -s ui:check`，结果为 `25 / 26 passed`，未达到前一轮记录的稳定全绿状态。
+- 当前稳定失败项为 `ui-feedback-workflow.spec.js`：保存处理后 `#reviewBoardStatus` 未返回预期状态文本，Playwright 错误快照显示页面被 `401` 登录跳转接管。
+- 重新执行 `UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npm run -s ui:validate`，结果仍为 `4 / 5`，`T05` 反馈闭环任务继续失败，错误表现为 `iframe` 脱离 / 登录跳转。
+- 因此最终复审结论维持 **NO**，且 `K04` 由“待稳定”升级为当前明确阻塞项。
+
 ## 2026-03-07 · CHG-20260307-015 · 最终复审（结论：NO，进入第二轮闭环）
 - 按主待办规则执行最终复审，当前正式结论仍为 **NO**。
 - 原因：屏幕阅读器仍缺少真实人工验证、目标残障用户真实验证不足、试点核验样本尚未升级为线下核验完成的正式样本库。
