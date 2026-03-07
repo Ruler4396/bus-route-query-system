@@ -2434,3 +2434,35 @@ body.transit-shell #iframe {
   font-size: 11px;
   color: #64748b;
 }
+
+
+.route-governance-panel {
+  margin: 0 10px 14px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(248,250,252,1), rgba(244,247,241,1));
+  border: 1px solid rgba(148,163,184,.18);
+  box-shadow: 0 14px 30px rgba(15,23,42,.06);
+}
+.route-governance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.route-governance-panel .governance-card {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid rgba(148,163,184,.18);
+}
+.route-governance-panel .governance-card h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: #0f172a;
+}
+.route-governance-panel .governance-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #334155;
+}

@@ -5,6 +5,7 @@
         baseurl: '',
         swiperIndex: '-1',
         isPlanMode: false,
+        governanceMeta: null,
         planMeta: null,
         planNoticeType: '',
         planNoticeText: '',
@@ -115,7 +116,39 @@
 	var limit = 8;
     limit = 3 * 2;
 	vue.baseurl = http.baseurl;
+
+      function fetchGovernanceMeta() {
+        http.request('route/external/governance', 'get', {}, function(res) {
+          var data = res.data || {};
+          var sources = data.dataSources || [];
+          var confidence = data.confidenceRules || {};
+          var pilotSummary = data.pilotSummary || {};
+          var levels = [];
+          if (confidence.levels && jquery.isArray(confidence.levels)) {
+            confidence.levels.forEach(function(item) {
+              if (item && item.label) {
+                levels.push(item.label + '（≥' + item.minScore + '）');
+              }
+            });
+          }
+          vue.governanceMeta = {
+            dataSourceCount: sources.length,
+            confidenceLevels: levels,
+            pilotStationCount: Number(pilotSummary.stations || 0),
+            pilotTransferCount: Number(pilotSummary.transferNodes || 0),
+            pilotEntranceCount: Number(pilotSummary.destinationEntrances || 0)
+          };
+        }, {
+          silentError: true,
+          showLoading: false,
+          onError: function() {
+            vue.governanceMeta = null;
+          }
+        });
+      }
+
       // 分页列表
+      fetchGovernanceMeta();
       pageList();
 
 	      // 搜索按钮

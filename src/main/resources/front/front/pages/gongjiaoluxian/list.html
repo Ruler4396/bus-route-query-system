@@ -268,6 +268,23 @@ width: 100%;
 			</div>
 			<div id="routeLiveStatus" class="route-live-status" role="status" aria-live="polite">{{a11yStatusText}}</div>
 		</section>
+		<section v-if="governanceMeta" class="route-governance-panel" aria-label="数据治理与可信度说明">
+			<div class="route-governance-grid">
+				<div class="governance-card">
+					<h3>数据源登记</h3>
+					<p>当前登记 {{governanceMeta.dataSourceCount}} 类数据源，覆盖路线字段、站点表、OSM/Overpass、开放广东与试点人工样本基础。</p>
+				</div>
+				<div class="governance-card">
+					<h3>置信度规则</h3>
+					<p v-if="governanceMeta.confidenceLevels && governanceMeta.confidenceLevels.length">{{governanceMeta.confidenceLevels.join(' / ')}}</p>
+					<p v-else>当前未加载置信度规则。</p>
+				</div>
+				<div class="governance-card">
+					<h3>试点人工样本基础</h3>
+					<p>站点 {{governanceMeta.pilotStationCount}} 个 / 换乘节点 {{governanceMeta.pilotTransferCount}} 个 / 目的地入口 {{governanceMeta.pilotEntranceCount}} 个。</p>
+				</div>
+			</div>
+		</section>
 		<form class="layui-form filter" :style='{"padding":"0 10px","boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"10px 0 10px 0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(0, 0, 0, 0)","borderRadius":"4px","borderWidth":"0","borderStyle":"solid","justifyContent":"flex-end","height":"64px"}'>
 			<div class="item-list">
 				<div class="lable" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(0,0,0,0)","backgroundColor":"transparent","color":"rgba(19, 19, 19, 1)","borderRadius":"0","textAlign":"right","borderWidth":"0","width":"auto","fontSize":"16px","borderStyle":"solid"}'>路线名称</div>

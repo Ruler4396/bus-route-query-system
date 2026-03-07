@@ -385,6 +385,12 @@ public class RoutePlanningController {
         return R.ok().put("data", accessibilityExternalDataService.getConnectorMeta());
     }
 
+    @IgnoreAuth
+    @RequestMapping("/external/governance")
+    public R getGovernanceMeta() {
+        return R.ok().put("data", accessibilityExternalDataService.getGovernanceMeta());
+    }
+
     /**
      * 获取 OSM/Overpass 无障碍统计摘要。
      */

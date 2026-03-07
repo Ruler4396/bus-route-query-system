@@ -8,8 +8,11 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.service.AccessibilityExternalDataService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -54,6 +57,7 @@ public class AccessibilityExternalDataServiceImpl implements AccessibilityExtern
     private final Map<String, CacheEntry> overpassCache = new ConcurrentHashMap<>();
     private final Map<String, CacheEntry> openGdSearchCache = new ConcurrentHashMap<>();
     private final Map<String, CacheEntry> openGdDetailCache = new ConcurrentHashMap<>();
+    private Map<String, Object> governanceMetaCache;
 
     @Override
     public Map<String, Object> getConnectorMeta() {
@@ -77,6 +81,40 @@ public class AccessibilityExternalDataServiceImpl implements AccessibilityExtern
         meta.put("connectors", Arrays.asList(overpass, openGd));
         meta.put("generatedAt", nowIso());
         return meta;
+    }
+
+
+    @Override
+    public Map<String, Object> getGovernanceMeta() {
+        if (governanceMetaCache != null) {
+            return cloneMap(governanceMetaCache);
+        }
+        JSONObject root = readClassPathJson("accessibility-governance.json");
+        Map<String, Object> result = new LinkedHashMap<>();
+        if (root == null) {
+            result.put("version", "missing");
+            result.put("dataSources", Collections.emptyList());
+            result.put("confidenceRules", Collections.emptyMap());
+            result.put("pilotSamples", Collections.emptyMap());
+            result.put("generatedAt", nowIso());
+            governanceMetaCache = result;
+            return cloneMap(result);
+        }
+        result.put("version", root.getString("version"));
+        result.put("updatedAt", root.getString("updatedAt"));
+        result.put("dataSources", normalizeJsonArray(root.getJSONArray("dataSources")));
+        result.put("confidenceRules", castMap(root.getJSONObject("confidenceRules")));
+        Map<String, Object> pilot = castMap(root.getJSONObject("pilotSamples"));
+        Map<String, Object> pilotSummary = new LinkedHashMap<>();
+        pilotSummary.put("stations", safeListSize(pilot.get("stations")));
+        pilotSummary.put("transferNodes", safeListSize(pilot.get("transferNodes")));
+        pilotSummary.put("destinationEntrances", safeListSize(pilot.get("destinationEntrances")));
+        result.put("pilotSamples", pilot);
+        result.put("pilotSummary", pilotSummary);
+        result.put("connectorMeta", getConnectorMeta());
+        result.put("generatedAt", nowIso());
+        governanceMetaCache = result;
+        return cloneMap(result);
     }
 
     @Override
@@ -368,6 +406,7 @@ public class AccessibilityExternalDataServiceImpl implements AccessibilityExtern
         result.put("openGd", openGd);
         result.put("synthesis", synthesis);
         result.put("connectorMeta", getConnectorMeta());
+        result.put("governanceMeta", getGovernanceMeta());
         result.put("generatedAt", nowIso());
         return result;
     }
@@ -506,6 +545,35 @@ public class AccessibilityExternalDataServiceImpl implements AccessibilityExtern
                 .execute()
                 .body();
         return JSON.parseObject(raw);
+    }
+
+
+    private JSONObject readClassPathJson(String path) {
+        try (InputStream inputStream = new ClassPathResource(path).getInputStream()) {
+            byte[] bytes = inputStream.readAllBytes();
+            return JSON.parseObject(new String(bytes, StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private List<Map<String, Object>> normalizeJsonArray(JSONArray array) {
+        if (array == null) {
+            return Collections.emptyList();
+        }
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (int i = 0; i < array.size(); i++) {
+            JSONObject obj = array.getJSONObject(i);
+            items.add(castMap(obj));
+        }
+        return items;
+    }
+
+    private int safeListSize(Object raw) {
+        if (raw instanceof List) {
+            return ((List<?>) raw).size();
+        }
+        return 0;
     }
 
     private String mapOpenGdSourceType(String sourceType) {

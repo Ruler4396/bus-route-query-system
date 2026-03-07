@@ -1,0 +1,155 @@
+{
+  "version": "a11y-governance-v1",
+  "updatedAt": "2026-03-07 16:00:00",
+  "dataSources": [
+    {
+      "id": "internal_route_fields",
+      "label": "项目内置路线字段",
+      "sourceType": "project_dataset",
+      "license": "project-internal-demo",
+      "updateFrequency": "按版本更新",
+      "coverage": ["路线无障碍等级", "语音播报", "盲道支持", "导盲犬支持", "电梯/换乘设施说明"],
+      "confidencePolicy": "single_source_structured"
+    },
+    {
+      "id": "station_accessibility_table",
+      "label": "站点无障碍表",
+      "sourceType": "project_dataset",
+      "license": "project-internal-demo",
+      "updateFrequency": "按试点维护",
+      "coverage": ["站点无障碍等级", "升降台/坡道", "盲道", "座椅", "无障碍厕所", "无障碍停车场"],
+      "confidencePolicy": "single_source_structured"
+    },
+    {
+      "id": "osm_overpass",
+      "label": "OSM / Overpass",
+      "sourceType": "open_data",
+      "license": "ODbL",
+      "updateFrequency": "按需抓取",
+      "coverage": ["wheelchair 标签", "tactile_paving", "elevator", "bus_stop/platform 覆盖率"],
+      "confidencePolicy": "open_crowdsourced"
+    },
+    {
+      "id": "open_gd",
+      "label": "开放广东",
+      "sourceType": "government_open_data",
+      "license": "政府开放数据",
+      "updateFrequency": "以资源更新时间为准",
+      "coverage": ["无障碍主题目录", "交通/残联/政务类资源"],
+      "confidencePolicy": "government_catalog"
+    },
+    {
+      "id": "pilot_manual_sample",
+      "label": "试点人工核验样本基础",
+      "sourceType": "project_manual_pilot",
+      "license": "project-internal-demo",
+      "updateFrequency": "手工维护",
+      "coverage": ["缘石坡道", "上落车可达性", "换乘节点设施", "目的地入口可达性"],
+      "confidencePolicy": "manual_pilot"
+    }
+  ],
+  "confidenceRules": {
+    "levels": [
+      { "code": "HIGH", "minScore": 80, "label": "高", "meaning": "多源一致或试点人工样本支撑，可作为优先候选" },
+      { "code": "MEDIUM", "minScore": 60, "label": "中", "meaning": "结构化字段较完整，但仍需结合风险提示核对" },
+      { "code": "LOW", "minScore": 0, "label": "低", "meaning": "关键字段不足，只能作为辅助参考或需拒绝推荐" }
+    ],
+    "routePlanFactors": [
+      { "factor": "route_level_present", "weight": 14, "description": "路线无障碍等级有值" },
+      { "factor": "facility_text_present", "weight": 12, "description": "路线设施说明非空" },
+      { "factor": "voice_field_present", "weight": 8, "description": "语音播报字段有值" },
+      { "factor": "blind_path_field_present", "weight": 8, "description": "盲道字段有值" },
+      { "factor": "guide_dog_field_present", "weight": 6, "description": "导盲犬字段有值" },
+      { "factor": "elevator_field_present", "weight": 8, "description": "换乘/电梯字段有值" },
+      { "factor": "route_timestamp_present", "weight": 6, "description": "路线更新时间有值" },
+      { "factor": "pilot_manual_match", "weight": 12, "description": "命中试点人工样本基础" },
+      { "factor": "structured_station_match", "weight": 10, "description": "起终站命中结构化站点表" },
+      { "factor": "score_bonus", "weight": 10, "description": "无障碍评分较高时加分" }
+    ],
+    "decisionRules": [
+      { "profile": "WHEELCHAIR", "rule": "轮椅/坡道 + 电梯/换乘信息同时不足时拒绝推荐" },
+      { "profile": "LOW_VISION", "rule": "语音播报 + 盲道信息同时不足时拒绝推荐" },
+      { "profile": "HEARING_TEXT", "rule": "文字提示设施不足时降级但不直接拒绝" }
+    ]
+  },
+  "pilotSamples": {
+    "stations": [
+      {
+        "stationName": "东山署前路总站",
+        "verifiedLevel": "manual_pilot",
+        "verifiedAt": "2026-03-07",
+        "curbRamp": true,
+        "boardingAccessible": true,
+        "notes": "起点站样本：上落车路径平缓，适合轮椅起始演示"
+      },
+      {
+        "stationName": "海珠广场",
+        "verifiedLevel": "manual_pilot",
+        "verifiedAt": "2026-03-07",
+        "curbRamp": true,
+        "boardingAccessible": true,
+        "notes": "换乘节点样本：需核对人流与复杂路口"
+      },
+      {
+        "stationName": "西门口人民北路",
+        "verifiedLevel": "manual_pilot",
+        "verifiedAt": "2026-03-07",
+        "curbRamp": true,
+        "boardingAccessible": true,
+        "notes": "老城路口样本：有缘石坡道，但需注意步行段复杂度"
+      },
+      {
+        "stationName": "纸厂地铁燕岗站",
+        "verifiedLevel": "manual_pilot",
+        "verifiedAt": "2026-03-07",
+        "curbRamp": false,
+        "boardingAccessible": true,
+        "notes": "地铁接驳样本：上车可达，缘石坡道信息不足"
+      }
+    ],
+    "transferNodes": [
+      {
+        "name": "海珠广场",
+        "verifiedLevel": "manual_pilot",
+        "verifiedAt": "2026-03-07",
+        "elevatorAccessible": true,
+        "rampAccessible": true,
+        "notes": "可识别换乘设施，但高峰期仍需人工核对"
+      },
+      {
+        "name": "纸厂地铁燕岗站",
+        "verifiedLevel": "manual_pilot",
+        "verifiedAt": "2026-03-07",
+        "elevatorAccessible": true,
+        "rampAccessible": false,
+        "notes": "有地铁换乘设施，但周边坡道连续性不足"
+      }
+    ],
+    "destinationEntrances": [
+      {
+        "name": "中山医",
+        "verifiedLevel": "manual_pilot",
+        "verifiedAt": "2026-03-07",
+        "entranceAccessible": true,
+        "entranceType": "医院主入口缓坡",
+        "notes": "适合作为医疗目的地入口可达性样本"
+      },
+      {
+        "name": "珠江医院",
+        "verifiedLevel": "manual_pilot",
+        "verifiedAt": "2026-03-07",
+        "entranceAccessible": true,
+        "entranceType": "主入口无障碍坡道",
+        "notes": "适合作为海珠医疗场景目的地样本"
+      },
+      {
+        "name": "省中医院",
+        "verifiedLevel": "manual_pilot",
+        "verifiedAt": "2026-03-07",
+        "entranceAccessible": false,
+        "entranceType": "入口信息不足",
+        "notes": "用作入口级数据不足时的风险提示样本"
+      }
+    ]
+  }
+}

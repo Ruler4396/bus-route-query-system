@@ -1,5 +1,6 @@
 package com.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.entity.GongjiaoluxianEntity;
@@ -11,8 +12,11 @@ import com.service.YonghuService;
 import com.service.ZhandianWuzhangaiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -28,6 +32,8 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
     @Autowired
     private YonghuService yonghuService;
 
+    private Map<String, Object> governanceMetaCache;
+
     private static final double DEFAULT_NEUTRAL_SCORE = 50.0;
     private static final String RULE_ROUTE_LEVEL = "routeLevel";
     private static final String RULE_STATION = "station";
@@ -37,6 +43,7 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
     private static final String PROFILE_LOW_VISION = "LOW_VISION";
     private static final String PROFILE_HEARING_TEXT = "HEARING_TEXT";
     private static final String PROFILE_MULTI = "MULTI";
+    private static final String PILOT_SOURCE_MANUAL = "project_manual_pilot";
 
     @Value("${route.rule.pipeline:routeLevel,station,userMatch}")
     private String scoreRulePipeline;
@@ -721,8 +728,15 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
         segment.put("status", status);
         segment.put("statusText", statusText);
         segment.put("estimatedDistanceMeters", distanceMeters);
+        Map<String, Object> entranceSample = !origin ? findDestinationEntranceSample(stationName) : null;
+        if (entranceSample != null) {
+            segment.put("entranceAccessible", entranceSample.get("entranceAccessible"));
+            segment.put("entranceType", entranceSample.get("entranceType"));
+            segment.put("pilotVerifiedLevel", entranceSample.get("verifiedLevel"));
+            description = description + "；入口：" + String.valueOf(entranceSample.get("entranceType"));
+        }
         segment.put("description", description);
-        segment.put("dataSourceText", "启发式步行接驳估算");
+        segment.put("dataSourceText", entranceSample != null ? PILOT_SOURCE_MANUAL : "启发式步行接驳估算");
         return segment;
     }
 
@@ -751,11 +765,20 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
         }
         segment.put("status", status);
         segment.put("statusText", statusText);
-        segment.put("description", "无障碍等级：" + getAccessibilityLevelText(station.getWuzhangaijibie()) + "；升降台/坡道：" + (hasLift ? "有" : "未知/无") + "；盲道：" + (hasBlind ? "有" : "未知/无"));
+        Map<String, Object> stationSample = findStationPilotSample(stationName);
+        String description = "无障碍等级：" + getAccessibilityLevelText(station.getWuzhangaijibie()) + "；升降台/坡道：" + (hasLift ? "有" : "未知/无") + "；盲道：" + (hasBlind ? "有" : "未知/无");
+        if (stationSample != null) {
+            description += "；缘石坡道：" + (Boolean.TRUE.equals(stationSample.get("curbRamp")) ? "有" : "待核对/无");
+            description += "；上落车可达：" + (Boolean.TRUE.equals(stationSample.get("boardingAccessible")) ? "已核验" : "待核对");
+            segment.put("curbRamp", stationSample.get("curbRamp"));
+            segment.put("boardingAccessible", stationSample.get("boardingAccessible"));
+            segment.put("pilotVerifiedLevel", stationSample.get("verifiedLevel"));
+        }
+        segment.put("description", description);
         segment.put("seatCount", station.getZuoweishu());
         segment.put("accessibleToilet", station.getCesuo());
         segment.put("parking", station.getTingchechang());
-        segment.put("dataSourceText", station.getBeizhu() == null ? "站点基础无障碍数据" : station.getBeizhu());
+        segment.put("dataSourceText", stationSample != null ? PILOT_SOURCE_MANUAL : (station.getBeizhu() == null ? "站点基础无障碍数据" : station.getBeizhu()));
         return segment;
     }
 
@@ -784,10 +807,16 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
             return segment;
         }
         boolean hasTransferFacility = route.getDiantifacilities() != null && !route.getDiantifacilities().trim().isEmpty();
-        segment.put("status", hasTransferFacility ? "CAUTION" : "RISK");
-        segment.put("statusText", hasTransferFacility ? "已识别换乘设施" : "换乘设施信息不足");
-        segment.put("description", hasTransferFacility ? route.getDiantifacilities() : "当前只识别到潜在换乘节点，但缺少明确电梯/通道/坡道说明。");
-        segment.put("dataSourceText", hasTransferFacility ? "路线换乘设施字段" : "潜在换乘节点启发式识别");
+        Map<String, Object> transferSample = findTransferNodeSample(route);
+        segment.put("status", hasTransferFacility || transferSample != null ? "CAUTION" : "RISK");
+        segment.put("statusText", hasTransferFacility || transferSample != null ? "已识别换乘设施" : "换乘设施信息不足");
+        String description = hasTransferFacility ? route.getDiantifacilities() : "当前只识别到潜在换乘节点，但缺少明确电梯/通道/坡道说明。";
+        if (transferSample != null) {
+            description += "；试点样本：电梯=" + (Boolean.TRUE.equals(transferSample.get("elevatorAccessible")) ? "可达" : "待核对") + "，坡道=" + (Boolean.TRUE.equals(transferSample.get("rampAccessible")) ? "可达" : "待核对");
+            segment.put("pilotVerifiedLevel", transferSample.get("verifiedLevel"));
+        }
+        segment.put("description", description);
+        segment.put("dataSourceText", transferSample != null ? PILOT_SOURCE_MANUAL : (hasTransferFacility ? "路线换乘设施字段" : "潜在换乘节点启发式识别"));
         return segment;
     }
 
@@ -815,6 +844,80 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
             }
         }
         return ordered.get(ordered.size() - 1);
+    }
+
+    private Map<String, Object> getGovernanceMeta() {
+        if (governanceMetaCache != null) {
+            return governanceMetaCache;
+        }
+        try (InputStream inputStream = new ClassPathResource("accessibility-governance.json").getInputStream()) {
+            byte[] bytes = inputStream.readAllBytes();
+            Object parsed = JSON.parseObject(new String(bytes, StandardCharsets.UTF_8));
+            if (parsed instanceof Map) {
+                governanceMetaCache = (Map<String, Object>) parsed;
+            } else {
+                governanceMetaCache = new LinkedHashMap<>();
+            }
+        } catch (Exception e) {
+            governanceMetaCache = new LinkedHashMap<>();
+        }
+        return governanceMetaCache;
+    }
+
+    private Map<String, Object> findStationPilotSample(String stationName) {
+        return findPilotSampleByName("stations", "stationName", stationName);
+    }
+
+    private Map<String, Object> findDestinationEntranceSample(String name) {
+        return findPilotSampleByName("destinationEntrances", "name", name);
+    }
+
+    private Map<String, Object> findTransferNodeSample(GongjiaoluxianEntity route) {
+        Map<String, Object> governance = getGovernanceMeta();
+        Object pilotRaw = governance.get("pilotSamples");
+        if (!(pilotRaw instanceof Map)) {
+            return null;
+        }
+        Object nodesRaw = ((Map<?, ?>) pilotRaw).get("transferNodes");
+        if (!(nodesRaw instanceof List)) {
+            return null;
+        }
+        String search = (route.getTujingzhandian() == null ? "" : route.getTujingzhandian()) + "," + (route.getQidianzhanming() == null ? "" : route.getQidianzhanming()) + "," + (route.getZhongdianzhanming() == null ? "" : route.getZhongdianzhanming());
+        for (Object item : (List<?>) nodesRaw) {
+            if (item instanceof Map) {
+                Map<String, Object> map = (Map<String, Object>) item;
+                Object name = map.get("name");
+                if (name != null && search.contains(String.valueOf(name))) {
+                    return map;
+                }
+            }
+        }
+        return null;
+    }
+
+    private Map<String, Object> findPilotSampleByName(String collectionKey, String nameKey, String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return null;
+        }
+        Map<String, Object> governance = getGovernanceMeta();
+        Object pilotRaw = governance.get("pilotSamples");
+        if (!(pilotRaw instanceof Map)) {
+            return null;
+        }
+        Object collectionRaw = ((Map<?, ?>) pilotRaw).get(collectionKey);
+        if (!(collectionRaw instanceof List)) {
+            return null;
+        }
+        for (Object item : (List<?>) collectionRaw) {
+            if (item instanceof Map) {
+                Map<String, Object> map = (Map<String, Object>) item;
+                Object candidate = map.get(nameKey);
+                if (candidate != null && name.contains(String.valueOf(candidate))) {
+                    return map;
+                }
+            }
+        }
+        return null;
     }
 
     private Map<String, ScoreRule> buildRuleRegistry() {
