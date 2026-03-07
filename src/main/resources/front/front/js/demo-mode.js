@@ -707,6 +707,9 @@
 
     performSettingsWalkthrough: async function() {
       await this.openStepPage('./pages/accessibility/settings.html', '.preset-btn', 20000);
+      var stepBaseSettings = global.AccessibilityUtils && typeof global.AccessibilityUtils.getSettings === 'function'
+        ? global.AccessibilityUtils.getSettings()
+        : null;
       await this.narrate('最后进入设置页做逐项验证。这里特别演示不同预设的差异，确保不是所有预设都强制打开高对比度。', 9000);
       var lowVisionBtn = this.findFrameButtonByText('低视力预设');
       if (lowVisionBtn) {
@@ -744,10 +747,10 @@
         await this.pause(800);
       }
       await this.narrate('预设只是起点，用户仍然可以手动关闭高对比度、切换减少动态或字幕提示，找到最适合自己的组合。', 8600);
-      var resetBtn = this.findFrameButtonByText('恢复默认');
-      if (resetBtn) {
-        resetBtn.click();
-        await this.pause(1600);
+      if (stepBaseSettings && global.AccessibilityUtils) {
+        global.AccessibilityUtils.saveSettings(stepBaseSettings);
+        syncAssistSettings();
+        await this.pause(1200);
       }
     },
 

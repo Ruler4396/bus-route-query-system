@@ -103,9 +103,13 @@ test.describe('Accessibility Interaction Baseline', () => {
     const modeFlags = await frame.evaluate(() => ({
       highContrast: document.body.classList.contains('high-contrast'),
       reducedMotionBody: document.body.classList.contains('reduced-motion'),
-      reducedMotionRoot: document.documentElement.classList.contains('reduced-motion')
+      reducedMotionRoot: document.documentElement.classList.contains('reduced-motion'),
+      bodyBg: window.getComputedStyle(document.body).backgroundColor,
+      titleColor: window.getComputedStyle(document.querySelector('.page-title')).color
     }));
     expect(modeFlags.highContrast).toBeFalsy();
     expect(modeFlags.reducedMotionBody || modeFlags.reducedMotionRoot).toBeTruthy();
+    expect(modeFlags.bodyBg).not.toBe('rgb(245, 245, 245)');
+    expect(modeFlags.titleColor).not.toBe(modeFlags.bodyBg);
   });
 });

@@ -25,6 +25,7 @@
 }
 
 /* 基础样式 */
+body.high-contrast,
 .high-contrast body {
     background-color: #000000 !important;
     color: #ffffff !important;
@@ -249,4 +250,51 @@
 
 .high-contrast ::-webkit-scrollbar-thumb:hover {
     background: #ffff00 !important;
+}
+
+
+/* 设置页在高对比度下保持可读，不再出现白字叠白底 */
+body.page-accessibility-settings.high-contrast {
+    background: #000000 !important;
+    color: #ffffff !important;
+}
+
+body.page-accessibility-settings.high-contrast .settings-container,
+body.page-accessibility-settings.high-contrast .setting-group,
+body.page-accessibility-settings.high-contrast .keyboard-help,
+body.page-accessibility-settings.high-contrast .status-message {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
+    box-shadow: none !important;
+}
+
+body.page-accessibility-settings.high-contrast .page-title,
+body.page-accessibility-settings.high-contrast .setting-group-title,
+body.page-accessibility-settings.high-contrast .setting-label h4,
+body.page-accessibility-settings.high-contrast .setting-label p,
+body.page-accessibility-settings.high-contrast .font-size-value,
+body.page-accessibility-settings.high-contrast .back-link,
+body.page-accessibility-settings.high-contrast .keyboard-help h4,
+body.page-accessibility-settings.high-contrast .keyboard-help li,
+body.page-accessibility-settings.high-contrast .preset-btn,
+body.page-accessibility-settings.high-contrast .preset-btn small {
+    color: #ffffff !important;
+}
+
+body.page-accessibility-settings.high-contrast .preset-btn,
+body.page-accessibility-settings.high-contrast .btn,
+body.page-accessibility-settings.high-contrast .font-size-btn {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
+}
+
+body.page-accessibility-settings.high-contrast .btn-primary:hover,
+body.page-accessibility-settings.high-contrast .btn-secondary:hover,
+body.page-accessibility-settings.high-contrast .preset-btn:hover,
+body.page-accessibility-settings.high-contrast .font-size-btn:hover {
+    background: #ffff00 !important;
+    color: #000000 !important;
+    border-color: #000000 !important;
 }
