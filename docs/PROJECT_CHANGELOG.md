@@ -6,7 +6,7 @@
 - 路线规划页在推荐卡片内展示分段清单，支持查看“哪一段安全、哪一段存在风险”。
 - `ui-automation/tests/ui-route-segments.spec.js` 新增分段建模回归测试，验证 6 类分段可见。
 - 本轮完成 `ACCESSIBILITY_READINESS_TODO.md` 中的 `E01`、`E02`、`E03`、`E05`。
-- 对应提交：`6164b78`
+- 对应提交：`da97154`
 
 ## 2026-03-07 · CHG-20260307-009 · 前端高风险页面脚本拆分（S01）
 - 将 `index.html`、`home.html`、`gongjiaoluxian/list.html`、`accessibility/settings.html` 的内联脚本抽离到 `src/main/resources/front/front/js/pages/`。
