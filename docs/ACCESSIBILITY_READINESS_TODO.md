@@ -211,18 +211,18 @@
 - [x] H01 设计真实任务清单。
   - 示例：去医院、去政务大厅、去地铁站、去校园建筑。
   - 完成日期：2026-03-07
-  - 对应提交：`d6308e4`
+  - 对应提交：`0ac6c08`
   - 验证方式：新增 `docs/ACCESSIBILITY_VALIDATION_TASKS.md`，定义 5 个准真实任务场景与成功标准
   - 结果：通过
 - [x] H02 至少完成一轮目标用户或准真实用户验证。
   - 完成标准：至少记录任务成功率、失败点、理解成本、是否误导用户。
   - 完成日期：2026-03-07
-  - 对应提交：`d6308e4`
+  - 对应提交：`0ac6c08`
   - 验证方式：新增 `ui-automation/scripts/run-user-validation.mjs` 并生成 `ui-automation/reports/user-validation-report.pretty.json`，本轮准真实任务成功率为 `80%`
   - 结果：通过
 - [x] H03 将验证结论回写到本清单与 `PROJECT_CHANGELOG.md`，不是只口头确认。
   - 完成日期：2026-03-07
-  - 对应提交：`d6308e4`
+  - 对应提交：`0ac6c08`
   - 验证方式：新增 `docs/ACCESSIBILITY_VALIDATION_REPORT_2026-03-07.md` 并在 `PROJECT_CHANGELOG.md` 中记录本轮验证结论
   - 结果：通过
 

@@ -7,7 +7,7 @@
 - 本轮准真实任务验证结果：`5` 个任务中 `4` 个通过，成功率 `80%`，达到本轮门槛。
 - 失败任务 `T05` 的问题来自脚本代理在 iframe 内部切页后的稳定性，而非反馈闭环功能本身缺失；独立回归 `ui-feedback-workflow.spec.js` 已通过。
 - 本轮完成 `ACCESSIBILITY_READINESS_TODO.md` 中的 `H01`、`H02`、`H03`。
-- 对应提交：`d6308e4`
+- 对应提交：`0ac6c08`
 
 ## 2026-03-07 · CHG-20260307-012 · 用户反馈入口与最小审核闭环
 - 扩展 `messages` 数据结构，新增 `feedback_type / severity_level / route_name / station_name / handle_status / audit_owner / review_notes / reviewed_at` 等字段。
