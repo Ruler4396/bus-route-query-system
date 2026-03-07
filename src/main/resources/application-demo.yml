@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    driverClassName: org.h2.Driver
+    url: jdbc:h2:file:./data/springbootmf383-demo;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;AUTO_SERVER=TRUE
+    username: sa
+    password:
+    initialization-mode: always
+    schema: classpath:schema-demo.sql
+    data: classpath:data-demo.sql
+  h2:
+    console:
+      enabled: true
+      path: /h2-console

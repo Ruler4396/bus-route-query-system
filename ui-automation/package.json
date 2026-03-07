@@ -1,0 +1,17 @@
+{
+  "name": "bus-route-ui-automation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "UI guardrails for accessibility-focused bus route system",
+  "scripts": {
+    "install:browsers": "playwright install chromium",
+    "ui:check": "playwright test",
+    "ui:check:headed": "playwright test --headed",
+    "ui:fix": "node scripts/auto-fix-known-issues.mjs",
+    "ui:guard": "node scripts/ui-guard.mjs"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "@playwright/test": "^1.51.1"
+  }
+}
