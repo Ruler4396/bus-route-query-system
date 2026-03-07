@@ -752,6 +752,11 @@
             });
         }
 
+
+        function shouldPreferLocalRoutePath(pathPoints, stations) {
+            return Array.isArray(pathPoints) && pathPoints.length >= Math.max(12, ((stations && stations.length) || 0) + 4);
+        }
+
         function refreshEta(currentStationIndex) {
             if (!currentRoute || !currentRoute.id) {
                 return;
@@ -798,7 +803,11 @@
             if (!stations || stations.length === 0) return;
             var pathPoints = getRoutePathForRender(route, stations);
             if (mapEngine.type === 'gaode') {
-                drawRouteAmap(route, stations, pathPoints);
+                if (shouldPreferLocalRoutePath(pathPoints, stations)) {
+                    drawRouteAmapFallback(stations, pathPoints);
+                } else {
+                    drawRouteAmap(route, stations, pathPoints);
+                }
             } else {
                 drawRouteLeaflet(stations, pathPoints);
             }

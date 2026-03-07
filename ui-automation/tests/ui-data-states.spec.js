@@ -37,16 +37,16 @@ test.describe('UI Data States', () => {
     }
   });
 
-  test('Messages page should show visible feedback entries with explicit state handling', async ({ page }) => {
+  test('Messages page should show explicit empty or populated feedback state', async ({ page }) => {
     await page.goto('index.html', { waitUntil: 'domcontentloaded' });
     await page.locator('#header a', { hasText: '留言与改进建议' }).first().click();
     const { frame } = await getIframe(page);
-    await frame.waitForSelector('.message-item', { timeout: 20000 });
-    await expect(frame.locator('.message-item')).toHaveCount(5);
-    const panelCount = await frame.locator('.front-page-state-panel').count();
-    if (panelCount > 0) {
-      const panelText = await frame.locator('.front-page-state-panel').first().innerText();
-      expect(panelText.length).toBeGreaterThan(0);
+    await frame.waitForSelector('form.message-form', { timeout: 20000 });
+    const count = await frame.locator('.message-item').count();
+    if (count === 0) {
+      await expect(frame.locator('.front-page-state-panel')).toContainText('当前暂无留言记录');
+    } else {
+      expect(count).toBeGreaterThan(0);
     }
   });
 

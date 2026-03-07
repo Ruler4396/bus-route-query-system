@@ -2277,6 +2277,124 @@ body.transit-shell #iframe {
   min-height: 32px;
 }
 
+
+
+/* user center compact layout */
+.page-user-center #swiper {
+  display: none !important;
+}
+
+.page-user-center #app {
+  width: min(1180px, calc(100% - 20px));
+  margin: 0 auto;
+  padding: 10px 0 20px;
+}
+
+.page-user-center .index-title {
+  width: 100% !important;
+  margin: 0 auto 18px !important;
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center !important;
+}
+
+.page-user-center .center-container {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.page-user-center .left-container,
+.page-user-center .right-container {
+  width: 100% !important;
+  margin: 0 !important;
+  border-radius: 18px !important;
+  box-shadow: var(--ux-shadow-sm) !important;
+}
+
+.page-user-center .right-container {
+  padding: 18px !important;
+}
+
+.page-user-center .right-container .layui-form-item {
+  padding: 8px 0 !important;
+  margin: 0 0 8px 0 !important;
+}
+
+.page-user-center .right-container .layui-input-block {
+  margin: 0 !important;
+}
+
+.page-user-center .right-container .layui-btn {
+  height: 42px !important;
+  line-height: 42px !important;
+}
+
+/* message page stronger centering */
+.page-messages-list #app {
+  width: min(1320px, calc(100% - 20px));
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.page-messages-list .message-page-title,
+.page-messages-list .message-container,
+.page-messages-list .message-form,
+.page-messages-list .message-list {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.page-messages-list .message-page-title {
+  width: min(100%, 1280px);
+}
+
+.page-messages-list .message-container {
+  width: min(100%, 1180px);
+}
+
+.page-messages-list .message-form,
+.page-messages-list .message-list {
+  width: 100%;
+}
+
+.page-messages-list .feedback-chip {
+  min-height: 30px;
+  padding: 4px 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.page-messages-list .feedback-chip.warn {
+  background: #fff7ed !important;
+  border-color: #fed7aa !important;
+  color: #9a3412 !important;
+}
+
+.page-messages-list .feedback-chip.good {
+  background: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #166534 !important;
+}
+
+.page-messages-list .feedback-chip.danger {
+  background: #fef2f2 !important;
+  border-color: #fecaca !important;
+  color: #991b1b !important;
+}
+
+@media (max-width: 980px) {
+  .page-user-center .center-container {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* login page redesign */
 body.page-login {
   min-height: 100vh;

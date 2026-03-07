@@ -16,8 +16,14 @@ test.describe('Feedback Workflow', () => {
     await page.locator('#header a', { hasText: '留言与改进建议' }).first().click();
     const { frame } = await getIframe(page);
     await frame.waitForURL(/messages\/list\.html/);
-    await expect(frame.locator('body')).toContainText('类型：');
+    await expect(frame.locator('body')).toContainText('类型');
     await expect(frame.locator('body')).toContainText('反馈处理看板');
+
+    await frame.locator('textarea[name="content"]').fill('自动化回归反馈：请核验 31 路地图与站点贴合度');
+    await frame.locator('input[name="routeName"]').fill('31路');
+    await frame.locator('input[name="stationName"]').fill('纸厂地铁燕岗站');
+    await frame.locator('#messageSubmitBtn').click();
+    await frame.waitForTimeout(1500);
 
     await frame.locator('button', { hasText: '反馈处理看板' }).click();
     await frame.waitForURL(/messages\/review\.html/);

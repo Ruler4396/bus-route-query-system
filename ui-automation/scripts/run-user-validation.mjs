@@ -142,6 +142,11 @@ async function main() {
         const bodyText = await frame.locator('body').innerText();
         const intakeReady = bodyText.includes('反馈处理看板') && bodyText.includes('留言');
         task.checks.push({ check: 'feedback_entry', value: intakeReady });
+        await frame.locator('textarea[name="content"]').fill('准真实验证反馈：请核对 31 路终点地铁衔接可达性');
+        await frame.locator('input[name="routeName"]').fill('31路');
+        await frame.locator('input[name="stationName"]').fill('南石路地铁棣园站');
+        await frame.locator('#messageSubmitBtn').click();
+        await frame.waitForTimeout(1500);
         await frame.locator('button', { hasText: '反馈处理看板' }).click();
         await frame.waitForURL(/messages\/review\.html/, { timeout: 20000 });
         await frame.waitForSelector('button', { timeout: 20000 });
