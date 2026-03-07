@@ -1,8 +1,13 @@
 # PJT-0001 · PROJECT_CHANGELOG
 
-## 2026-03-07 · CHG-20260307-014 · 分段状态标签语法修正
-- 修复路线规划页分段状态标签 `:class` 绑定中的引号问题，避免后续页面维护时出现模板解析风险。
-- 对应提交：`6f06073`
+## 2026-03-07 · CHG-20260307-014 · 屏幕阅读器基线 / 目的地入口 / 试点核验台账
+- 新增 `docs/SCREEN_READER_BASELINE_2026-03-07.md`，明确 NVDA / VoiceOver / TalkBack 目标组合与当前结构化代理验证范围。
+- 新增 `docs/PILOT_VERIFICATION_LOG.md`，固化广州老城区公共服务走廊试点样本（站点 / 换乘节点 / 目的地入口）。
+- 路线治理配置与路线规划页治理面板新增已核验样本名称展示。
+- 路线分段结果增强 `entranceType / entranceAccessible / curbRamp` 等字段，使终点入口级可达性在前端可见。
+- 新增 `ui-automation/tests/ui-screen-reader-baseline.spec.js`，验证壳层、路线规划、反馈页、设置页的屏幕阅读器基线语义。
+- 本轮完成 `ACCESSIBILITY_READINESS_TODO.md` 中的 `C02`、`E04`、`F04`。
+- 对应提交：`3b6a39e`
 
 ## 2026-03-07 · CHG-20260307-013 · 准真实用户验证任务与验证报告
 - 新增 `docs/ACCESSIBILITY_VALIDATION_TASKS.md`，定义 5 个准真实任务场景与成功标准。
