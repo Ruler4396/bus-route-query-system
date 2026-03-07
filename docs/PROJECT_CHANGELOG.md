@@ -1,5 +1,12 @@
 # PJT-0001 · PROJECT_CHANGELOG
 
+## 2026-03-07 · CHG-20260307-009 · 前端高风险页面脚本拆分（S01）
+- 将 `index.html`、`home.html`、`gongjiaoluxian/list.html`、`accessibility/settings.html` 的内联脚本抽离到 `src/main/resources/front/front/js/pages/`。
+- 新增 `shell-page.js`、`home-page.js`、`route-list-page.js`、`accessibility-settings-page.js`，降低后续增量修改时的格式错误风险。
+- 本轮拆分不改变业务功能，只优化高风险页面的脚本结构。
+- 结构拆分后重新跑现有 20 条自动化测试，全部通过。
+- 对应提交：`c5b2f08`
+
 ## 2026-03-07 · CHG-20260307-008 · 用户画像接入推荐逻辑与可解释结果
 - `RoutePlanningService` / `RoutePlanningServiceImpl` 支持 `profileType` 画像输入，并为轮椅/行动不便与低视力画像生成差异化排序结果。
 - `/route/plan` 与 `/route/plan/summary` 返回 `confidenceScore / confidenceLevelText / dataSourceText / dataUpdatedAtText / decisionState / riskHints / rejectedRoutes` 等解释字段。
