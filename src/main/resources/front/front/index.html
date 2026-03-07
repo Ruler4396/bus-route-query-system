@@ -14,12 +14,11 @@
 	</head>
 	<style type="text/css">
 		html, body {
-			height: 100%;
+			min-height: 100%;
 		}
 
 			#header {
-				position: sticky;
-				top: 0;
+				position: relative;
 				width: 100%;
 				z-index: 20;
 			}
@@ -29,7 +28,7 @@
 			border: 0;
 		}
 	</style>
-		<body class="transit-ui transit-shell" data-shell-scroll-mode="iframe">
+		<body class="transit-ui transit-shell" data-shell-scroll-mode="page">
 		<!-- 跳过导航链接（无障碍） -->
 		<a href="#main-content" class="skip-link">跳转到主要内容</a>
 		<!-- start 顶部导航栏 -->
@@ -77,16 +76,16 @@
 					<button id="assistFontMinus" class="assist-btn" type="button" aria-label="减小字体">字体 -</button>
 					<button id="assistSpeech" class="assist-btn" type="button" aria-label="切换语音播报">语音播报</button>
 					<button id="assistKeyboard" class="assist-btn" type="button" aria-label="切换键盘导航">键盘导航</button>
-					<button id="assistCaption" class="assist-btn" type="button" aria-label="切换字幕提示面板">字幕提示</button>
-					<button id="assistMotion" class="assist-btn" type="button" aria-label="切换减少动态效果">减少动态</button>
-					<button id="assistShortcutHelp" class="assist-btn" type="button" aria-label="打开快捷键帮助">快捷键帮助</button>
+					<button id="assistCaption" class="assist-btn" type="button" aria-label="切换字幕提示面板" aria-keyshortcuts="Alt+C">字幕提示</button>
+					<button id="assistMotion" class="assist-btn" type="button" aria-label="切换减少动态效果" aria-keyshortcuts="Alt+R">减少动态</button>
+					<button id="assistShortcutHelp" class="assist-btn" type="button" aria-label="打开快捷键帮助" aria-keyshortcuts="Alt+/">快捷键帮助</button>
 					<span id="assistStatusText" class="assist-status" aria-live="polite">系统状态同步中…</span>
 				</div>
 			</div>
 								</div>
 		<!-- end 顶部导航栏 -->
 			<main id="main-content" tabindex="-1" aria-label="页面主要内容区域">
-				<iframe src="./pages/home/home.html" id="iframe" frameborder="0" scrolling="auto" width="100%" title="业务内容区域" onload="changeFrameHeight()"></iframe>
+				<iframe src="./pages/home/home.html" id="iframe" frameborder="0" scrolling="no" width="100%" title="业务内容区域" onload="changeFrameHeight()"></iframe>
 		</main>
 		<button class="assist-entry-btn" type="button" aria-label="打开无障碍设置页面" onclick="navPage('./pages/accessibility/settings.html')">
 			<span class="assist-entry-icon" aria-hidden="true">♿</span>

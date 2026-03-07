@@ -1,5 +1,7 @@
 				var DEFAULT_IFRAME_URL = './pages/home/home.html';
 				var frameResizeTimer = null;
+				var frameDomObserver = null;
+				var frameResizeObserver = null;
 
 				function normalizeIframeUrl(rawUrl) {
 					var fallbackUrl = DEFAULT_IFRAME_URL;
@@ -14,6 +16,63 @@
 					return safePathPattern.test(url) ? url : fallbackUrl;
 				}
 
+				function scrollShellToTop() {
+					window.scrollTo({ top: 0, behavior: 'auto' });
+				}
+
+				function disconnectFrameSizeObservers() {
+					if (frameDomObserver) {
+						try { frameDomObserver.disconnect(); } catch (e) {}
+						frameDomObserver = null;
+					}
+					if (frameResizeObserver) {
+						try { frameResizeObserver.disconnect(); } catch (e) {}
+						frameResizeObserver = null;
+					}
+				}
+
+				function attachFrameSizeObservers() {
+					var iframe = document.getElementById('iframe');
+					if (!iframe || !iframe.contentWindow || !iframe.contentWindow.document) return;
+					disconnectFrameSizeObservers();
+					var doc = iframe.contentWindow.document;
+					var observeTarget = doc.body || doc.documentElement;
+					if (!observeTarget) return;
+					var ResizeCtor = iframe.contentWindow.ResizeObserver || window.ResizeObserver;
+					if (ResizeCtor) {
+						frameResizeObserver = new ResizeCtor(function() {
+							scheduleFrameResize(0);
+						});
+						frameResizeObserver.observe(observeTarget);
+						if (doc.documentElement && doc.documentElement !== observeTarget) {
+							frameResizeObserver.observe(doc.documentElement);
+						}
+					}
+					var MutationCtor = iframe.contentWindow.MutationObserver || window.MutationObserver;
+					if (MutationCtor) {
+						frameDomObserver = new MutationCtor(function() {
+							scheduleFrameResize(16);
+						});
+						frameDomObserver.observe(observeTarget, {
+							childList: true,
+							subtree: true,
+							attributes: true,
+							characterData: true
+						});
+					}
+					if (doc.fonts && doc.fonts.ready) {
+						doc.fonts.ready.then(function() {
+							scheduleFrameResize(0);
+						}).catch(function() {});
+					}
+				}
+
+				function queueFrameResizeBurst() {
+					[0, 180, 520, 1100, 2000].forEach(function(delay) {
+						setTimeout(changeFrameHeight, delay);
+					});
+				}
+
 				function applyIframeUrl(url, persist) {
 					var iframe = document.getElementById('iframe');
 					if (!iframe) return;
@@ -24,13 +83,17 @@
 					if (vue) {
 						vue.activeNavUrl = safeUrl;
 					}
+					scrollShellToTop();
 					var currentSrc = iframe.getAttribute('src') || '';
 					if (currentSrc === safeUrl) {
 						scheduleFrameResize(30);
+						queueFrameResizeBurst();
 						return;
 					}
+					disconnectFrameSizeObservers();
 					iframe.src = safeUrl;
 					scheduleFrameResize(120);
+					queueFrameResizeBurst();
 				}
 
 	      var vue1 = new Vue({el: '#tabbar'})
@@ -196,16 +259,19 @@
 						if (iframe) {
 							iframe.addEventListener('load', function() {
 								syncAssistSettingsToIframe();
+								attachFrameSizeObservers();
 								updateAssistStatus();
 								scheduleFrameResize(0);
 								scheduleFrameResize(300);
 								scheduleFrameResize(1000);
+								queueFrameResizeBurst();
 							});
 							iframe.addEventListener('error', function() {
 								var statusNode = document.getElementById('assistStatusText');
 								if (statusNode) {
 									statusNode.textContent = '页面加载失败，已回退首页';
 								}
+								disconnectFrameSizeObservers();
 								applyIframeUrl(DEFAULT_IFRAME_URL, true);
 							});
 						}
@@ -253,25 +319,68 @@
 						scheduleFrameResize(0);
 					}, 10000);
 
+	      function readFrameHeight(doc) {
+	        if (!doc) return 0;
+	        var body = doc.body;
+	        var html = doc.documentElement;
+	        var win = doc.defaultView || window;
+	        var maxBottom = 0;
+
+	        function consider(node) {
+	          if (!node || !node.getBoundingClientRect) return;
+	          var style = win.getComputedStyle(node);
+	          if (style && style.position === 'fixed') return;
+	          var rect = node.getBoundingClientRect();
+	          if (!rect) return;
+	          maxBottom = Math.max(maxBottom, Math.ceil(rect.bottom + (win.scrollY || win.pageYOffset || 0)));
+	        }
+
+	        consider(doc.getElementById('app'));
+	        consider(doc.querySelector('main'));
+	        if (body && body.children) {
+	          for (var i = 0; i < body.children.length; i++) {
+	            consider(body.children[i]);
+	          }
+	        }
+
+	        if (maxBottom > 0) {
+	          return maxBottom;
+	        }
+
+	        return Math.max(
+	          body ? body.scrollHeight || 0 : 0,
+	          body ? body.offsetHeight || 0 : 0,
+	          html ? html.scrollHeight || 0 : 0,
+	          html ? html.offsetHeight || 0 : 0
+	        );
+	      }
+
 	      function changeFrameHeight() {
 	        var iframe = document.getElementById('iframe');
 	        if (!iframe) return;
-	        var main = document.getElementById('main-content');
-	        var header = document.getElementById('header');
-	        var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 900;
-	        var headerHeight = header ? Math.ceil(header.getBoundingClientRect().height || header.offsetHeight || 0) : 0;
-	        var mainStyle = main ? window.getComputedStyle(main) : null;
-	        var padTop = mainStyle ? parseFloat(mainStyle.paddingTop || '0') : 0;
-	        var padBottom = mainStyle ? parseFloat(mainStyle.paddingBottom || '0') : 0;
-	        var availableHeight = Math.max(420, Math.floor(viewportHeight - headerHeight - padTop - padBottom - 2));
+	        var doc = null;
+	        try {
+	          doc = iframe.contentWindow && iframe.contentWindow.document ? iframe.contentWindow.document : null;
+	        } catch (e) {
+	          doc = null;
+	        }
+	        var minHeight = 560;
+	        var nextHeight = minHeight;
+	        if (doc) {
+	          nextHeight = Math.max(minHeight, Math.ceil(readFrameHeight(doc) + 12));
+	        } else {
+	          var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 900;
+	          nextHeight = Math.max(minHeight, viewportHeight - 120);
+	        }
 
-	        iframe.style.height = availableHeight + 'px';
-	        iframe.style.overflow = 'auto';
-	        iframe.setAttribute('scrolling', 'auto');
-
-	        // 单滚动策略：外层壳页面不滚动，滚动权交给 iframe 内页
-	        document.body.style.overflow = 'hidden';
-	        document.documentElement.style.overflow = 'hidden';
+	        iframe.style.height = nextHeight + 'px';
+	        iframe.style.overflow = 'hidden';
+	        iframe.setAttribute('scrolling', 'no');
+	        document.body.setAttribute('data-shell-scroll-mode', 'page');
+	        document.body.style.overflowX = 'hidden';
+	        document.body.style.overflowY = 'auto';
+	        document.documentElement.style.overflowX = 'hidden';
+	        document.documentElement.style.overflowY = 'auto';
 	      };
 
 			//  窗口变化时候iframe自适应

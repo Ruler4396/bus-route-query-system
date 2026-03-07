@@ -49,8 +49,9 @@ body {
 
 body.transit-shell {
   overflow-x: hidden;
-  overflow-y: hidden;
-  height: 100vh;
+  overflow-y: auto;
+  min-height: 100vh;
+  height: auto;
 }
 
 h1,
@@ -1865,6 +1866,265 @@ body.page-accessibility-settings {
 
   .page-route-map #map {
     min-height: 420px;
+  }
+}
+
+
+/* natural shell scroll */
+body.transit-shell {
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-height: 100vh;
+  height: auto;
+}
+
+body.transit-shell #header {
+  position: relative !important;
+  top: auto !important;
+  box-shadow: none !important;
+}
+
+body.transit-shell #main-content {
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 0 14px 34px;
+}
+
+body.transit-shell #iframe {
+  display: block !important;
+  min-height: 560px !important;
+  margin: 0 auto !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+/* public page cleanup */
+.page-notice-list .banner,
+.page-links-list .banner,
+.page-messages-list #swiper {
+  display: none !important;
+}
+
+.page-notice-list #app,
+.page-links-list #app,
+.page-messages-list #app {
+  width: min(1320px, calc(100% - 20px));
+  margin: 0 auto;
+}
+
+.page-notice-list .recommend,
+.page-links-list .recommend {
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.page-notice-list .recommend .box,
+.page-links-list .recommend .box {
+  width: 100% !important;
+  max-width: 1320px !important;
+}
+
+.page-notice-list .recommend .title,
+.page-links-list .recommend .title {
+  margin: 0 0 18px !important;
+  padding: 20px 22px !important;
+  min-height: 0 !important;
+  height: auto !important;
+  border-radius: 20px !important;
+  background: linear-gradient(120deg, rgba(34, 44, 40, 0.96), rgba(46, 57, 52, 0.88)) !important;
+  box-shadow: var(--ux-shadow-md) !important;
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: flex-start !important;
+  gap: 8px;
+}
+
+.page-notice-list .recommend .title span:first-child,
+.page-links-list .recommend .title span:first-child {
+  width: 100%;
+  padding: 0 !important;
+  font-size: clamp(26px, 3vw, 34px) !important;
+  font-weight: 700 !important;
+  color: #f4efe6 !important;
+}
+
+.page-notice-list .recommend .title span:last-child,
+.page-links-list .recommend .title span:last-child {
+  width: 100%;
+  padding: 0 !important;
+  color: #ddd1bf !important;
+  font-size: 14px !important;
+}
+
+.page-notice-list .recommend .filter,
+.page-links-list .recommend .filter {
+  padding: 0 !important;
+  margin: 0 0 18px !important;
+  height: auto !important;
+  justify-content: flex-start !important;
+  gap: 12px;
+}
+
+.page-notice-list .recommend .filter .item-list,
+.page-links-list .recommend .filter .item-list {
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(255, 253, 250, 0.95);
+  border: 1px solid var(--ux-border);
+  border-radius: 14px;
+}
+
+.page-notice-list .recommend .filter button,
+.page-links-list .recommend .filter button {
+  height: 42px !important;
+  padding: 0 16px !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+}
+
+.page-notice-list .recommend .list,
+.page-links-list .recommend .list {
+  gap: 18px;
+  align-items: stretch;
+}
+
+.page-notice-list .recommend .list .list-item,
+.page-links-list .recommend .list .list-item {
+  flex: 1 1 calc(50% - 9px) !important;
+  max-width: calc(50% - 9px);
+  min-width: 280px;
+  padding: 0 !important;
+}
+
+.page-notice-list .recommend .list .list-item .list-item-body,
+.page-links-list .recommend .list .list-item .list-item-body {
+  position: relative;
+  min-height: 220px;
+  margin: 0 !important;
+  padding: 18px !important;
+  display: flex !important;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 12px;
+  border: 1px solid var(--ux-border) !important;
+  border-radius: 20px !important;
+  background: linear-gradient(180deg, #fffdfa 0%, #f7f0e5 100%) !important;
+  box-shadow: var(--ux-shadow-sm) !important;
+  cursor: pointer;
+}
+
+.page-notice-list .recommend .list .list-item .list-item-body::before,
+.page-links-list .recommend .list .list-item .list-item-body::before {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(46, 57, 52, 0.08);
+  color: var(--ux-brand);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.page-notice-list .recommend .list .list-item .list-item-body::before {
+  content: '服务公告';
+}
+
+.page-links-list .recommend .list .list-item .list-item-body::before {
+  content: '资源链接';
+}
+
+.page-notice-list .recommend .list .list-item .list-item-body img,
+.page-links-list .recommend .list .list-item .list-item-body img {
+  display: none !important;
+}
+
+.page-notice-list .recommend .list .list-item .info,
+.page-links-list .recommend .list .list-item .info {
+  display: flex !important;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.page-notice-list .recommend .list .list-item .name,
+.page-links-list .recommend .list .list-item .name {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 19px !important;
+  line-height: 1.5;
+  font-weight: 700 !important;
+  color: var(--ux-brand) !important;
+  text-align: left !important;
+}
+
+.page-notice-list .recommend .list .list-item .summary,
+.page-links-list .recommend .list .list-item .summary {
+  width: 100%;
+  margin: 0;
+  color: var(--ux-text);
+  font-size: 14px;
+  line-height: 1.7;
+  text-align: left;
+  word-break: break-word;
+}
+
+.page-notice-list .recommend .list .list-item .meta,
+.page-links-list .recommend .list .list-item .meta {
+  width: 100%;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(46, 57, 52, 0.16);
+  color: var(--ux-muted);
+  font-size: 12px;
+  text-align: left;
+}
+
+.page-messages-list .index-title {
+  margin: 0 0 18px !important;
+  padding: 20px 22px !important;
+  border-radius: 20px !important;
+  background: linear-gradient(120deg, rgba(34, 44, 40, 0.96), rgba(46, 57, 52, 0.88)) !important;
+  box-shadow: var(--ux-shadow-md) !important;
+}
+
+.page-messages-list .message-container {
+  padding: 0 0 20px !important;
+}
+
+.page-messages-list .message-form,
+.page-messages-list .message-list {
+  border-radius: 18px !important;
+  box-shadow: var(--ux-shadow-sm) !important;
+}
+
+.page-messages-list .message-form .layui-form-item:last-child {
+  margin-bottom: 0;
+}
+
+.page-messages-list .message-item {
+  padding: 16px 0 !important;
+}
+
+.page-messages-list .message-item .message,
+.page-messages-list .message-item .label {
+  max-width: min(100%, 860px);
+  line-height: 1.7;
+}
+
+@media (max-width: 900px) {
+  body.transit-shell #main-content {
+    padding: 0 10px 26px;
+  }
+
+  .page-notice-list .recommend .list .list-item,
+  .page-links-list .recommend .list .list-item {
+    flex-basis: 100% !important;
+    max-width: 100%;
   }
 }
 

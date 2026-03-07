@@ -137,9 +137,13 @@ public class MessagesController {
     /**
      * 前端保存
      */
+    @IgnoreAuth
     @RequestMapping("/add")
     public R add(@RequestBody MessagesEntity messages, HttpServletRequest request){
     	messages.setId(new Date().getTime()+new Double(Math.floor(Math.random()*1000)).longValue());
+    	if(StringUtils.isBlank(messages.getUsername())) {
+    		messages.setUsername("匿名访客");
+    	}
     	//ValidatorUtils.validateEntity(messages);
         messagesService.insert(messages);
         return R.ok();
@@ -148,6 +152,7 @@ public class MessagesController {
     /**
      * 修改
      */
+    @IgnoreAuth
     @RequestMapping("/update")
     public R update(@RequestBody MessagesEntity messages, HttpServletRequest request){
         //ValidatorUtils.validateEntity(messages);
