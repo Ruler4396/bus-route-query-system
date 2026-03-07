@@ -8,7 +8,7 @@
 - 新增 `docs/ACCESSIBILITY_DATA_SOURCE_REGISTRY.md` 与 `docs/ACCESSIBILITY_CONFIDENCE_RULES.md`。
 - 新增 `ui-automation/tests/ui-governance-panel.spec.js`，验证治理面板可见。
 - 本轮完成 `ACCESSIBILITY_READINESS_TODO.md` 中的 `F01`、`F02`、`F03`。
-- 对应提交：`9c95fe8`
+- 对应提交：`d7e8a95`
 
 ## 2026-03-07 · CHG-20260307-010 · 分段式门到门无障碍建模（步行 / 上下车 / 换乘）
 - `RoutePlanningService` / `RoutePlanningServiceImpl` 新增分段建模：`origin_walk`、`boarding_access`、`ride_segment`、`transfer_access`、`alighting_access`、`destination_walk`。

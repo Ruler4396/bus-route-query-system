@@ -179,18 +179,18 @@
 ### F. 数据与可信度治理
 - [x] F01 建立数据源登记表：来源、许可、更新频率、覆盖范围、可信度等级。
   - 完成日期：2026-03-07
-  - 对应提交：`9c95fe8`
+  - 对应提交：`d7e8a95`
   - 验证方式：新增 `docs/ACCESSIBILITY_DATA_SOURCE_REGISTRY.md` + `/route/external/governance` 治理接口 + 路线页治理面板
   - 结果：通过
 - [x] F02 为关键标签建立统一置信度规则。
   - 示例：人工核验 > 多源一致 > 单源推断 > 未知。
   - 完成日期：2026-03-07
-  - 对应提交：`9c95fe8`
+  - 对应提交：`d7e8a95`
   - 验证方式：新增 `docs/ACCESSIBILITY_CONFIDENCE_RULES.md`，并在治理面板与路线规划结果中统一使用置信度等级与决策状态
   - 结果：通过
 - [x] F03 接入并整理关键无障碍数据：盲道、无障碍电梯、缘石坡道、站点无障碍等级、目的地入口可达性。
   - 完成日期：2026-03-07
-  - 对应提交：`9c95fe8`
+  - 对应提交：`d7e8a95`
   - 验证方式：治理 JSON + 路线分段结果整合 `curbRamp / transferNodes / destinationEntrances`，并通过 `ui-governance-panel.spec.js` 与 `ui-route-segments.spec.js` 回归
   - 结果：通过
 - [ ] F04 在广州建立一块“小范围人工核验试点数据”，作为真正可演示的可信样本。
