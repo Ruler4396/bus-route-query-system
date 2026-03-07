@@ -1,7 +1,7 @@
 # PJT-0001 · bus-route-query-system · PROJECT_RUNBOOK
 
 最后更新：2026-03-07  
-变更票据：`CHG-20260307-003`
+变更票据：`CHG-20260307-004`
 
 ## 1. 项目定位
 面向视障人士与行动不便人士的无障碍公交出行系统。当前以“演示稳定、远端可调试、线上可回滚”为首要目标。
@@ -52,4 +52,5 @@
 - 远端开发流程：`docs/REMOTE_DEV_WORKFLOW.md`
 - 无障碍达标待办：`docs/ACCESSIBILITY_READINESS_TODO.md`
 - 目标用户范围：`docs/TARGET_USER_SCOPE.md`
+- 首轮试点范围：`docs/PILOT_SCOPE.md`
 - 跨项目索引：`/root/dev/DEVELOPMENT_LOGBOOK.md`
