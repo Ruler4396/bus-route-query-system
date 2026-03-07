@@ -131,12 +131,19 @@
               }
             });
           }
+          var pilot = data.pilotSamples || {};
+          var stationNames = (pilot.stations || []).map(function(item) { return item.stationName; }).slice(0, 4);
+          var transferNames = (pilot.transferNodes || []).map(function(item) { return item.name; }).slice(0, 4);
+          var entranceNames = (pilot.destinationEntrances || []).map(function(item) { return item.name; }).slice(0, 4);
           vue.governanceMeta = {
             dataSourceCount: sources.length,
             confidenceLevels: levels,
             pilotStationCount: Number(pilotSummary.stations || 0),
             pilotTransferCount: Number(pilotSummary.transferNodes || 0),
-            pilotEntranceCount: Number(pilotSummary.destinationEntrances || 0)
+            pilotEntranceCount: Number(pilotSummary.destinationEntrances || 0),
+            pilotStationNames: stationNames,
+            pilotTransferNames: transferNames,
+            pilotEntranceNames: entranceNames
           };
         }, {
           silentError: true,

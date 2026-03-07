@@ -35,14 +35,14 @@
       <div class="summary-block"><h4>关联站点</h4><p>{{item.stationName || '未关联'}}</p></div>
       <div class="summary-block"><h4>处理操作</h4>
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-          <select :value="item.handleStatus || 'PENDING'" @change="updateField(item, 'handleStatus', $event.target.value)">
+          <select aria-label="处理状态" :value="item.handleStatus || 'PENDING'" @change="updateField(item, 'handleStatus', $event.target.value)">
             <option value="PENDING">PENDING</option>
             <option value="IN_REVIEW">IN_REVIEW</option>
             <option value="RESOLVED">RESOLVED</option>
           </select>
-          <input type="text" :value="item.auditOwner || ''" placeholder="审核人" @change="updateField(item, 'auditOwner', $event.target.value)">
-          <input type="text" :value="item.reviewNotes || ''" placeholder="审核备注" @change="updateField(item, 'reviewNotes', $event.target.value)">
-          <input type="text" :value="item.reply || ''" placeholder="回复内容" @change="updateField(item, 'reply', $event.target.value)">
+          <input type="text" aria-label="审核人" :value="item.auditOwner || ''" placeholder="审核人" @change="updateField(item, 'auditOwner', $event.target.value)">
+          <input type="text" aria-label="审核备注" :value="item.reviewNotes || ''" placeholder="审核备注" @change="updateField(item, 'reviewNotes', $event.target.value)">
+          <input type="text" aria-label="回复内容" :value="item.reply || ''" placeholder="回复内容" @change="updateField(item, 'reply', $event.target.value)">
           <button type="button" class="demo-main-btn" @click="saveReview(item)">保存处理</button>
         </div>
       </div>

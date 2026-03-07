@@ -96,10 +96,44 @@
 					<div class="layui-form-item layui-form-text" style="display: flex;align-items: center;margin:0">
 						<label class="layui-form-label" style="width: auto;" :style='{"padding":"0","minWidth":"54px","fontSize":"14px","color":"#333","textAlign":"center"}'>留言</label>
 						<div class="layui-input-block" style="margin:0;flex:1;">
-							<textarea :style='{"padding":"10px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"#333","borderRadius":"4px","borderWidth":"0","fontSize":"14px","borderStyle":"solid","height":"120px"}' name="content" required lay-verify="required" placeholder="请输入内容" class="layui-textarea"></textarea>
+							<textarea aria-label="反馈内容" :style='{"padding":"10px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"#333","borderRadius":"4px","borderWidth":"0","fontSize":"14px","borderStyle":"solid","height":"120px"}' name="content" required lay-verify="required" placeholder="请输入内容" class="layui-textarea"></textarea>
 						</div>
 					</div>
-					<div class="layui-form-item layui-form-text" style="display: flex;align-items: center;margin-top:10px">
+					<div class="layui-form-item" style="display:flex;align-items:center;margin-top:10px">
+                                                <label class="layui-form-label" style="width: auto;" :style='{"padding":"0","minWidth":"54px","fontSize":"14px","color":"#333","textAlign":"center"}'>类型</label>
+                                                <div class="layui-input-block" style="margin:0;flex:1;">
+                                                        <select name="feedbackType" id="feedbackType" class="layui-input" aria-label="反馈类型">
+                                                                <option value="ROUTE_INACCURATE">路线不准确</option>
+                                                                <option value="FACILITY_ABNORMAL">设施异常</option>
+                                                                <option value="ENTRANCE_MISSING">入口信息缺失</option>
+                                                                <option value="PAGE_USABILITY">页面不可用</option>
+                                                                <option value="OTHER">其他</option>
+                                                        </select>
+                                                </div>
+                                        </div>
+                                        <div class="layui-form-item" style="display:flex;align-items:center;margin-top:10px">
+                                                <label class="layui-form-label" style="width: auto;" :style='{"padding":"0","minWidth":"54px","fontSize":"14px","color":"#333","textAlign":"center"}'>级别</label>
+                                                <div class="layui-input-block" style="margin:0;flex:1;">
+                                                        <select name="severityLevel" id="severityLevel" class="layui-input" aria-label="严重级别">
+                                                                <option value="LOW">低</option>
+                                                                <option value="MEDIUM" selected>中</option>
+                                                                <option value="HIGH">高</option>
+                                                        </select>
+                                                </div>
+                                        </div>
+                                        <div class="layui-form-item" style="display:flex;align-items:center;margin-top:10px">
+                                                <label class="layui-form-label" style="width: auto;" :style='{"padding":"0","minWidth":"54px","fontSize":"14px","color":"#333","textAlign":"center"}'>路线</label>
+                                                <div class="layui-input-block" style="margin:0;flex:1;">
+                                                        <input type="text" name="routeName" aria-label="关联路线" placeholder="例如：1路 / 31路" autocomplete="off" class="layui-input">
+                                                </div>
+                                        </div>
+                                        <div class="layui-form-item" style="display:flex;align-items:center;margin-top:10px">
+                                                <label class="layui-form-label" style="width: auto;" :style='{"padding":"0","minWidth":"54px","fontSize":"14px","color":"#333","textAlign":"center"}'>站点</label>
+                                                <div class="layui-input-block" style="margin:0;flex:1;">
+                                                        <input type="text" name="stationName" aria-label="关联站点" placeholder="例如：海珠广场 / 中山医" autocomplete="off" class="layui-input">
+                                                </div>
+                                        </div>
+                                        <div class="layui-form-item layui-form-text" style="display: flex;align-items: center;margin-top:10px">
                                             <div class="layui-form-item" pane>
                                                 <label class="layui-form-label" style="width: auto;" :style='{"padding":"0","minWidth":"54px","fontSize":"14px","color":"#333","textAlign":"center"}'>图片</label>
                                                 <div v-if="cpicture" class="layui-input-block">

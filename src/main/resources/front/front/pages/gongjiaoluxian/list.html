@@ -288,23 +288,23 @@ width: 100%;
 		<form class="layui-form filter" :style='{"padding":"0 10px","boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"10px 0 10px 0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(0, 0, 0, 0)","borderRadius":"4px","borderWidth":"0","borderStyle":"solid","justifyContent":"flex-end","height":"64px"}'>
 			<div class="item-list">
 				<div class="lable" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(0,0,0,0)","backgroundColor":"transparent","color":"rgba(19, 19, 19, 1)","borderRadius":"0","textAlign":"right","borderWidth":"0","width":"auto","fontSize":"16px","borderStyle":"solid"}'>路线名称</div>
-				<input type="text" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"140px","fontSize":"14px","borderStyle":"solid","height":"40px"}' name="luxianmingcheng" id="luxianmingcheng" placeholder="路线名称" autocomplete="off" class="layui-input">
+				<input aria-label="路线名称" type="text" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"140px","fontSize":"14px","borderStyle":"solid","height":"40px"}' name="luxianmingcheng" id="luxianmingcheng" placeholder="路线名称" autocomplete="off" class="layui-input">
 			</div>
 			<div class="item-list">
 				<div class="lable" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(0,0,0,0)","backgroundColor":"transparent","color":"rgba(19, 19, 19, 1)","borderRadius":"0","textAlign":"right","borderWidth":"0","width":"auto","fontSize":"16px","borderStyle":"solid"}'>起点站名</div>
-				<input type="text" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"140px","fontSize":"14px","borderStyle":"solid","height":"40px"}' name="qidianzhanming" id="qidianzhanming" placeholder="起点站名" autocomplete="off" class="layui-input">
+				<input aria-label="起点站名" type="text" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"140px","fontSize":"14px","borderStyle":"solid","height":"40px"}' name="qidianzhanming" id="qidianzhanming" placeholder="起点站名" autocomplete="off" class="layui-input">
 			</div>
 			<div class="item-list">
 				<div class="lable" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(0,0,0,0)","backgroundColor":"transparent","color":"rgba(19, 19, 19, 1)","borderRadius":"0","textAlign":"right","borderWidth":"0","width":"auto","fontSize":"16px","borderStyle":"solid"}'>途径站点</div>
-				<input type="text" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"140px","fontSize":"14px","borderStyle":"solid","height":"40px"}' name="tujingzhandian" id="tujingzhandian" placeholder="途径站点" autocomplete="off" class="layui-input">
+				<input aria-label="途径站点" type="text" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"140px","fontSize":"14px","borderStyle":"solid","height":"40px"}' name="tujingzhandian" id="tujingzhandian" placeholder="途径站点" autocomplete="off" class="layui-input">
 			</div>
 				<div class="item-list">
 					<div class="lable" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(0,0,0,0)","backgroundColor":"transparent","color":"rgba(19, 19, 19, 1)","borderRadius":"0","textAlign":"right","borderWidth":"0","width":"auto","fontSize":"16px","borderStyle":"solid"}'>终点站名</div>
-					<input type="text" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"140px","fontSize":"14px","borderStyle":"solid","height":"40px"}' name="zhongdianzhanming" id="zhongdianzhanming" placeholder="终点站名" autocomplete="off" class="layui-input">
+					<input aria-label="终点站名" type="text" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"140px","fontSize":"14px","borderStyle":"solid","height":"40px"}' name="zhongdianzhanming" id="zhongdianzhanming" placeholder="终点站名" autocomplete="off" class="layui-input">
 				</div>
 				<div class="item-list">
 					<div class="lable" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(0,0,0,0)","backgroundColor":"transparent","color":"rgba(19, 19, 19, 1)","borderRadius":"0","textAlign":"right","borderWidth":"0","width":"auto","fontSize":"16px","borderStyle":"solid"}'>服务画像</div>
-					<select id="profileType" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"170px","fontSize":"14px","borderStyle":"solid","height":"40px"}' class="layui-input">
+					<select id="profileType" aria-label="服务画像" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"170px","fontSize":"14px","borderStyle":"solid","height":"40px"}' class="layui-input">
 						<option value="AUTO" selected>自动识别 / 通用</option>
 						<option value="WHEELCHAIR">轮椅 / 行动不便</option>
 						<option value="LOW_VISION">低视力</option>
@@ -313,7 +313,7 @@ width: 100%;
 				</div>
 				<div class="item-list">
 					<div class="lable" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(0,0,0,0)","backgroundColor":"transparent","color":"rgba(19, 19, 19, 1)","borderRadius":"0","textAlign":"right","borderWidth":"0","width":"auto","fontSize":"16px","borderStyle":"solid"}'>推荐偏好</div>
-					<select id="preferenceType" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"160px","fontSize":"14px","borderStyle":"solid","height":"40px"}' class="layui-input">
+					<select id="preferenceType" aria-label="推荐偏好" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"160px","fontSize":"14px","borderStyle":"solid","height":"40px"}' class="layui-input">
 						<option value="AUTO" selected>智能推荐</option>
 						<option value="ACCESSIBLE">无障碍优先</option>
 						<option value="TIME">时间优先</option>
@@ -426,6 +426,9 @@ width: 100%;
 								<span v-if="segment.stationName">站点：{{segment.stationName}}</span>
 								<span v-if="segment.estimatedDistanceMeters">估算：{{segment.estimatedDistanceMeters}} 米</span>
 								<span v-if="segment.stationSpan">覆盖：{{segment.stationSpan}} 站</span>
+								<span v-if="segment.entranceType">入口：{{segment.entranceType}}</span>
+								<span v-if="segment.entranceAccessible !== undefined">入口可达：{{segment.entranceAccessible ? '是' : '待核对/否'}}</span>
+								<span v-if="segment.curbRamp !== undefined">缘石坡道：{{segment.curbRamp ? '有' : '待核对/无'}}</span>
 							</div>
 						</div>
 					</div>
