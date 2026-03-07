@@ -159,6 +159,7 @@
 		<script src="../../modules/config.js"></script>
 		<!-- 工具方法 -->
 		<script src="../../js/utils.js"></script>
+			<script src="../../js/page-state.js"></script>
 
 		<script>
 			var vue = new Vue({
@@ -200,6 +201,36 @@
 				var http = layui.http;
 				var form = layui.form;
 				var jquery = layui.jquery;
+				var messageStatePanel = FrontPageState.createPanel({
+					mount: function() { return document.getElementById('pager'); },
+					position: 'before',
+					onAction: function() { init(); }
+				});
+
+				function applyMessageState(res) {
+					var list = (res && res.data && jquery.isArray(res.data.list)) ? res.data.list : [];
+					var total = (res && res.data && typeof res.data.total === 'number') ? res.data.total : list.length;
+					vue.dataList = list;
+					if (!list.length) {
+						jquery('#pager').html('');
+						messageStatePanel.setEmpty({
+							title: '当前暂无留言记录',
+							description: '当前页还没有可展示的留言，可登录演示账号提交一条新的改进建议。',
+							count: total,
+							actionLabel: '重新加载',
+							actionMode: 'reload',
+							sourceLabel: '当前环境：试点演示数据'
+						});
+						return;
+					}
+					messageStatePanel.setReady(total, {
+						title: '留言数据已同步',
+						description: '当前展示用户留言与回复，可用于演示反馈闭环。',
+						sparseThreshold: 4,
+						sparseText: '当前留言样本量有限，但已足够演示“用户反馈 -> 回复 -> 待办改进”的闭环。',
+						sourceLabel: '当前环境：试点演示数据'
+					});
+				}
 
 				var limit = 5;
 				vue.baseurl = http.baseurl;
@@ -248,38 +279,66 @@
 				init();
 
 				function init() {
-					// 获取列表数据
-					http.request('messages/list', 'get', {
-						page: 1,
-						limit: limit,
-                        sort:"addtime",
-                        order:"desc"
-					}, function(res) {
-						vue.dataList = res.data.list
-						// 分页
-						laypage.render({
-							elem: 'pager',
-							count: res.data.total,
-							limit: limit,
-							groups: 5,
-							layout: ["prev","page","next"],
-							theme: '#B7BA6B',
-							jump: function(obj, first) {
-								//首次不执行
-								if (!first) {
-									http.request('messages/list', 'get', {
-										page: obj.curr,
-										limit: obj.limit,
-                                        sort:"addtime",
-                                        order:"desc"
-									}, function(res) {
-										vue.dataList = res.data.list
-									})
-								}
-							}
-						});
-					})
-				}
+                        messageStatePanel.setLoading({
+                                title: '正在加载留言数据',
+                                description: '系统正在同步留言与回复，请稍候。',
+                                sourceLabel: '当前环境：试点演示数据'
+                        });
+                        http.request('messages/list', 'get', {
+                                page: 1,
+                                limit: limit,
+                                sort: 'addtime',
+                                order: 'desc'
+                        }, function(res) {
+                                applyMessageState(res);
+                                laypage.render({
+                                        elem: 'pager',
+                                        count: res.data.total,
+                                        limit: limit,
+                                        groups: 5,
+                                        layout: ['prev', 'page', 'next'],
+                                        theme: '#B7BA6B',
+                                        jump: function(obj, first) {
+                                                if (!first) {
+                                                        http.request('messages/list', 'get', {
+                                                                page: obj.curr,
+                                                                limit: obj.limit,
+                                                                sort: 'addtime',
+                                                                order: 'desc'
+                                                        }, function(innerRes) {
+                                                                applyMessageState(innerRes);
+                                                        }, {
+                                                                silentError: true,
+                                                                onError: function() {
+                                                                        vue.dataList = [];
+                                                                        jquery('#pager').html('');
+                                                                        messageStatePanel.setError({
+                                                                                title: '留言数据加载失败',
+                                                                                description: '未能加载留言列表，请稍后重试。',
+                                                                                actionLabel: '重新加载',
+                                                                                actionMode: 'reload',
+                                                                                sourceLabel: '当前环境：试点演示数据'
+                                                                        });
+                                                                }
+                                                        });
+                                                }
+                                        }
+                                });
+                        }, {
+                                silentError: true,
+                                onError: function() {
+                                        vue.dataList = [];
+                                        jquery('#pager').html('');
+                                        messageStatePanel.setError({
+                                                title: '留言数据加载失败',
+                                                description: '请求留言接口失败，请稍后重试。',
+                                                actionLabel: '重新加载',
+                                                actionMode: 'reload',
+                                                sourceLabel: '当前环境：试点演示数据'
+                                        });
+                                }
+                        });
+                    }
                                 //上传图片
                                 var cpictureUpload = upload.render({
                                         //绑定元素

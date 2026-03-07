@@ -1,7 +1,7 @@
 # PJT-0001 · bus-route-query-system · PROJECT_RUNBOOK
 
 最后更新：2026-03-07  
-变更票据：`CHG-20260307-005`
+变更票据：`CHG-20260307-006`
 
 ## 1. 项目定位
 面向视障人士与行动不便人士的无障碍公交出行系统。当前以“演示稳定、远端可调试、线上可回滚”为首要目标。
@@ -28,6 +28,7 @@
 - 开发地址：`http://8.134.206.52:8134/springbootmf383/front/index.html`
 - 开发日志：`runtime/remote-dev/app.log`
 - 开发 PID：`runtime/remote-dev/server.pid`
+- 页面级状态回归：`ui-automation/tests/ui-data-states.spec.js`
 - 演示数据重置：`bash scripts/remote-dev-reset-demo-db.sh`
 
 ## 5. 回归重点
@@ -55,4 +56,5 @@
 - 目标用户范围：`docs/TARGET_USER_SCOPE.md`
 - 首轮试点范围：`docs/PILOT_SCOPE.md`
 - 中期检查演示文档：`docs/MIDTERM_DEMO_GUIDE.md`
+- 页面状态组件：`src/main/resources/front/front/js/page-state.js`
 - 跨项目索引：`/root/dev/DEVELOPMENT_LOGBOOK.md`

@@ -371,6 +371,7 @@ width: 100%;
 	  <script src="../../js/config.js"></script>
 	  <script src="../../modules/config.js"></script>
 	  <script src="../../js/utils.js"></script>
+			<script src="../../js/page-state.js"></script>
   <script src="../../js/accessibility.js"></script>
 
   <script type="text/javascript">
@@ -436,6 +437,43 @@ width: 100%;
 	var http = layui.http;
 	var jquery = layui.jquery;
 	var laydate = layui.laydate;
+	var routeStatePanel = FrontPageState.createPanel({
+		mount: function() { return document.querySelector('.page-route-list .list'); },
+		onAction: function(actionMode) {
+			if (actionMode === 'reset-filters') {
+				jquery('#luxianmingcheng, #qidianzhanming, #tujingzhandian, #zhongdianzhanming').val('');
+				jquery('#preferenceType').val('AUTO');
+				form.render('select');
+				clearPlanNotice();
+			}
+			pageList();
+		}
+	});
+
+	function applyRouteStateForList(res, hasFilters) {
+		var list = (res && res.data && jquery.isArray(res.data.list)) ? res.data.list : [];
+		var total = (res && res.data && typeof res.data.total === 'number') ? res.data.total : list.length;
+		vue.dataList = list;
+		if (!list.length) {
+			clearPager();
+			routeStatePanel.setEmpty({
+				title: hasFilters ? '未找到符合条件的路线' : '当前暂无可展示路线',
+				description: hasFilters ? '可减少筛选条件，或直接查看 1路、3路、31路这三条试点重点线路。' : '当前页没有可展示结果，可稍后刷新，或切换到实时地图继续查看试点线路。',
+				count: total,
+				actionLabel: hasFilters ? '清空筛选并重试' : '重新加载',
+				actionMode: hasFilters ? 'reset-filters' : 'reload',
+				sourceLabel: '当前环境：试点演示数据'
+			});
+			return;
+		}
+		routeStatePanel.setReady(total, {
+			title: vue.isPlanMode ? '推荐结果已生成' : '路线数据已同步',
+			description: vue.isPlanMode ? '当前展示无障碍推荐结果，可切换到地图页继续核对站点和 ETA。' : '当前展示首轮试点范围内的路线数据，可按关键词筛选。',
+			sparseThreshold: 4,
+			sparseText: '当前仅展示首轮试点的重点线路（1路、3路、31路），属于试点样本，数量有限但可完整演示。',
+			sourceLabel: '当前环境：试点演示数据'
+		});
+	}
 
 	var limit = 8;
     limit = 3 * 2;
@@ -471,54 +509,83 @@ width: 100%;
 	      }
 
 	      function pageList() {
-	        var param = {
-	          page: 1,
-	          limit: limit
-	        }
-
+        routeStatePanel.setLoading({
+          title: '正在加载路线数据',
+          description: '系统正在同步试点范围内的路线，请稍候。',
+          sourceLabel: '当前环境：试点演示数据'
+        });
+        var param = {
+          page: 1,
+          limit: limit
+        };
 
         if (jquery('#luxianmingcheng').val()) {
-          param['luxianmingcheng'] = jquery('#luxianmingcheng').val() ? '%' + jquery('#luxianmingcheng').val() + '%' : '';
+          param['luxianmingcheng'] = '%' + jquery('#luxianmingcheng').val() + '%';
         }
         if (jquery('#qidianzhanming').val()) {
-          param['qidianzhanming'] = jquery('#qidianzhanming').val() ? '%' + jquery('#qidianzhanming').val() + '%' : '';
+          param['qidianzhanming'] = '%' + jquery('#qidianzhanming').val() + '%';
         }
         if (jquery('#tujingzhandian').val()) {
-          param['tujingzhandian'] = jquery('#tujingzhandian').val() ? '%' + jquery('#tujingzhandian').val() + '%' : '';
+          param['tujingzhandian'] = '%' + jquery('#tujingzhandian').val() + '%';
         }
         if (jquery('#zhongdianzhanming').val()) {
-          param['zhongdianzhanming'] = jquery('#zhongdianzhanming').val() ? '%' + jquery('#zhongdianzhanming').val() + '%' : '';
+          param['zhongdianzhanming'] = '%' + jquery('#zhongdianzhanming').val() + '%';
         }
 
+        var hasFilters = !!(jquery('#luxianmingcheng').val() || jquery('#qidianzhanming').val() || jquery('#tujingzhandian').val() || jquery('#zhongdianzhanming').val());
 
-
-	        // 获取列表数据
-	        http.request('gongjiaoluxian/list', 'get', param, function(res) {
-	          vue.isPlanMode = false;
-	          clearPlanNotice();
-	          vue.dataList = res.data.list
-	          // 分页
-	          laypage.render({
+        http.request('gongjiaoluxian/list', 'get', param, function(res) {
+          vue.isPlanMode = false;
+          clearPlanNotice();
+          applyRouteStateForList(res, hasFilters);
+          laypage.render({
             elem: 'pager',
             count: res.data.total,
             limit: limit,
             groups: 5,
-            layout: ["prev","page","next"],
+            layout: ['prev','page','next'],
             theme: '#B7BA6B',
             jump: function(obj, first) {
-            	param.page = obj.curr;
-              //首次不执行
+              param.page = obj.curr;
               if (!first) {
-                http.request('gongjiaoluxian/list', 'get', param, function(res) {
-                  vue.dataList = res.data.list
-                })
+                http.request('gongjiaoluxian/list', 'get', param, function(innerRes) {
+                  applyRouteStateForList(innerRes, hasFilters);
+                }, {
+                  silentError: true,
+                  onError: function() {
+                    vue.dataList = [];
+                    clearPager();
+                    routeStatePanel.setError({
+                      title: '路线列表加载失败',
+                      description: '请求分页数据失败，请稍后重试或检查开发实例。',
+                      actionLabel: '重新加载',
+                      actionMode: 'reload',
+                      sourceLabel: '当前环境：试点演示数据'
+                    });
+                  }
+                });
               }
             }
-	          });
-	        })
-	      }
+          });
+        }, {
+          silentError: true,
+          onError: function() {
+            vue.isPlanMode = false;
+            clearPlanNotice();
+            vue.dataList = [];
+            clearPager();
+            routeStatePanel.setError({
+              title: '路线列表加载失败',
+              description: '未能获取路线数据，请稍后重试或检查开发实例服务。',
+              actionLabel: '重新加载',
+              actionMode: 'reload',
+              sourceLabel: '当前环境：试点演示数据'
+            });
+          }
+        });
+      }
 
-	      function planAccessibleRoutes() {
+      function planAccessibleRoutes() {
 	        var startStation = jquery.trim(jquery('#qidianzhanming').val() || '');
 	        var endStation = jquery.trim(jquery('#zhongdianzhanming').val() || '');
 
@@ -539,6 +606,11 @@ width: 100%;
 	        }
 
 	        setPlanNotice('info', '正在计算推荐路线，请稍候...');
+        routeStatePanel.setLoading({
+          title: '正在计算推荐路线',
+          description: '系统正在结合起终点、偏好与试点线路数据生成推荐，请稍候。',
+          sourceLabel: '推荐范围：首轮试点线路'
+        });
 	        var loadingIndex = layer.load(1, {
 	          shade: [0.1, '#fff']
 	        });

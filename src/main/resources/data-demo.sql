@@ -141,3 +141,16 @@ VALUES
   (12, '纸厂地铁燕岗站', 113.2558600, 23.0796920, 2, 1, 1, 1, 4, 0, 0, '地铁衔接点：适合展示电梯与换乘设施。', CURRENT_TIMESTAMP),
   (13, '南石路地铁棣园站', 113.2626120, 23.0770640, 2, 1, 1, 1, 4, 0, 0, '终点换乘点：适合展示站点级可达性。', CURRENT_TIMESTAMP),
   (14, '南石西地铁棣园站总站', 113.2581780, 23.0749740, 2, 1, 1, 1, 6, 0, 0, '试点终点总站：适合演示地铁接驳与终点说明。', CURRENT_TIMESTAMP);
+
+
+MERGE INTO discussgongjiaoluxian (id, refid, userid, nickname, content, reply, addtime)
+KEY(id)
+VALUES
+  (201, 1, 1001, 'demo_user', '1路 的跨江段如果能补充坡道连续性说明，会更适合轮椅用户决策。', '已记录，将在试点核验阶段补充关键站点连续可达性说明。', DATEADD('MINUTE', -18, CURRENT_TIMESTAMP)),
+  (202, 3, 1001, 'demo_user', '31路 的地铁衔接场景很适合演示换乘风险提示。', '已作为中期检查视频中的重点展示线路。', DATEADD('MINUTE', -6, CURRENT_TIMESTAMP));
+
+MERGE INTO discusswangzhangonggao (id, refid, userid, nickname, content, reply, addtime)
+KEY(id)
+VALUES
+  (301, 1, 1001, 'demo_user', '试点范围公告建议持续显示在首页和公告页，方便观众理解边界。', '已通过首页总览 + 公告页双重呈现进行强化。', DATEADD('MINUTE', -14, CURRENT_TIMESTAMP)),
+  (302, 2, 1001, 'demo_user', '演示模式支持 Alt + D 很适合录屏。', '已保留手动演示与自动串场两种模式。', DATEADD('MINUTE', -4, CURRENT_TIMESTAMP));

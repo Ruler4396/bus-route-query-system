@@ -307,6 +307,7 @@ width: 100%;
   <script src="../../js/config.js"></script>
   <script src="../../modules/config.js"></script>
   <script src="../../js/utils.js"></script>
+			<script src="../../js/page-state.js"></script>
 
   <script type="text/javascript">
     var vue = new Vue({
@@ -347,6 +348,40 @@ width: 100%;
 	var http = layui.http;
 	var jquery = layui.jquery;
 	var laydate = layui.laydate;
+	var listStatePanel = FrontPageState.createPanel({
+		mount: function() { return document.querySelector('.list'); },
+		onAction: function(actionMode) {
+			if (actionMode === 'reset-search') {
+				jquery('#lianjiemingcheng').val('');
+			}
+			pageList();
+		}
+	});
+
+	function applyListState(res, hasKeyword) {
+		var list = (res && res.data && jquery.isArray(res.data.list)) ? res.data.list : [];
+		var total = (res && res.data && typeof res.data.total === 'number') ? res.data.total : list.length;
+		vue.dataList = list;
+		if (!list.length) {
+			jquery('#pager').html('');
+			listStatePanel.setEmpty({
+				title: hasKeyword ? '未找到匹配内容' : '当前暂无可展示内容',
+				description: hasKeyword ? '可减少筛选条件，或回到首页继续浏览试点演示内容。' : '当前页没有更多可展示内容，可稍后刷新或切换到首页查看其他模块。',
+				count: total,
+				actionLabel: hasKeyword ? '清空筛选并重试' : '重新加载',
+				actionMode: hasKeyword ? 'reset-search' : 'reload',
+				sourceLabel: '当前环境：试点演示数据'
+			});
+			return;
+		}
+		listStatePanel.setReady(total, {
+			title: '资源链接已同步',
+			description: '当前页面内容已完成加载，可继续打开详情页或返回首页浏览更多内容。',
+			sparseThreshold: 5,
+			sparseText: '当前资源链接样本量有限，但已覆盖 Wheelmap、OpenStreetMap、开放广东等主要数据来源。',
+			sourceLabel: '当前环境：试点演示数据'
+		});
+	}
 
 	var limit = 8;
     limit = 3 * 2;
@@ -397,6 +432,11 @@ width: 100%;
       });
 
       function pageList() {
+        listStatePanel.setLoading({
+          title: '正在加载页面数据',
+          description: '系统正在同步当前页面的数据，请稍候。',
+          sourceLabel: '当前环境：试点演示数据'
+        });
         var param = {
           page: 1,
           limit: limit
@@ -411,7 +451,7 @@ width: 100%;
 
         // 获取列表数据
         http.request('youqinglianjie/list', 'get', param, function(res) {
-          vue.dataList = res.data.list
+          applyListState(res, !!jquery('#lianjiemingcheng').val());
           // 分页
           laypage.render({
             elem: 'pager',
@@ -425,11 +465,37 @@ width: 100%;
               //首次不执行
               if (!first) {
                 http.request('youqinglianjie/list', 'get', param, function(res) {
-                  vue.dataList = res.data.list
+                  applyListState(res, !!jquery('#lianjiemingcheng').val());
+                }, {
+                  silentError: true,
+                  onError: function() {
+                    vue.dataList = [];
+                    jquery('#pager').html('');
+                    listStatePanel.setError({
+                      title: '列表加载失败',
+                      description: '分页数据请求失败，请稍后重试。',
+                      actionLabel: '重新加载',
+                      actionMode: 'reload',
+                      sourceLabel: '当前环境：试点演示数据'
+                    });
+                  }
                 })
               }
             }
           });
+        }, {
+          silentError: true,
+          onError: function() {
+            vue.dataList = [];
+            jquery('#pager').html('');
+            listStatePanel.setError({
+              title: '列表加载失败',
+              description: '当前页面数据请求失败，请稍后重试或检查开发实例。',
+              actionLabel: '重新加载',
+              actionMode: 'reload',
+              sourceLabel: '当前环境：试点演示数据'
+            });
+          }
         })
       }
     });
