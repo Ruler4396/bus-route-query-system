@@ -8,6 +8,24 @@ var reviewVue = new Vue({
     updateField: function(item, field, value) {
       item[field] = value;
     },
+    formatSeverity: function(value) {
+      var map = { HIGH: '高优先级', MEDIUM: '处理中', LOW: '一般提醒' };
+      return map[value] || '处理中';
+    },
+    formatHandleStatus: function(value) {
+      var map = { PENDING: '待核查', IN_REVIEW: '核查中', RESOLVED: '已处理' };
+      return map[value] || '待核查';
+    },
+    formatFeedbackType: function(value) {
+      var map = {
+        ROUTE_INACCURATE: '路线不准确',
+        FACILITY_ABNORMAL: '设施异常',
+        ENTRANCE_MISSING: '入口信息缺失',
+        PAGE_USABILITY: '页面可用性',
+        OTHER: '其他反馈'
+      };
+      return map[value] || '其他反馈';
+    },
     saveReview: function(item) {
       var payload = Object.assign({}, item, {
         reviewedAt: new Date().toISOString().slice(0, 19).replace('T', ' ')

@@ -166,7 +166,7 @@
 						<div class="content" class="content" style="margin: 0;flex: 1;">
 							<span style="display: inline-block;" :style='{"padding":"8px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"8px 0 0 50px","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(183, 186, 107, 0.71)","color":"#fff","borderRadius":"4px","borderWidth":"0","fontSize":"14px","borderStyle":"solid"}' class="message feedback-message-body">
 								{{item.content}}
-                                                                <br><small class="feedback-meta-line"><span class="feedback-meta-chip type">{{formatFeedbackType(item.feedbackType)}}</span><span class="feedback-meta-chip">路线：{{item.routeName || "未关联"}}</span><span class="feedback-meta-chip">站点：{{item.stationName || "未关联"}}</span></small>
+                                                                <br><small class="feedback-meta-line"><span class="feedback-meta-chip type">{{formatFeedbackType(item.feedbackType)}}</span><span class="feedback-meta-chip">{{formatRouteName(item.routeName)}}</span><span class="feedback-meta-chip">{{formatStationName(item.stationName)}}</span></small>
 							</span>
 						</div>
                                                 <div v-if="item.cpicture" class="content" style="margin: 0;flex: 1;">
@@ -245,6 +245,12 @@
 							OTHER: '其他反馈'
 						};
 						return map[value] || '其他反馈';
+					},
+					formatRouteName(value) {
+						return value || '未关联路线';
+					},
+					formatStationName(value) {
+						return value || '未关联站点';
 					}
 				}
 			})
@@ -276,16 +282,15 @@
 							count: total,
 							actionLabel: '重新加载',
 							actionMode: 'reload',
-							sourceLabel: '当前环境：试点演示数据'
+							sourceLabel: ''
 						});
 						return;
 					}
 					messageStatePanel.setReady(total, {
-						title: '留言数据已同步',
-						description: '当前展示用户留言与回复，可用于演示反馈闭环。',
-						sparseThreshold: 5,
-						sparseText: '当前留言样本量有限，但已足够演示“用户反馈 -> 回复 -> 待办改进”的闭环。',
-						sourceLabel: '当前环境：试点演示数据'
+						title: '',
+						description: '',
+						sparseThreshold: 0,
+						sourceLabel: ''
 					});
 				}
 
@@ -339,7 +344,7 @@
                         messageStatePanel.setLoading({
                                 title: '正在加载留言数据',
                                 description: '系统正在同步留言与回复，请稍候。',
-                                sourceLabel: '当前环境：试点演示数据'
+                                sourceLabel: ''
                         });
                         http.request('messages/list', 'get', {
                                 page: 1,
@@ -374,7 +379,7 @@
                                                                                 description: '未能加载留言列表，请稍后重试。',
                                                                                 actionLabel: '重新加载',
                                                                                 actionMode: 'reload',
-                                                                                sourceLabel: '当前环境：试点演示数据'
+                                                                                sourceLabel: ''
                                                                         });
                                                                 }
                                                         });
@@ -391,7 +396,7 @@
                                                 description: '请求留言接口失败，请稍后重试。',
                                                 actionLabel: '重新加载',
                                                 actionMode: 'reload',
-                                                sourceLabel: '当前环境：试点演示数据'
+                                                sourceLabel: ''
                                         });
                                 }
                         });

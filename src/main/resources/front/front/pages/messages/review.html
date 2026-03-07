@@ -26,9 +26,9 @@
     </section>
     <section class="route-plan-summary" v-for="item in dataList" :key="item.id">
       <div class="route-plan-summary-grid">
-        <div class="summary-chip"><strong>反馈类型</strong><span>{{item.feedbackType || 'OTHER'}}</span></div>
-        <div class="summary-chip"><strong>严重级别</strong><span>{{item.severityLevel || 'MEDIUM'}}</span></div>
-        <div class="summary-chip"><strong>处理状态</strong><span>{{item.handleStatus || 'PENDING'}}</span></div>
+        <div class="summary-chip"><strong>反馈类型</strong><span>{{formatFeedbackType(item.feedbackType)}}</span></div>
+        <div class="summary-chip"><strong>严重级别</strong><span>{{formatSeverity(item.severityLevel)}}</span></div>
+        <div class="summary-chip"><strong>处理状态</strong><span>{{formatHandleStatus(item.handleStatus)}}</span></div>
         <div class="summary-chip"><strong>关联路线</strong><span>{{item.routeName || '未关联'}}</span></div>
       </div>
       <div class="summary-block"><h4>用户反馈</h4><p>{{item.content}}</p></div>

@@ -3423,3 +3423,52 @@ body.page-login #app {
   background: rgba(70, 95, 82, 0.12);
   color: #2f4a3c;
 }
+
+
+.page-messages-list .message-list {
+  width: 100%;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.page-messages-list .message-item {
+  width: 100%;
+  margin: 0 0 16px 0 !important;
+  padding: 18px 20px !important;
+  background: #fffdfa !important;
+  border: 1px solid var(--ux-border) !important;
+  border-radius: 18px !important;
+  box-shadow: var(--ux-shadow-sm) !important;
+}
+
+.page-messages-list .message-item:last-child {
+  margin-bottom: 0 !important;
+}
+
+.page-messages-list .content,
+.page-messages-list .replay {
+  margin-top: 10px !important;
+}
+
+.page-messages-list .feedback-message-body,
+.page-messages-list .feedback-reply-body {
+  display: inline-flex !important;
+  flex-direction: column;
+  gap: 6px;
+  margin-left: 0 !important;
+}
+
+.page-feedback-review .summary-chip span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fffaf3;
+  border: 1px solid #e1d5bf;
+  color: #3f4b45;
+  font-size: 13px;
+  font-weight: 700;
+}
