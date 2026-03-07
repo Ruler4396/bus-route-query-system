@@ -86,7 +86,7 @@
 			<div class="line-container">
 				<p class="line"> 留言建议 </p>
 			</div> -->
-			<div class="index-title" :style='{"padding":"10px","boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"10px auto","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(77, 79, 54, 1)","color":"rgba(255, 255, 255, 1)","borderRadius":"4px","borderWidth":"0","fontSize":"20px","borderStyle":"solid","height":"auto"}'>
+			<div class="index-title message-page-title" :style='{"padding":"10px","boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"10px auto","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(77, 79, 54, 1)","color":"rgba(255, 255, 255, 1)","borderRadius":"4px","borderWidth":"0","fontSize":"20px","borderStyle":"solid","height":"auto"}'>
 			  <span>MESSAGES / ADVICE</span><span>留言建议</span>
 			</div>
 			<!-- 标题 -->
@@ -133,7 +133,7 @@
                                                         <input type="text" name="stationName" aria-label="关联站点" placeholder="例如：海珠广场 / 中山医" autocomplete="off" class="layui-input">
                                                 </div>
                                         </div>
-                                        <div class="layui-form-item layui-form-text" style="display: flex;align-items: center;margin-top:10px">
+                                        <div class="layui-form-item layui-form-text message-upload-row" style="display: flex;align-items: center;margin-top:10px">
                                             <div class="layui-form-item" pane>
                                                 <label class="layui-form-label" style="width: auto;" :style='{"padding":"0","minWidth":"54px","fontSize":"14px","color":"#333","textAlign":"center"}'>图片</label>
                                                 <div v-if="cpicture" class="layui-input-block">
@@ -147,11 +147,11 @@
                                                 </div>
                                            </div>
                                         </div>
-					<div class="layui-form-item">
-						<div class="layui-input-block">
-							<button :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"10px 5px 0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(183, 186, 107, 1)","color":"#fff","borderRadius":"4px","borderWidth":"0","width":"auto","lineHeight":"34px","fontSize":"14px","borderStyle":"solid"}' class="layui-btn btn-submit" lay-submit lay-filter="*">立即提交</button>
-                                <button :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"10px 5px 0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"#2e3a1f","borderRadius":"4px","borderWidth":"1px","width":"auto","lineHeight":"34px","fontSize":"14px","borderStyle":"solid"}' type="button" @click="jump('../messages/review.html')">反馈处理看板</button>
-							<button :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"10px 5px 0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"red","borderRadius":"4px","borderWidth":"0","width":"auto","lineHeight":"34px","fontSize":"14px","borderStyle":"solid"}' type="reset" class="layui-btn layui-btn-primary">重置</button>
+					<div class="layui-form-item message-actions-row">
+						<div class="layui-input-block message-actions">
+							<button :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"10px 5px 0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(183, 186, 107, 1)","color":"#fff","borderRadius":"4px","borderWidth":"0","width":"auto","lineHeight":"34px","fontSize":"14px","borderStyle":"solid"}' id="messageSubmitBtn" class="layui-btn btn-submit" lay-submit lay-filter="*">立即提交</button>
+                                <button :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"10px 5px 0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"#2e3a1f","borderRadius":"4px","borderWidth":"1px","width":"auto","lineHeight":"34px","fontSize":"14px","borderStyle":"solid"}' id="messageReviewBoardBtn" type="button" @click="jump('../messages/review.html')">反馈处理看板</button>
+							<button :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"10px 5px 0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"red","borderRadius":"4px","borderWidth":"0","width":"auto","lineHeight":"34px","fontSize":"14px","borderStyle":"solid"}' id="messageResetBtn" type="reset" class="layui-btn layui-btn-primary">重置</button>
 						</div>
 					</div>
 				</form>
@@ -159,7 +159,7 @@
 					<div :style='{"padding":"20px 0","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","borderRadius":"0","borderWidth":"0 0 1px 0","borderStyle":"solid"}'  class="message-item" v-for="(item,index) in dataList" v-bind:key="index" >
 						<div class="username-container" style="display: flex;align-items: center;">
 							<img :style='{"boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"0 10px 0 0","borderColor":"rgba(0,0,0,.3)","borderRadius":"100%","borderWidth":"0","width":"40px","borderStyle":"solid","height":"40px"}' class="avator" src="../../img/avator.png">
-							<span style="display: inline-block;" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"#333","borderRadius":"4px","borderWidth":"0","width":"auto","lineHeight":"28px","fontSize":"14px","borderStyle":"solid"}' class="username">用户：{{item.username}}</span>
+							<span style="display: inline-block;" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"#333","borderRadius":"4px","borderWidth":"0","width":"auto","lineHeight":"28px","fontSize":"14px","borderStyle":"solid"}' class="username">用户：{{item.username || "匿名用户"}}</span>
                                                         <span class="route-tag" :class="item.severityLevel==='HIGH' ? 'danger' : (item.severityLevel==='MEDIUM' ? 'warn' : 'good')">{{item.severityLevel || 'MEDIUM'}}</span>
                                                         <span class="route-tag" :class="item.handleStatus==='RESOLVED' ? 'good' : (item.handleStatus==='IN_REVIEW' ? 'warn' : 'danger')">{{item.handleStatus || 'PENDING'}}</span>
 						</div>

@@ -2157,6 +2157,293 @@ body.transit-shell #iframe {
 /* ui-heal-emergency-end */
 
 
+
+
+/* shell typography tuning */
+#header .nav-group-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+#header .navs li {
+  height: 46px !important;
+  line-height: 46px !important;
+}
+
+#header .navs li a {
+  padding: 0 18px;
+  font-size: 15px;
+}
+
+#header .nav-support-group .utility-link,
+#header .nav-support-group .support-link {
+  height: 38px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+
+/* message page alignment polish */
+.page-messages-list .message-page-title {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center !important;
+}
+
+.page-messages-list .message-page-title span {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+.page-messages-list .message-page-title span:first-child {
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  opacity: 0.84;
+}
+
+.page-messages-list .message-page-title span:last-child {
+  font-size: clamp(28px, 3vw, 34px);
+  font-weight: 700;
+}
+
+.page-messages-list .message-form {
+  padding: 24px !important;
+}
+
+.page-messages-list .message-form .layui-form-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.page-messages-list .message-form .layui-form-label {
+  width: 76px !important;
+  min-width: 76px !important;
+  line-height: 40px !important;
+  text-align: left !important;
+}
+
+.page-messages-list .message-form .layui-input-block {
+  margin: 0 !important;
+  flex: 1;
+}
+
+.page-messages-list .message-form textarea,
+.page-messages-list .message-form input,
+.page-messages-list .message-form select {
+  border-radius: 14px !important;
+}
+
+.page-messages-list .message-upload-row > .layui-form-item {
+  width: 100%;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.page-messages-list .message-upload-row .layui-input-block {
+  flex: 0 0 auto;
+}
+
+.page-messages-list .message-actions {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding-left: 90px;
+}
+
+.page-messages-list .message-actions button {
+  margin: 0 !important;
+  min-width: 132px;
+  height: 40px !important;
+  line-height: 40px !important;
+  border-radius: 999px !important;
+}
+
+.page-messages-list .username-container {
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.page-messages-list .username {
+  display: inline-flex !important;
+  align-items: center;
+  min-height: 32px;
+}
+
+/* login page redesign */
+body.page-login {
+  min-height: 100vh;
+}
+
+body.page-login #app {
+  width: min(1240px, calc(100% - 32px));
+  padding: 34px 0;
+}
+
+.page-login .login {
+  min-height: calc(100vh - 68px) !important;
+  display: grid !important;
+  grid-template-columns: minmax(320px, 1fr) minmax(380px, 470px);
+  gap: 28px;
+  align-items: center;
+  background: radial-gradient(circle at 18% 18%, rgba(180, 138, 82, 0.24), transparent 24%), linear-gradient(135deg, #1f2925 0%, #2a3631 48%, #47544d 100%) !important;
+  border-radius: 30px;
+  padding: clamp(26px, 4vw, 42px);
+  box-shadow: 0 22px 56px rgba(15, 23, 20, 0.28);
+  background-image: none !important;
+}
+
+.page-login .login-intro {
+  color: #f5efe6;
+}
+
+.page-login .login-eyebrow {
+  display: inline-flex;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.page-login .login-heading {
+  margin: 18px 0 12px;
+  font-size: clamp(32px, 4vw, 46px);
+  line-height: 1.2;
+  color: #fff7ef;
+}
+
+.page-login .login-summary {
+  max-width: 560px;
+  color: #e4d9c8;
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.page-login .login-feature-list {
+  margin: 18px 0 0;
+  padding-left: 20px;
+  color: #f2eadf;
+  display: grid;
+  gap: 10px;
+}
+
+.page-login .login-note-card {
+  margin-top: 22px;
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.page-login .login-note-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff7ef;
+  margin-bottom: 6px;
+}
+
+.page-login .login-note-card p {
+  margin: 0;
+  color: #e5dccc;
+  line-height: 1.7;
+}
+
+.page-login .login-form {
+  width: min(100%, 470px) !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 28px !important;
+  border-radius: 30px !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  box-shadow: 0 18px 44px rgba(19, 27, 24, 0.22) !important;
+  align-self: center;
+}
+
+.page-login .login-form .title.msg-warn {
+  width: 100% !important;
+  margin: 0 0 22px !important;
+  padding: 12px 16px !important;
+  border-radius: 18px !important;
+  background: rgba(46, 57, 52, 0.08) !important;
+  color: var(--ux-brand) !important;
+  font-size: 15px !important;
+  line-height: 1.7 !important;
+}
+
+.page-login .login-form .form-item,
+.page-login .login-form .l-redio {
+  width: 100% !important;
+  margin: 0 0 14px 0 !important;
+  padding: 0 !important;
+  height: auto !important;
+}
+
+.page-login .login-form input {
+  width: 100% !important;
+  height: 50px !important;
+  border: 1px solid rgba(46, 57, 52, 0.14) !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+  padding: 0 16px !important;
+  font-size: 15px !important;
+}
+
+.page-login .login-form .l-redio {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.page-login .login-form .btn-submit {
+  margin: 10px 0 0 !important;
+  width: 100% !important;
+  height: 52px !important;
+  line-height: 52px !important;
+  padding: 0 !important;
+  border-radius: 16px !important;
+  font-size: 18px !important;
+  font-weight: 700;
+  background: linear-gradient(135deg, #b9824b, #9b6134) !important;
+  box-shadow: 0 14px 30px rgba(155, 97, 52, 0.24) !important;
+}
+
+.page-login .login-form .txt {
+  margin-top: 14px !important;
+  text-align: center !important;
+  font-size: 13px !important;
+}
+
+.page-login .login-form .txt a {
+  color: var(--ux-brand) !important;
+  font-weight: 600;
+}
+
+@media (max-width: 980px) {
+  .page-login .login {
+    grid-template-columns: 1fr;
+    padding: 22px;
+  }
+
+  .page-login .login-form {
+    width: 100% !important;
+  }
+
+  .page-messages-list .message-actions {
+    padding-left: 0;
+  }
+}
+
 /* demo-presentation-start */
 .assist-btn.accent {
   background: linear-gradient(135deg, #0f766e, #0b5d56);

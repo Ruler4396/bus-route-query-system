@@ -29,391 +29,505 @@
     }
   }
 
+  function wait(ms) {
+    return new Promise(function(resolve) {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  function getFrameWindow() {
+    var iframe = byId('iframe');
+    return iframe && iframe.contentWindow ? iframe.contentWindow : null;
+  }
+
+  function getFrameDocument() {
+    try {
+      var win = getFrameWindow();
+      return win && win.document ? win.document : null;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function setRunnerStatus(text) {
+    var statusNode = byId('assistStatusText');
+    if (statusNode) {
+      statusNode.textContent = text;
+    }
+  }
+
+  function syncAssistSettings() {
+    try {
+      if (typeof global.syncAssistSettingsToIframe === 'function') {
+        global.syncAssistSettingsToIframe();
+      }
+      if (typeof global.updateAssistStatus === 'function') {
+        global.updateAssistStatus();
+      }
+    } catch (err) {
+      console.warn('同步演示无障碍设置失败', err);
+    }
+  }
+
+  function fireInputEvents(node) {
+    if (!node) return;
+    ['input', 'change', 'blur'].forEach(function(type) {
+      node.dispatchEvent(new Event(type, { bubbles: true }));
+    });
+  }
+
+  async function waitForFrameSelector(selector, timeoutMs) {
+    var timeout = timeoutMs || 15000;
+    var started = Date.now();
+    while (Date.now() - started < timeout) {
+      var doc = getFrameDocument();
+      if (doc && doc.querySelector(selector)) {
+        return doc.querySelector(selector);
+      }
+      await wait(160);
+    }
+    throw new Error('FRAME_SELECTOR_TIMEOUT: ' + selector);
+  }
+
+  async function setFrameValue(selector, value) {
+    var node = await waitForFrameSelector(selector, 12000);
+    node.focus();
+    node.value = value;
+    fireInputEvents(node);
+    return node;
+  }
+
+  async function setFrameSelectValue(selector, value) {
+    var node = await waitForFrameSelector(selector, 12000);
+    node.value = value;
+    fireInputEvents(node);
+    return node;
+  }
+
+  async function clickFrame(selector) {
+    var node = await waitForFrameSelector(selector, 12000);
+    node.click();
+    return node;
+  }
+
   var steps = [
     {
       id: 'intro',
       title: '首页总览：项目定位与试点边界',
       url: './pages/home/home.html',
       durationLabel: '建议 55 秒',
+      autoplayMs: 4200,
       coverage: ['首页总览', '目标用户', '试点范围'],
       notes: [
-        '先说明系统首轮主服务人群是轮椅/行动不便，次服务人群是低视力。',
-        '再说明试点只覆盖广州老城区公共服务走廊，不宣传广州全城都已可信可用。',
-        '点出这不是模板站点，而是围绕真实试点线路和场景组织的演示原型。'
+        '说明首轮主服务人群是轮椅/行动不便，次服务人群是低视力。',
+        '强调当前只承诺广州老城区公共服务走廊试点，不宣传广州全城都已可信可用。'
       ]
     },
     {
       id: 'assist',
-      title: '无障碍快捷控制：高对比、大字体、语音与键盘导航',
+      title: '无障碍快捷控制：高对比、大字体与键盘导航',
       url: './pages/home/home.html',
       durationLabel: '建议 60 秒',
-      coverage: ['高对比度', '大字体', '语音播报', '键盘导航'],
+      autoplayMs: 5200,
+      coverage: ['高对比度', '大字体', '键盘导航'],
       notes: [
-        '展示顶栏的无障碍快捷控制区，说明这些能力是全站级而不是单页开关。',
-        '演示 Alt + H / Alt + M / Alt + A / Alt + D 等快捷键。',
-        '说明这是服务低视力与行动不便用户的交互基线。'
+        '像手动测试一样演示高对比度和大字体效果。',
+        '展示完成后自动恢复默认观感，避免影响后续页面录制。'
       ],
-      action: 'presetAssistiveMode'
+      action: 'demoAssistControls'
     },
     {
       id: 'route-list',
       title: '路线规划与可达路线清单',
       url: './pages/gongjiaoluxian/list.html',
       durationLabel: '建议 70 秒',
-      coverage: ['路线列表', '无障碍等级', '推荐排序', '试点线路'],
+      autoplayMs: 5200,
+      coverage: ['路线列表', '服务画像', '无障碍推荐'],
       notes: [
-        '说明路线列表不是全城承诺，而是先围绕 1路、3路、31路做可信闭环。',
-        '讲解为何这些线路适合轮椅/行动不便用户演示。',
-        '强调路线排序最终会接入画像、置信度和风险提示。'
-      ]
-    },
-    {
-      id: 'route-detail',
-      title: '路线详情：推荐理由、设施标签与说明文案',
-      url: './pages/gongjiaoluxian/detail.html?id=1',
-      durationLabel: '建议 60 秒',
-      coverage: ['路线详情', '设施标签', '文字说明'],
-      notes: [
-        '展示一条路线的详细说明、关键站点和无障碍设施字段。',
-        '强调路线详情页是后续补“推荐理由 / 风险点 / 置信度”的落点页面。',
-        '可以指出当前系统已经开始从模板字段转向无障碍解释字段。'
-      ]
+        '自动切换服务画像和推荐偏好，触发一次无障碍推荐。',
+        '验证路线页在演示环境下可以正常交互。'
+      ],
+      action: 'demoRoutePlanning'
     },
     {
       id: 'map',
-      title: '实时线路地图与 ETA 估算',
+      title: '实时线路地图与站点核验',
       url: './pages/gongjiaoluxian/map.html',
       durationLabel: '建议 75 秒',
-      coverage: ['地图展示', '站点核对', 'ETA', '风险核对'],
+      autoplayMs: 5600,
+      coverage: ['地图展示', '站点定位', '车辆切换'],
       notes: [
-        '展示路线轨迹、站点、车辆位置与 ETA。',
-        '说明地图页是“出门到到达”建模的中间层，目前仍以公交段为主。',
-        '强调未来要补步行段、入口级可达性和关键设施置信度。'
-      ]
+        '自动选择一条试点路线，并点击站点、切换车辆显示。',
+        '展示地图页可用，而不是停在静态画面。'
+      ],
+      action: 'demoMap'
     },
     {
       id: 'announcements',
-      title: '出行服务公告：试点说明与演示提示',
+      title: '出行服务公告：搜索与卡片阅读',
       url: './pages/wangzhangonggao/list.html',
       durationLabel: '建议 45 秒',
-      coverage: ['公告内容', '试点口径', '演示账号'],
+      autoplayMs: 4400,
+      coverage: ['公告搜索', '卡片摘要'],
       notes: [
-        '展示公告页不再空白，而是承载试点范围说明、演示模式说明和演示账号说明。',
-        '强调公告页是“状态透明”和“能力边界透明”的一部分。'
-      ]
+        '自动填写公告关键词并触发搜索，再恢复默认列表。'
+      ],
+      action: 'demoAnnouncementSearch'
     },
     {
       id: 'resources',
-      title: '无障碍资源链接：数据来源与核查路径',
+      title: '无障碍资源链接：数据来源核查',
       url: './pages/youqinglianjie/list.html',
       durationLabel: '建议 45 秒',
-      coverage: ['外部数据源', '友情链接', '核查路径'],
+      autoplayMs: 4400,
+      coverage: ['资源搜索', '数据来源'],
       notes: [
-        '展示 Wheelmap、OpenStreetMap、开放广东等资源链接。',
-        '说明系统不是闭门造车，关键数据需要外部来源与后续人工核验。'
-      ]
+        '自动搜索 Wheelmap 等资源关键词，验证资源页可用。'
+      ],
+      action: 'demoResourceSearch'
     },
     {
       id: 'messages',
-      title: '留言与改进建议：用户反馈闭环',
+      title: '留言与改进建议：反馈闭环测试',
       url: './pages/messages/list.html',
       durationLabel: '建议 50 秒',
-      coverage: ['留言反馈', '问题回复', '改进闭环'],
+      autoplayMs: 7800,
+      coverage: ['反馈提交', '处理看板', '审核保存'],
       notes: [
-        '展示用户留言和管理员回复，说明数据不准、路径不可达、页面不可用都能沉淀为改进项。',
-        '这部分是后续真实用户验证和人工纠错闭环的雏形。'
-      ]
+        '像人工巡检一样自动提交一条演示反馈，再进入处理看板保存处理结果。'
+      ],
+      action: 'demoFeedbackLoop'
     },
     {
       id: 'settings',
-      title: '无障碍设置页：交互模式基线',
+      title: '无障碍设置页：开关效果验证',
       url: './pages/accessibility/settings.html',
       durationLabel: '建议 55 秒',
-      coverage: ['高对比', '字体', '语音', '键盘'],
+      autoplayMs: 5000,
+      coverage: ['高对比', '减少动态', '字幕'],
       notes: [
-        '展示无障碍设置页，把快捷控制区和单独设置页串起来。',
-        '强调这是低视力场景的直接收益点，也是后续屏幕阅读器基线验证的入口。'
-      ]
+        '自动打开关键开关并恢复默认状态，避免影响后续观感。'
+      ],
+      action: 'demoSettings'
     },
     {
-      id: 'login-chat',
-      title: '登录态扩展示范：演示账号与在线提问',
+      id: 'login-center',
+      title: '登录态扩展示范：演示账号与个人中心',
       url: './pages/home/home.html',
-      durationLabel: '建议 65 秒',
-      coverage: ['演示账号', '登录态', '在线提问'],
+      durationLabel: '建议 60 秒',
+      autoplayMs: 5200,
+      coverage: ['演示账号', '登录态', '个人中心'],
       notes: [
-        '演示模式会自动尝试登录 demo_user / demo123。',
-        '登录成功后自动打开在线提问弹窗，展示问答记录。',
-        '这一步属于扩展示范，用于补足中期检查视频的功能覆盖面。'
+        '演示模式会静默登录 demo_user / demo123，并跳转个人中心。',
+        '不再弹出额外窗口，而是像人工巡检一样在主流程中完成。'
       ],
-      action: 'loginAndOpenChat'
+      action: 'demoLoginCenter'
     },
     {
       id: 'summary',
-      title: '总结：当前完成度、边界与后续待办',
+      title: '总结：当前完成度与后续工作',
       url: './pages/home/home.html',
       durationLabel: '建议 60 秒',
-      coverage: ['阶段成果', '边界说明', '后续工作'],
+      autoplayMs: 4200,
+      coverage: ['阶段成果', '边界说明'],
       notes: [
-        '回到首页，强调当前已经有试点范围、用户范围、一键演示、自动巡检和基础无障碍交互。',
-        '同时说明系统仍未达到“完全可信的无障碍出行系统”，后续还要继续完成主待办文档。',
-        '建议在视频末尾点出：当前答案仍然是 NO，但已经知道要如何迭代到 YES。'
-      ]
+        '回到首页收束演示，并恢复默认显示设置。'
+      ],
+      action: 'restoreAssistiveDefaults'
     }
   ];
 
   var DemoPresentationService = {
-    isOpen: false,
+    isRunning: false,
     isAutoplay: false,
     currentIndex: 0,
     timerId: null,
-    root: null,
+    baseSettings: null,
+    lastStatusText: '',
 
     init: function() {
       if (!shellAvailable()) return;
-      this.mount();
-      this.bindControls();
-      this.bindEntryPoints();
       this.handleQueryStart();
-    },
-
-    mount: function() {
-      if (byId('demoPresentationRoot')) {
-        this.root = byId('demoPresentationRoot');
-        return;
-      }
-      var root = document.createElement('div');
-      root.id = 'demoPresentationRoot';
-      root.className = 'demo-presentation';
-      root.hidden = true;
-      root.innerHTML = [
-        '<section class="demo-panel" role="dialog" aria-modal="false" aria-labelledby="demoPanelTitle">',
-        '  <div class="demo-panel-header">',
-        '    <div>',
-        '      <div class="demo-panel-eyebrow">Midterm Demo Deck</div>',
-        '      <h2 id="demoPanelTitle">10 分钟演示模式</h2>',
-        '      <p id="demoPanelStatus" class="demo-panel-status">Alt + D 可随时重新打开本面板。</p>',
-        '    </div>',
-        '    <div class="demo-panel-actions">',
-        '      <button type="button" class="demo-mini-btn" id="demoToggleAutoplay">自动播放</button>',
-        '      <button type="button" class="demo-mini-btn" id="demoClose">关闭</button>',
-        '    </div>',
-        '  </div>',
-        '  <div class="demo-panel-body">',
-        '    <div class="demo-step-list-wrap">',
-        '      <div class="demo-step-list-title">演示步骤</div>',
-        '      <div id="demoStepList" class="demo-step-list" role="tablist" aria-label="演示步骤列表"></div>',
-        '    </div>',
-        '    <div class="demo-step-detail">',
-        '      <div class="demo-step-meta">',
-        '        <span id="demoDuration" class="demo-chip"></span>',
-        '        <span class="demo-chip">覆盖所有公开前台功能</span>',
-        '      </div>',
-        '      <h3 id="demoStepTitle" class="demo-step-title"></h3>',
-        '      <p id="demoStepSummary" class="demo-step-summary"></p>',
-        '      <div>',
-        '        <div class="demo-block-title">本步骤覆盖</div>',
-        '        <div id="demoCoverage" class="demo-coverage"></div>',
-        '      </div>',
-        '      <div>',
-        '        <div class="demo-block-title">建议讲解内容</div>',
-        '        <ol id="demoNarration" class="demo-narration"></ol>',
-        '      </div>',
-        '      <div class="demo-step-toolbar">',
-        '        <button type="button" class="demo-main-btn secondary" id="demoPrev">上一步</button>',
-        '        <button type="button" class="demo-main-btn" id="demoNext">下一步</button>',
-        '      </div>',
-        '      <div class="demo-step-tip">可用方式：<kbd>Alt + D</kbd> 打开演示，<kbd>?demo=1</kbd> 直接进入，<kbd>?demo=auto</kbd> 自动串场。</div>',
-        '    </div>',
-        '  </div>',
-        '</section>'
-      ].join('');
-      document.body.appendChild(root);
-      this.root = root;
-      this.renderStepList();
-    },
-
-    bindControls: function() {
-      var self = this;
-      byId('demoClose').addEventListener('click', function() { self.close(); });
-      byId('demoPrev').addEventListener('click', function() { self.previous(); });
-      byId('demoNext').addEventListener('click', function() { self.next(); });
-      byId('demoToggleAutoplay').addEventListener('click', function() { self.toggleAutoplay(); });
-    },
-
-    bindEntryPoints: function() {
-      var self = this;
-      var assistButton = byId('assistDemo');
-      if (assistButton) {
-        assistButton.addEventListener('click', function() {
-          self.open({ autoplay: false, source: 'assist-button' });
-        });
-      }
     },
 
     handleQueryStart: function() {
       try {
         var params = new URLSearchParams(global.location.search || '');
-        if (params.get('demo') === '1') {
+        if (params.get('demo') === '1' || params.get('demo') === 'auto') {
           var self = this;
-          setTimeout(function() { self.open({ autoplay: false, source: 'query-demo' }); }, 800);
-        } else if (params.get('demo') === 'auto') {
-          var service = this;
-          setTimeout(function() { service.open({ autoplay: true, source: 'query-auto' }); }, 800);
+          setTimeout(function() {
+            self.open({ autoplay: true, source: 'query-auto' });
+          }, 800);
         }
       } catch (err) {
         console.warn('解析演示模式 query 参数失败', err);
       }
     },
 
-    renderStepList: function() {
-      var container = byId('demoStepList');
-      if (!container) return;
-      container.innerHTML = steps.map(function(step, index) {
-        return '<button type="button" class="demo-step-item" data-step-index="' + index + '">' +
-          '<span class="demo-step-no">' + (index + 1) + '</span>' +
-          '<span class="demo-step-text">' + step.title + '</span>' +
-        '</button>';
-      }).join('');
-      var self = this;
-      Array.prototype.forEach.call(container.querySelectorAll('[data-step-index]'), function(node) {
-        node.addEventListener('click', function() {
-          self.goTo(Number(node.getAttribute('data-step-index')), false);
-        });
-      });
-    },
-
     open: function(options) {
       options = options || {};
-      this.isOpen = true;
-      this.root.hidden = false;
-      this.root.classList.add('is-open');
-      this.goTo(this.currentIndex || 0, !!options.autoplay);
-      if (options.autoplay) {
-        this.startAutoplay();
-      } else {
-        this.stopAutoplay();
-      }
-      safeAnnounce('中期检查演示模式已打开');
-    },
-
-    close: function() {
-      this.isOpen = false;
-      this.stopAutoplay();
-      if (this.root) {
-        this.root.hidden = true;
-        this.root.classList.remove('is-open');
-      }
-      closeTransientLayers();
-      safeAnnounce('演示模式已关闭');
-    },
-
-    toggleAutoplay: function() {
-      if (this.isAutoplay) {
-        this.stopAutoplay();
-      } else {
-        this.startAutoplay();
-      }
-      this.renderCurrentStep();
-    },
-
-    startAutoplay: function() {
-      this.isAutoplay = true;
-      this.queueNext();
-    },
-
-    stopAutoplay: function() {
-      this.isAutoplay = false;
-      clearTimeout(this.timerId);
-      this.timerId = null;
-    },
-
-    queueNext: function() {
-      clearTimeout(this.timerId);
-      if (!this.isAutoplay) return;
-      var step = steps[this.currentIndex];
-      var delay = step && step.autoplayMs ? step.autoplayMs : 25000;
-      var self = this;
-      this.timerId = setTimeout(function() { self.next(true); }, delay);
-    },
-
-    next: function(fromAuto) {
-      if (this.currentIndex >= steps.length - 1) {
-        if (fromAuto) this.stopAutoplay();
+      if (this.isRunning) {
+        this.close('演示模式已停止');
         return;
       }
-      this.goTo(this.currentIndex + 1, fromAuto);
+      this.isRunning = true;
+      document.body.setAttribute('data-demo-running', 'true');
+      this.isAutoplay = options.autoplay !== false;
+      this.currentIndex = 0;
+      this.lastStatusText = byId('assistStatusText') ? byId('assistStatusText').textContent : '';
+      this.baseSettings = global.AccessibilityUtils && typeof global.AccessibilityUtils.getSettings === 'function'
+        ? global.AccessibilityUtils.getSettings()
+        : null;
+      safeAnnounce('演示模式已启动，将按人工巡检顺序自动检查页面与功能。');
+      this.runCurrentStep();
     },
 
-    previous: function() {
-      if (this.currentIndex <= 0) return;
-      this.goTo(this.currentIndex - 1, false);
-    },
-
-    goTo: function(index, fromAuto) {
-      if (index < 0 || index >= steps.length) return;
-      this.currentIndex = index;
-      var step = steps[index];
+    close: function(message) {
+      clearTimeout(this.timerId);
+      this.timerId = null;
+      this.isRunning = false;
+      document.body.setAttribute('data-demo-running', 'false');
+      document.body.removeAttribute('data-demo-step');
+      this.isAutoplay = false;
       closeTransientLayers();
+      this.restoreAssistiveDefaults();
+      if (typeof global.updateAssistStatus === 'function') {
+        global.updateAssistStatus();
+      } else if (this.lastStatusText) {
+        setRunnerStatus(this.lastStatusText);
+      }
+      safeAnnounce(message || '演示模式已关闭');
+    },
+
+    finish: function() {
+      clearTimeout(this.timerId);
+      this.timerId = null;
+      this.isRunning = false;
+      document.body.setAttribute('data-demo-running', 'false');
+      document.body.removeAttribute('data-demo-step');
+      this.isAutoplay = false;
+      this.restoreAssistiveDefaults();
+      setRunnerStatus('演示流程已完成，可按 Alt + D 重新开始。');
+      safeAnnounce('演示流程已完成，已恢复默认显示设置。');
+      var self = this;
+      setTimeout(function() {
+        if (!self.isRunning && typeof global.updateAssistStatus === 'function') {
+          global.updateAssistStatus();
+        }
+      }, 2200);
+    },
+
+    scheduleNext: function(delay) {
+      var self = this;
+      clearTimeout(this.timerId);
+      this.timerId = setTimeout(function() {
+        if (!self.isRunning) return;
+        if (self.currentIndex >= steps.length - 1) {
+          self.finish();
+          return;
+        }
+        self.currentIndex += 1;
+        self.runCurrentStep();
+      }, delay || 4200);
+    },
+
+    async runCurrentStep() {
+      if (!this.isRunning) return;
+      var step = steps[this.currentIndex];
+      document.body.setAttribute('data-demo-step', step ? step.id : '');
+      if (!step) {
+        this.finish();
+        return;
+      }
+      closeTransientLayers();
+      setRunnerStatus('演示步骤 ' + (this.currentIndex + 1) + '/' + steps.length + '：' + step.title);
+      safeAnnounce('开始演示：' + step.title);
       if (step.url && typeof global.navPage === 'function') {
         global.navPage(step.url);
       }
-      this.renderCurrentStep();
-      var self = this;
-      setTimeout(function() { self.runStepAction(step); }, 900);
-      if (fromAuto || this.isAutoplay) {
-        this.queueNext();
+      await wait(1100);
+      try {
+        await this.runStepAction(step);
+      } catch (err) {
+        console.warn('演示步骤执行失败', step.id, err);
+        safeAnnounce('演示步骤执行失败：' + step.title + '，已继续后续步骤。');
+      }
+      if (!this.isRunning) return;
+      if (this.isAutoplay) {
+        this.scheduleNext(step.autoplayMs || 4200);
       }
     },
 
-    renderCurrentStep: function() {
-      var step = steps[this.currentIndex];
-      if (!step) return;
-      var totalMinutes = '约 10 分钟';
-      byId('demoPanelStatus').textContent = '当前步骤 ' + (this.currentIndex + 1) + '/' + steps.length + ' · ' + totalMinutes + ' 演示总时长';
-      byId('demoDuration').textContent = step.durationLabel;
-      byId('demoStepTitle').textContent = step.title;
-      byId('demoStepSummary').textContent = '当前展示页面：' + step.url.replace('./pages/', '');
-      byId('demoCoverage').innerHTML = step.coverage.map(function(item) {
-        return '<span class="demo-coverage-chip">' + item + '</span>';
-      }).join('');
-      byId('demoNarration').innerHTML = step.notes.map(function(item) {
-        return '<li>' + item + '</li>';
-      }).join('');
-      byId('demoToggleAutoplay').textContent = this.isAutoplay ? '暂停自动播放' : '自动播放';
-      Array.prototype.forEach.call(document.querySelectorAll('.demo-step-item'), function(node, idx) {
-        node.classList.toggle('is-active', idx === DemoPresentationService.currentIndex);
-      });
-      safeAnnounce('演示步骤已切换到：' + step.title);
+    async runStepAction(step) {
+      switch (step.action) {
+        case 'demoAssistControls':
+          await this.demoAssistControls();
+          break;
+        case 'demoRoutePlanning':
+          await this.demoRoutePlanning();
+          break;
+        case 'demoMap':
+          await this.demoMap();
+          break;
+        case 'demoAnnouncementSearch':
+          await this.demoAnnouncementSearch();
+          break;
+        case 'demoResourceSearch':
+          await this.demoResourceSearch();
+          break;
+        case 'demoFeedbackLoop':
+          await this.demoFeedbackLoop();
+          break;
+        case 'demoSettings':
+          await this.demoSettings();
+          break;
+        case 'demoLoginCenter':
+          await this.demoLoginCenter();
+          break;
+        case 'restoreAssistiveDefaults':
+          this.restoreAssistiveDefaults();
+          break;
+        default:
+          break;
+      }
     },
 
-    runStepAction: function(step) {
-      if (!step || !step.action) return;
-      if (step.action === 'presetAssistiveMode') {
-        try {
-          if (global.AccessibilityUtils) {
-            if (!global.AccessibilityUtils.isHighContrast()) {
-              global.AccessibilityUtils.enableHighContrast();
-            }
-            global.AccessibilityUtils.setFontSize(18);
-            global.AccessibilityUtils.saveSettings({ keyboardNav: true, speech: true, highContrast: true, fontSize: 18 });
-            if (typeof global.syncAssistSettingsToIframe === 'function') global.syncAssistSettingsToIframe();
-            if (typeof global.updateAssistStatus === 'function') global.updateAssistStatus();
-          }
-        } catch (err) {
-          console.warn('应用演示无障碍预设失败', err);
+    restoreAssistiveDefaults: function() {
+      try {
+        if (global.AccessibilityUtils && this.baseSettings) {
+          global.AccessibilityUtils.saveSettings(this.baseSettings);
+          syncAssistSettings();
         }
+      } catch (err) {
+        console.warn('恢复演示默认设置失败', err);
       }
-      if (step.action === 'loginAndOpenChat') {
-        this.loginDemoUser().then(function() {
-          if (typeof global.chatTap === 'function') {
-            global.chatTap();
-          }
-        }).catch(function(err) {
-          console.warn('演示账号登录失败', err);
-          safeAnnounce('演示账号自动登录失败，可按文档中的账号手动登录');
-        });
+    },
+
+    async demoAssistControls() {
+      if (!global.AccessibilityUtils || !this.baseSettings) return;
+      global.AccessibilityUtils.enableHighContrast();
+      syncAssistSettings();
+      await wait(900);
+      global.AccessibilityUtils.setFontSize(Math.min((this.baseSettings.fontSize || 14) + 4, 20));
+      syncAssistSettings();
+      await wait(900);
+      global.AccessibilityUtils.disableHighContrast();
+      global.AccessibilityUtils.setFontSize(this.baseSettings.fontSize || 14);
+      syncAssistSettings();
+      await wait(360);
+    },
+
+    async demoRoutePlanning() {
+      await waitForFrameSelector('#profileType', 15000);
+      await setFrameValue('#qidianzhanming', '东山口');
+      await setFrameValue('#zhongdianzhanming', '芳村花园');
+      await setFrameSelectValue('#profileType', 'LOW_VISION');
+      await setFrameSelectValue('#preferenceType', 'ACCESSIBLE');
+      await clickFrame('#btn-plan');
+      await wait(1800);
+    },
+
+    async demoMap() {
+      var select = await waitForFrameSelector('#routeSelect', 15000);
+      if (select && select.options && select.options.length > 1) {
+        select.value = select.options[1].value;
+        fireInputEvents(select);
       }
+      await wait(1600);
+      var stationButton = getFrameDocument() && getFrameDocument().querySelector('.station-item-btn');
+      if (stationButton) {
+        stationButton.click();
+        await wait(900);
+      }
+      var vehicleBtn = getFrameDocument() && getFrameDocument().querySelector('#vehicleBtn');
+      if (vehicleBtn) {
+        vehicleBtn.click();
+        await wait(1200);
+        vehicleBtn.click();
+      }
+      await wait(600);
+    },
+
+    async demoAnnouncementSearch() {
+      await setFrameValue('#biaoti', '试点');
+      await clickFrame('#btn-search');
+      await wait(1200);
+      await setFrameValue('#biaoti', '');
+      await clickFrame('#btn-search');
+      await wait(500);
+    },
+
+    async demoResourceSearch() {
+      await setFrameValue('#lianjiemingcheng', 'Wheelmap');
+      await clickFrame('#btn-search');
+      await wait(1200);
+      await setFrameValue('#lianjiemingcheng', '');
+      await clickFrame('#btn-search');
+      await wait(500);
+    },
+
+    async demoFeedbackLoop() {
+      var marker = new Date().toISOString().replace('T', ' ').slice(0, 19);
+      await waitForFrameSelector('textarea[name="content"]', 15000);
+      await setFrameValue('textarea[name="content"]', '演示巡检反馈：自动验证留言流程是否可用（' + marker + '）');
+      await setFrameSelectValue('#feedbackType', 'PAGE_USABILITY');
+      await setFrameSelectValue('#severityLevel', 'LOW');
+      await setFrameValue('input[name="routeName"]', '1路');
+      await setFrameValue('input[name="stationName"]', '东山口');
+      await clickFrame('#messageSubmitBtn');
+      await wait(2200);
+      await clickFrame('#messageReviewBoardBtn');
+      await waitForFrameSelector('#reviewBoardStatus', 15000);
+      var doc = getFrameDocument();
+      var select = doc.querySelector('select');
+      if (select) {
+        select.value = 'IN_REVIEW';
+        fireInputEvents(select);
+      }
+      var owner = doc.querySelector('input[placeholder="审核人"]');
+      if (owner) {
+        owner.value = '演示巡检';
+        fireInputEvents(owner);
+      }
+      var notes = doc.querySelector('input[placeholder="审核备注"]');
+      if (notes) {
+        notes.value = '已完成自动化演示检查';
+        fireInputEvents(notes);
+      }
+      var saveBtn = Array.prototype.find.call(doc.querySelectorAll('button'), function(node) {
+        return (node.textContent || '').indexOf('保存处理') >= 0;
+      });
+      if (saveBtn) {
+        saveBtn.click();
+      }
+      await wait(1500);
+    },
+
+    async demoSettings() {
+      await waitForFrameSelector('#contrastToggle', 15000);
+      var doc = getFrameDocument();
+      ['#contrastToggle', '#motionToggle', '#captionToggle'].forEach(function(selector) {
+        var node = doc.querySelector(selector);
+        if (node && !node.checked) {
+          node.click();
+        }
+      });
+      await wait(900);
+      ['#contrastToggle', '#motionToggle', '#captionToggle'].forEach(function(selector) {
+        var node = doc.querySelector(selector);
+        if (node && node.checked) {
+          node.click();
+        }
+      });
+      await wait(600);
+    },
+
+    async demoLoginCenter() {
+      await this.loginDemoUser();
+      if (typeof global.navPage === 'function') {
+        global.navPage('./pages/yonghu/center.html');
+      }
+      await wait(1800);
     },
 
     loginDemoUser: function() {
@@ -446,8 +560,12 @@
         if (json && json.data && json.data.id) {
           localStorage.setItem('userid', json.data.id);
         }
-        safeAnnounce('演示账号已自动登录，正在打开在线提问');
+        safeAnnounce('演示账号已自动登录，正在进入个人中心。');
         return json;
+      }).catch(function(err) {
+        console.warn('演示账号登录失败', err);
+        safeAnnounce('演示账号自动登录失败，可手动使用 demo_user / demo123 登录。');
+        throw err;
       });
     }
   };
@@ -458,7 +576,9 @@
   };
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() { DemoPresentationService.init(); });
+    document.addEventListener('DOMContentLoaded', function() {
+      DemoPresentationService.init();
+    });
   } else {
     DemoPresentationService.init();
   }

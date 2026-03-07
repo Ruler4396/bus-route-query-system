@@ -552,17 +552,17 @@
         openDemoMode: function() {
             try {
                 if (typeof window.openDemoMode === 'function') {
-                    window.openDemoMode({ autoplay: false, source: 'local-shortcut' });
+                    window.openDemoMode({ autoplay: true, source: 'local-shortcut' });
                     return;
                 }
             } catch (e) {}
             try {
                 if (window.parent && window.parent !== window && typeof window.parent.openDemoMode === 'function') {
-                    window.parent.openDemoMode({ autoplay: false, source: 'iframe-shortcut' });
+                    window.parent.openDemoMode({ autoplay: true, source: 'iframe-shortcut' });
                     return;
                 }
             } catch (e2) {}
-            window.location.href = resolveFrontUrl('index.html?demo=1');
+            window.location.href = resolveFrontUrl('index.html?demo=auto');
         },
 
         focusMainContent: function() {

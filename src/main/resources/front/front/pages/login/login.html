@@ -119,8 +119,23 @@
 
 		<link rel="stylesheet" href="../../css/accessibility-high-contrast.css">
 </head>
-<body class="transit-ui transit-page">
-	    <div id="app" class="login">
+<body class="transit-ui transit-page page-login">
+	    <a href="#loginForm" class="skip-link">跳转到登录表单</a>
+    <div id="app" class="login login-shell">
+        <section class="login-intro" aria-label="登录页说明">
+            <div class="login-eyebrow">Accessible Transit Entry</div>
+            <h1 class="login-heading">无障碍公交出行系统</h1>
+            <p class="login-summary">面向轮椅/行动不便与低视力试点用户，登录后可查看个人中心、收藏记录与个性化演示流程。</p>
+            <ul class="login-feature-list">
+                <li>首轮试点：广州老城区公共服务走廊</li>
+                <li>支持高对比度、大字体、键盘导航与字幕提示</li>
+                <li>演示账号：<strong>demo_user</strong> / <strong>demo123</strong></li>
+            </ul>
+            <div class="login-note-card">
+                <div class="login-note-title">演示登录提示</div>
+                <p>公共场所请勿勾选自动登录；演示时建议登录后返回首页，继续使用 Alt + D 自动巡检全站流程。</p>
+            </div>
+        </section>
         <form id="loginForm" class="layui-form login-form" :style='{"padding":"0 12px","boxShadow":"0 0 0px rgba(30, 144, 255, .8)","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(255, 255, 255, 0.7)","borderRadius":"45px","borderWidth":"0","width":"700px","borderStyle":"solid","justifyContent":"center","height":"400px"}'>
             
             <div class="msg-warn hide title" v-if="true" :style='{"padding":"15px 0","boxShadow":"0 0 6px rgba(0,0,0,0)","margin":"-125px auto 50px","borderColor":"rgba(0,0,0,1)","backgroundColor":"rgba(255, 255, 255, 0.7)","color":"rgba(77, 79, 54, 1)","isshow":true,"borderRadius":"30px 30px 0 0","borderWidth":"0","width":"80%","lineHeight":"50px","fontSize":"24px","borderStyle":"solid"}'>公共场所不建议自动登录，以防账号丢失</div>
