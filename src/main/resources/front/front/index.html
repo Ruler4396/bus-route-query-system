@@ -77,6 +77,9 @@
 					<button id="assistFontMinus" class="assist-btn" type="button" aria-label="减小字体">字体 -</button>
 					<button id="assistSpeech" class="assist-btn" type="button" aria-label="切换语音播报">语音播报</button>
 					<button id="assistKeyboard" class="assist-btn" type="button" aria-label="切换键盘导航">键盘导航</button>
+					<button id="assistCaption" class="assist-btn" type="button" aria-label="切换字幕提示面板">字幕提示</button>
+					<button id="assistMotion" class="assist-btn" type="button" aria-label="切换减少动态效果">减少动态</button>
+					<button id="assistShortcutHelp" class="assist-btn" type="button" aria-label="打开快捷键帮助">快捷键帮助</button>
 					<span id="assistStatusText" class="assist-status" aria-live="polite">系统状态同步中…</span>
 				</div>
 			</div>
@@ -274,6 +277,22 @@
 					var enabled = AccessibilityUtils.toggleKeyboardNav();
 					AccessibilityUtils.announce(enabled ? '键盘导航已开启' : '键盘导航已关闭');
 					syncAssistSettingsToIframe();
+					updateAssistStatus();
+				});
+				bind('assistCaption', function() {
+					var enabled = AccessibilityUtils.toggleCaptionCenter();
+					AccessibilityUtils.announce(enabled ? '字幕提示面板已开启' : '字幕提示面板已关闭');
+					syncAssistSettingsToIframe();
+					updateAssistStatus();
+				});
+				bind('assistMotion', function() {
+					var enabled = AccessibilityUtils.toggleReducedMotion();
+					AccessibilityUtils.announce(enabled ? '减少动态效果已开启' : '减少动态效果已关闭');
+					syncAssistSettingsToIframe();
+					updateAssistStatus();
+				});
+				bind('assistShortcutHelp', function() {
+					AccessibilityUtils.announce('快捷键帮助：Alt加1到7切换导航，Alt加S聚焦搜索，Alt加L聚焦主内容，Alt加C切换字幕提示，Alt加R切换减少动态，Alt加A打开设置，Alt加D打开演示。');
 					updateAssistStatus();
 				});
 						var iframe = document.getElementById('iframe');

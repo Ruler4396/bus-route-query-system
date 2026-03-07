@@ -2213,3 +2213,102 @@ body.transit-shell #iframe {
   cursor: pointer;
 }
 /* front-page-state-panel-end */
+
+
+/* caption-center-start */
+#a11y-caption-center {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  width: min(360px, calc(100vw - 32px));
+  max-height: 44vh;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: rgba(15, 23, 42, 0.94);
+  color: #f8fafc;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(10px);
+  z-index: 10001;
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: opacity .24s ease, transform .24s ease;
+}
+#a11y-caption-center.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+#a11y-caption-center .caption-center-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+#a11y-caption-center .caption-center-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+#a11y-caption-center .caption-center-toggle {
+  border: 1px solid rgba(148,163,184,.22);
+  border-radius: 10px;
+  background: rgba(30,41,59,.72);
+  color: #fff;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+#a11y-caption-center .caption-center-list {
+  max-height: calc(44vh - 54px);
+  overflow: auto;
+  padding: 10px 14px 14px;
+}
+#a11y-caption-center .caption-center-item {
+  display: grid;
+  grid-template-columns: 66px 1fr;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(148,163,184,.12);
+}
+#a11y-caption-center .caption-center-item:last-child {
+  border-bottom: 0;
+}
+#a11y-caption-center .caption-center-time {
+  font-size: 12px;
+  color: #94a3b8;
+}
+#a11y-caption-center .caption-center-text,
+#a11y-caption-center .caption-center-empty {
+  font-size: 13px;
+  line-height: 1.55;
+  color: #e2e8f0;
+}
+.reduced-motion *,
+.reduced-motion *::before,
+.reduced-motion *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+.high-contrast #a11y-caption-center {
+  background: #000 !important;
+  color: #fff !important;
+  border-color: #fff !important;
+  box-shadow: none !important;
+}
+.high-contrast #a11y-caption-center .caption-center-toggle,
+.high-contrast #a11y-caption-center .caption-center-text,
+.high-contrast #a11y-caption-center .caption-center-empty {
+  background: #000 !important;
+  color: #fff !important;
+  border-color: #fff !important;
+}
+@media (max-width: 960px) {
+  #a11y-caption-center {
+    left: 10px;
+    right: 10px;
+    width: auto;
+  }
+}
+/* caption-center-end */

@@ -229,16 +229,23 @@
     // 高对比度主题服务
     var ThemeService = {
         isHighContrast: false,
+        isReducedMotion: false,
         currentFontSize: BASE_FONT_SIZE,
 
         init: function() {
             // 加载保存的设置
             this.isHighContrast = localStorage.getItem('accessibility_high_contrast') === 'true';
+            this.isReducedMotion = localStorage.getItem('accessibility_reduced_motion') === 'true';
             this.currentFontSize = parseInt(localStorage.getItem('accessibility_font_size'), 10) || BASE_FONT_SIZE;
 
             // 应用设置
             if (this.isHighContrast) {
                 this.enableHighContrast();
+            }
+            if (this.isReducedMotion) {
+                this.enableReducedMotion();
+            } else {
+                this.disableReducedMotion();
             }
             this.setFontSize(this.currentFontSize);
 
@@ -319,6 +326,33 @@
          */
         decreaseFontSize: function() {
             this.setFontSize(this.currentFontSize - 2);
+        },
+
+        enableReducedMotion: function() {
+            document.documentElement.classList.add('reduced-motion');
+            if (document.body) {
+                document.body.classList.add('reduced-motion');
+            }
+            this.isReducedMotion = true;
+            localStorage.setItem('accessibility_reduced_motion', 'true');
+        },
+
+        disableReducedMotion: function() {
+            document.documentElement.classList.remove('reduced-motion');
+            if (document.body) {
+                document.body.classList.remove('reduced-motion');
+            }
+            this.isReducedMotion = false;
+            localStorage.setItem('accessibility_reduced_motion', 'false');
+        },
+
+        toggleReducedMotion: function() {
+            if (this.isReducedMotion) {
+                this.disableReducedMotion();
+            } else {
+                this.enableReducedMotion();
+            }
+            return this.isReducedMotion;
         }
     };
 
@@ -388,6 +422,30 @@
                     self.openDemoMode();
                 }
 
+                // Alt + L 聚焦主内容区域
+                if (e.altKey && (e.key === 'l' || e.key === 'L')) {
+                    e.preventDefault();
+                    self.focusMainContent();
+                }
+
+                // Alt + C 切换字幕提示面板
+                if (e.altKey && (e.key === 'c' || e.key === 'C')) {
+                    e.preventDefault();
+                    self.toggleCaptionCenter();
+                }
+
+                // Alt + R 切换减少动态效果
+                if (e.altKey && (e.key === 'r' || e.key === 'R')) {
+                    e.preventDefault();
+                    self.toggleReducedMotion();
+                }
+
+                // Alt + / 快捷键帮助
+                if (e.altKey && (e.key === '/' || e.key === '?')) {
+                    e.preventDefault();
+                    self.showShortcutHelp();
+                }
+
                 // ESC 关闭弹窗或返回
                 if (e.key === 'Escape') {
                     var modals = document.querySelectorAll('.modal, .layui-layer');
@@ -418,6 +476,8 @@
             this.registerShortcut('nav_3', function() { self.goMap(); });
             this.registerShortcut('nav_4', function() { self.goAnnouncements(); });
             this.registerShortcut('nav_5', function() { self.goAccessibility(); });
+            this.registerShortcut('nav_6', function() { self.goMessages(); });
+            this.registerShortcut('nav_7', function() { self.goResources(); });
         },
 
         /**
@@ -471,6 +531,18 @@
             }
         },
 
+        goMessages: function() {
+            if (!openViaTopNav('./pages/messages/list.html')) {
+                window.location.href = resolveFrontUrl('pages/messages/list.html');
+            }
+        },
+
+        goResources: function() {
+            if (!openViaTopNav('./pages/youqinglianjie/list.html')) {
+                window.location.href = resolveFrontUrl('pages/youqinglianjie/list.html');
+            }
+        },
+
         goAccessibility: function() {
             if (!openViaTopNav('./pages/accessibility/settings.html')) {
                 window.location.href = resolveFrontUrl('pages/accessibility/settings.html');
@@ -491,6 +563,57 @@
                 }
             } catch (e2) {}
             window.location.href = resolveFrontUrl('index.html?demo=1');
+        },
+
+        focusMainContent: function() {
+            var focused = false;
+            try {
+                if (window.top && window.top.document) {
+                    var topMain = window.top.document.getElementById('main-content');
+                    if (topMain) {
+                        topMain.focus();
+                        focused = true;
+                    }
+                    var iframe = window.top.document.getElementById('iframe');
+                    if (iframe && iframe.contentWindow && iframe.contentWindow.document) {
+                        var frameMain = iframe.contentWindow.document.querySelector('main, #app, [role="main"]');
+                        if (frameMain) {
+                            frameMain.setAttribute('tabindex', '-1');
+                            frameMain.focus();
+                            focused = true;
+                        }
+                    }
+                }
+            } catch (e) {
+                // ignore cross-frame focus errors
+            }
+            if (!focused) {
+                var main = document.querySelector('main, #app, [role="main"]');
+                if (main) {
+                    main.setAttribute('tabindex', '-1');
+                    main.focus();
+                    focused = true;
+                }
+            }
+            if (focused) {
+                AccessibilityUtils.announce('已聚焦到主要内容区域');
+            }
+        },
+
+        toggleCaptionCenter: function() {
+            var enabled = AriaService.toggleCaptionCenter();
+            AccessibilityUtils.announce(enabled ? '字幕提示面板已开启' : '字幕提示面板已关闭');
+            return enabled;
+        },
+
+        toggleReducedMotion: function() {
+            var enabled = ThemeService.toggleReducedMotion();
+            AccessibilityUtils.announce(enabled ? '减少动态效果已开启' : '减少动态效果已关闭');
+            return enabled;
+        },
+
+        showShortcutHelp: function() {
+            AccessibilityUtils.announce('快捷键帮助：Alt加1到7可切换导航，Alt加S 聚焦搜索，Alt加L 聚焦主要内容，Alt加C 切换字幕提示，Alt加R 切换减少动态，Alt加A 打开无障碍设置，Alt加D 打开演示。');
         },
 
         /**
@@ -522,6 +645,9 @@
     // ARIA辅助服务
     var AriaService = {
         captionTimer: null,
+        captionDockEnabled: localStorage.getItem('accessibility_caption_center') === 'true',
+        captionHistory: [],
+        captionHistoryLimit: 8,
 
         /**
          * 为听障用户显示可见字幕提示
@@ -529,6 +655,7 @@
          */
         showVisualCaption: function(message) {
             if (!message) return;
+            this.appendCaptionHistory(message);
 
             var caption = document.getElementById('a11y-visual-caption');
             if (!caption) {
@@ -617,6 +744,64 @@
             if (element) {
                 element.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
             }
+        },
+
+        ensureCaptionCenter: function() {
+            var panel = document.getElementById('a11y-caption-center');
+            if (!panel) {
+                panel = document.createElement('section');
+                panel.id = 'a11y-caption-center';
+                panel.className = 'a11y-caption-center';
+                panel.setAttribute('role', 'region');
+                panel.setAttribute('aria-label', '字幕提示面板');
+                panel.innerHTML = '<div class="caption-center-head"><span class="caption-center-title">字幕提示面板</span><button type="button" class="caption-center-toggle" aria-label="隐藏字幕提示面板">隐藏</button></div><div class="caption-center-list"></div>';
+                document.body.appendChild(panel);
+                var self = this;
+                panel.querySelector('.caption-center-toggle').addEventListener('click', function() {
+                    self.setCaptionCenterEnabled(false);
+                    AccessibilityUtils.announce('字幕提示面板已关闭');
+                });
+            }
+            this.renderCaptionHistory();
+            panel.classList.toggle('show', !!this.captionDockEnabled);
+            return panel;
+        },
+
+        appendCaptionHistory: function(message) {
+            if (!message) return;
+            this.captionHistory.unshift({
+                text: message,
+                time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+            });
+            this.captionHistory = this.captionHistory.slice(0, this.captionHistoryLimit);
+            this.renderCaptionHistory();
+        },
+
+        renderCaptionHistory: function() {
+            var panel = document.getElementById('a11y-caption-center');
+            if (!panel) return;
+            var list = panel.querySelector('.caption-center-list');
+            if (!list) return;
+            list.innerHTML = this.captionHistory.map(function(item) {
+                return '<div class="caption-center-item"><span class="caption-center-time">' + item.time + '</span><span class="caption-center-text">' + item.text + '</span></div>';
+            }).join('');
+            if (!this.captionHistory.length) {
+                list.innerHTML = '<div class="caption-center-empty">当前还没有可显示的字幕提示。</div>';
+            }
+        },
+
+        setCaptionCenterEnabled: function(enabled) {
+            this.captionDockEnabled = !!enabled;
+            localStorage.setItem('accessibility_caption_center', this.captionDockEnabled ? 'true' : 'false');
+            var panel = this.ensureCaptionCenter();
+            if (panel) {
+                panel.classList.toggle('show', this.captionDockEnabled);
+            }
+            return this.captionDockEnabled;
+        },
+
+        toggleCaptionCenter: function() {
+            return this.setCaptionCenterEnabled(!this.captionDockEnabled);
         }
     };
 
@@ -1039,6 +1224,8 @@
             HapticService.init();
             ThemeService.init();
             KeyboardService.init();
+            AriaService.ensureCaptionCenter();
+            AriaService.setCaptionCenterEnabled(localStorage.getItem('accessibility_caption_center') === 'true');
             UiSelfHealService.init();
 
             console.log('无障碍工具库已初始化');
@@ -1129,6 +1316,22 @@
             return ThemeService.currentFontSize;
         },
 
+        toggleReducedMotion: function() {
+            return ThemeService.toggleReducedMotion();
+        },
+
+        isReducedMotionEnabled: function() {
+            return ThemeService.isReducedMotion;
+        },
+
+        toggleCaptionCenter: function() {
+            return AriaService.toggleCaptionCenter();
+        },
+
+        isCaptionCenterEnabled: function() {
+            return AriaService.captionDockEnabled;
+        },
+
         // 键盘导航
         toggleKeyboardNav: function() {
             return KeyboardService.toggle();
@@ -1174,6 +1377,8 @@
                 speech: SpeechService.isEnabled,
                 haptic: HapticService.isEnabled,
                 highContrast: ThemeService.isHighContrast,
+                reducedMotion: ThemeService.isReducedMotion,
+                captionCenter: AriaService.captionDockEnabled,
                 fontSize: ThemeService.currentFontSize,
                 keyboardNav: KeyboardService.isEnabled
             };
@@ -1198,6 +1403,16 @@
             }
             if (settings.fontSize !== undefined) {
                 ThemeService.setFontSize(settings.fontSize);
+            }
+            if (settings.reducedMotion !== undefined) {
+                if (settings.reducedMotion) {
+                    ThemeService.enableReducedMotion();
+                } else {
+                    ThemeService.disableReducedMotion();
+                }
+            }
+            if (settings.captionCenter !== undefined) {
+                AriaService.setCaptionCenterEnabled(settings.captionCenter);
             }
             if (settings.keyboardNav !== undefined) {
                 KeyboardService.isEnabled = settings.keyboardNav;

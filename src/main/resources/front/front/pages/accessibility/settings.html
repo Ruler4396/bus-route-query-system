@@ -302,6 +302,18 @@
                     </button>
                 </div>
             </div>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <h4>视觉字幕提示面板</h4>
+                    <p>为听障用户持续显示最近的重要系统提示，避免只依赖声音。</p>
+                </div>
+                <div class="setting-control">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="captionToggle" aria-label="视觉字幕提示面板">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
         </div>
 
         <!-- 显示设置 -->
@@ -333,6 +345,18 @@
                         <span class="font-size-value" id="fontSizeValue">14px</span>
                         <button class="font-size-btn" onclick="changeFontSize(2)" aria-label="增大字体">A+</button>
                     </div>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <h4>减少动态效果</h4>
+                    <p>关闭大部分过渡和动画，减少眩晕和视觉干扰，适合低视力与行动不便场景。</p>
+                </div>
+                <div class="setting-control">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="motionToggle" aria-label="减少动态效果">
+                        <span class="slider"></span>
+                    </label>
                 </div>
             </div>
         </div>
@@ -375,8 +399,14 @@
             <ul>
                 <li><kbd>Alt</kbd> + <kbd>1</kbd> 返回首页</li>
                 <li><kbd>Alt</kbd> + <kbd>2</kbd> 路线查询</li>
+                <li><kbd>Alt</kbd> + <kbd>6</kbd> 留言反馈</li>
+                <li><kbd>Alt</kbd> + <kbd>7</kbd> 资源链接</li>
                 <li><kbd>Alt</kbd> + <kbd>M</kbd> 地图模式</li>
                 <li><kbd>Alt</kbd> + <kbd>S</kbd> 聚焦搜索框</li>
+                <li><kbd>Alt</kbd> + <kbd>L</kbd> 聚焦主内容</li>
+                <li><kbd>Alt</kbd> + <kbd>C</kbd> 切换字幕提示面板</li>
+                <li><kbd>Alt</kbd> + <kbd>R</kbd> 切换减少动态效果</li>
+                <li><kbd>Alt</kbd> + <kbd>/</kbd> 快捷键帮助</li>
                 <li><kbd>Alt</kbd> + <kbd>A</kbd> 无障碍设置</li>
                 <li><kbd>Tab</kbd> 切换焦点</li>
                 <li><kbd>Enter</kbd> 确认选择</li>
@@ -412,6 +442,8 @@
 
             document.getElementById('speechToggle').checked = settings.speech;
             document.getElementById('contrastToggle').checked = settings.highContrast;
+            document.getElementById('motionToggle').checked = !!settings.reducedMotion;
+            document.getElementById('captionToggle').checked = !!settings.captionCenter;
             document.getElementById('keyboardToggle').checked = settings.keyboardNav;
             document.getElementById('hapticToggle').checked = settings.haptic;
             document.getElementById('fontSizeValue').textContent = settings.fontSize + 'px';
@@ -450,15 +482,19 @@
                 },
                 hearing: {
                     speech: false,
-                    highContrast: false,
+                    highContrast: true,
+                    reducedMotion: true,
+                    captionCenter: true,
                     keyboardNav: true,
                     haptic: false,
                     fontSize: 16,
-                    message: '已应用听障预设（文字反馈优先）'
+                    message: '已应用听障预设（文字反馈与视觉提示优先）'
                 },
                 mobility: {
                     speech: true,
                     highContrast: true,
+                    reducedMotion: true,
+                    captionCenter: true,
                     keyboardNav: true,
                     haptic: true,
                     fontSize: 18,
@@ -472,6 +508,8 @@
             AccessibilityUtils.saveSettings({
                 speech: preset.speech,
                 highContrast: preset.highContrast,
+                reducedMotion: !!preset.reducedMotion,
+                captionCenter: !!preset.captionCenter,
                 keyboardNav: preset.keyboardNav,
                 haptic: preset.haptic,
                 fontSize: preset.fontSize
@@ -486,6 +524,8 @@
             var settings = {
                 speech: document.getElementById('speechToggle').checked,
                 highContrast: document.getElementById('contrastToggle').checked,
+                reducedMotion: document.getElementById('motionToggle').checked,
+                captionCenter: document.getElementById('captionToggle').checked,
                 keyboardNav: document.getElementById('keyboardToggle').checked,
                 haptic: document.getElementById('hapticToggle').checked,
                 fontSize: AccessibilityUtils.getFontSize()
@@ -501,6 +541,8 @@
             var defaultSettings = {
                 speech: false,
                 highContrast: false,
+                reducedMotion: false,
+                captionCenter: false,
                 keyboardNav: true,
                 haptic: false,
                 fontSize: 14
@@ -534,6 +576,16 @@
 
         document.getElementById('speechToggle').addEventListener('change', function(e) {
             AccessibilityUtils.saveSettings({ speech: !!e.target.checked });
+        });
+
+        document.getElementById('motionToggle').addEventListener('change', function(e) {
+            AccessibilityUtils.saveSettings({ reducedMotion: !!e.target.checked });
+            showMessage(e.target.checked ? '减少动态效果已开启' : '减少动态效果已关闭');
+        });
+
+        document.getElementById('captionToggle').addEventListener('change', function(e) {
+            AccessibilityUtils.saveSettings({ captionCenter: !!e.target.checked });
+            showMessage(e.target.checked ? '视觉字幕提示面板已开启' : '视觉字幕提示面板已关闭');
         });
 
         document.getElementById('keyboardToggle').addEventListener('change', function(e) {
