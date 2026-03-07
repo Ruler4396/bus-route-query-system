@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service("routePlanningService")
@@ -31,6 +32,11 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
     private static final String RULE_ROUTE_LEVEL = "routeLevel";
     private static final String RULE_STATION = "station";
     private static final String RULE_USER_MATCH = "userMatch";
+    private static final String PROFILE_GENERAL = "GENERAL";
+    private static final String PROFILE_WHEELCHAIR = "WHEELCHAIR";
+    private static final String PROFILE_LOW_VISION = "LOW_VISION";
+    private static final String PROFILE_HEARING_TEXT = "HEARING_TEXT";
+    private static final String PROFILE_MULTI = "MULTI";
 
     @Value("${route.rule.pipeline:routeLevel,station,userMatch}")
     private String scoreRulePipeline;
@@ -45,44 +51,63 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
     private double userMatchWeight;
 
     @Override
-    public List<RouteResult> planAccessibleRoute(String startStation, String endStation, Long userId, String preferenceType) {
-        // 1. 获取用户档案
-        YonghuEntity userProfile = null;
-        if (userId != null) {
-            userProfile = yonghuService.selectById(userId);
+    public List<RouteResult> planAccessibleRoute(String startStation, String endStation, Long userId, String preferenceType, String profileType) {
+        String normalizedProfileType = normalizeProfileType(profileType);
+        YonghuEntity effectiveProfile = resolveEffectiveUserProfile(userId, normalizedProfileType);
+        String resolvedProfileType = resolveProfileType(effectiveProfile, normalizedProfileType);
+        String resolvedProfileLabel = getProfileTypeLabel(resolvedProfileType);
+        String resolvedPreferenceType = normalizePreferenceType(preferenceType);
+        if ("AUTO".equals(resolvedPreferenceType) && effectiveProfile != null) {
+            resolvedPreferenceType = determineBestStrategy(effectiveProfile);
         }
 
-        // 2. 如果用户选择AUTO，则根据障碍类型智能推荐
-        if ("AUTO".equals(preferenceType) && userProfile != null) {
-            preferenceType = determineBestStrategy(userProfile);
-        }
-
-        // 3. 获取所有可行路线
         List<GongjiaoluxianEntity> routes = getAllPossibleRoutes(startStation, endStation);
-
-        // 4. 计算每条路线的评分
         List<RouteResult> results = new ArrayList<>();
         for (GongjiaoluxianEntity route : routes) {
             RouteResult result = new RouteResult();
             result.setRoute(route);
+            result.setResolvedProfileType(resolvedProfileType);
+            result.setResolvedProfileLabel(resolvedProfileLabel);
+            result.setResolvedPreferenceType(resolvedPreferenceType);
+            result.setResolvedPreferenceLabel(getPreferenceLabel(resolvedPreferenceType));
+            result.setDataSourceText(resolveDataSourceText(route));
+            result.setDataUpdatedAtText(resolveDataUpdatedAtText(route));
+            result.setAccessibilityLevelText(getAccessibilityLevelText(route.getWuzhangaijibie()));
+            result.setVoiceAnnounceText(booleanFeatureText(route.getYuyintongbao(), "支持语音播报", "语音播报信息不足"));
+            result.setBlindPathSupportText(booleanFeatureText(route.getMangdaozhichi(), "有盲道支持", "盲道支持信息不足"));
+            result.setGuideDogSupportText(booleanFeatureText(route.getDitezhichi(), "支持导盲犬", "导盲犬支持信息不足"));
 
-            double accessibilityScore = calculateAccessibilityScore(route, userProfile);
+            double accessibilityScore = calculateAccessibilityScore(route, effectiveProfile);
             result.setAccessibilityScore(accessibilityScore);
 
-            double totalScore = calculateTotalScore(route, accessibilityScore, preferenceType, userProfile);
-            result.setTotalScore(totalScore);
-
-            result.setRecommendationReason(generateRecommendationReason(route, userProfile, accessibilityScore));
-            result.setAccessibilityLevelText(getAccessibilityLevelText(route.getWuzhangaijibie()));
-            result.setVoiceAnnounceText(booleanFeatureText(route.getYuyintongbao(), "支持语音播报", "暂无语音播报"));
-            result.setBlindPathSupportText(booleanFeatureText(route.getMangdaozhichi(), "有盲道支持", "暂无盲道支持信息"));
-            result.setGuideDogSupportText(booleanFeatureText(route.getDitezhichi(), "支持导盲犬", "暂无导盲犬支持信息"));
+            RouteAssessment assessment = assessRoute(route, effectiveProfile, resolvedProfileType, accessibilityScore);
+            double totalScore = calculateTotalScore(route, accessibilityScore, resolvedPreferenceType, effectiveProfile);
+            if (assessment.degraded) {
+                totalScore -= 8.0;
+            }
+            if (!assessment.recommendable) {
+                totalScore -= 35.0;
+            }
+            result.setTotalScore(roundToOneDecimal(Math.max(0.0, totalScore)));
+            result.setConfidenceScore(assessment.confidenceScore);
+            result.setConfidenceLevelText(assessment.confidenceLevelText);
+            result.setRiskHints(assessment.riskHints);
+            result.setMissingDataHints(assessment.missingDataHints);
+            result.setRecommendable(assessment.recommendable);
+            result.setDecisionState(assessment.decisionState);
+            result.setDecisionStateText(resolveDecisionStateText(assessment.decisionState));
+            result.setDecisionMessage(assessment.decisionMessage);
+            result.setRuleBreakdown(assessment.ruleBreakdown);
+            result.setRecommendationReason(generateRecommendationReason(route, effectiveProfile, resolvedProfileType, resolvedPreferenceType, accessibilityScore, assessment));
             results.add(result);
         }
 
-        // 5. 根据偏好排序
-        results.sort((r1, r2) -> Double.compare(r2.getTotalScore(), r1.getTotalScore()));
-
+        results.sort((left, right) -> {
+            if (left.isRecommendable() != right.isRecommendable()) {
+                return left.isRecommendable() ? -1 : 1;
+            }
+            return Double.compare(right.getTotalScore(), left.getTotalScore());
+        });
         return results;
     }
 
@@ -91,20 +116,15 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
         if (userProfile == null || userProfile.getZhangaijibie() == null) {
             return "AUTO";
         }
-
         switch (userProfile.getZhangaijibie()) {
-            case 1: // 视障
-                return "ACCESSIBLE";  // 优先无障碍设施完善的路线
-            case 2: // 听障
-                return "TIME";        // 听障用户对时间敏感
-            case 3: // 肢障
-                return "ACCESSIBLE";  // 需要无障碍设施
-            case 4: // 多重障碍
-                return "ACCESSIBLE";  // 优先无障碍
+            case 1:
+            case 3:
+            case 4:
+                return "ACCESSIBLE";
+            case 2:
+                return "TIME";
             default:
-                // 使用用户设置的偏好
-                return userProfile.getPreferenceRouteType() != null ?
-                        userProfile.getPreferenceRouteType() : "AUTO";
+                return userProfile.getPreferenceRouteType() != null ? userProfile.getPreferenceRouteType() : "AUTO";
         }
     }
 
@@ -113,10 +133,8 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
         RouteScoreContext context = new RouteScoreContext(route, userProfile);
         Map<String, ScoreRule> ruleRegistry = buildRuleRegistry();
         Map<String, Double> weightMap = buildRuleWeightMap();
-
         double weightedScore = 0.0;
         double totalWeight = 0.0;
-
         for (String ruleKey : resolveRulePipeline()) {
             ScoreRule rule = ruleRegistry.get(ruleKey);
             double weight = weightMap.containsKey(ruleKey) ? weightMap.get(ruleKey) : 0.0;
@@ -128,163 +146,40 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
             weightedScore += rawScore * weight;
             totalWeight += weight;
         }
-
         if (totalWeight <= 0.0) {
             return DEFAULT_NEUTRAL_SCORE;
         }
         return roundToOneDecimal(weightedScore / totalWeight);
     }
 
-    /**
-     * 计算站点无障碍评分
-     */
-    private double calculateStationAccessibilityScore(GongjiaoluxianEntity route) {
-        if (route.getTujingzhandian() == null || route.getTujingzhandian().isEmpty()) {
-            return 50.0; // 默认中等评分
-        }
-
-        String[] stations = route.getTujingzhandian().split(",");
-        if (stations.length == 0) {
-            return 50.0;
-        }
-
-        double totalScore = 0.0;
-        int validStationCount = 0;
-
-        for (String stationName : stations) {
-            stationName = stationName.trim();
-            ZhandianWuzhangaiEntity stationInfo = zhandianWuzhangaiService.getByStationName(stationName);
-
-            if (stationInfo != null) {
-                double stationScore = calculateSingleStationScore(stationInfo);
-                totalScore += stationScore;
-                validStationCount++;
-            }
-        }
-
-        if (validStationCount == 0) {
-            return 50.0;
-        }
-
-        return totalScore / validStationCount;
+    @Override
+    public List<GongjiaoluxianEntity> getAllPossibleRoutes(String startStation, String endStation) {
+        Wrapper<GongjiaoluxianEntity> wrapper = new EntityWrapper<>();
+        wrapper.like("qidianzhanming", startStation)
+                .or()
+                .like("zhongdianzhanming", endStation)
+                .or()
+                .like("tujingzhandian", startStation)
+                .or()
+                .like("tujingzhandian", endStation);
+        return gongjiaoluxianService.selectList(wrapper);
     }
 
-    /**
-     * 计算单个站点评分
-     */
-    private double calculateSingleStationScore(ZhandianWuzhangaiEntity station) {
-        double score = 0.0;
-
-        // 基础分：根据无障碍级别
-        Integer level = station.getWuzhangaijibie();
-        if (level == null) level = 3;
-        score += (3 - level) / 3.0 * 40; // 最高40分
-
-        // 设施加分
-        if (station.getShengjiangtai() != null && station.getShengjiangtai() == 1) score += 15;
-        if (station.getMangdao() != null && station.getMangdao() == 1) score += 10;
-        if (station.getZhuizhu() != null && station.getZhuizhu() == 1) score += 10;
-        if (station.getCesuo() != null && station.getCesuo() == 1) score += 10;
-        if (station.getTingchechang() != null && station.getTingchechang() == 1) score += 10;
-
-        // 爱心座椅加分
-        if (station.getZuoweishu() != null && station.getZuoweishu() > 0) score += 5;
-
-        return Math.min(score, 100.0);
-    }
-
-    /**
-     * 计算用户适配度
-     */
-    private double calculateUserMatchScore(GongjiaoluxianEntity route, YonghuEntity userProfile) {
-        double score = 0.0;
-        Integer disabilityLevel = userProfile.getZhangaijibie();
-
-        if (disabilityLevel == null) {
-            return 50.0;
-        }
-
-        switch (disabilityLevel) {
-            case 1: // 视障用户
-                // 重视：语音播报、盲道
-                if (route.getYuyintongbao() != null && route.getYuyintongbao() == 1) score += 40;
-                if (route.getMangdaozhichi() != null && route.getMangdaozhichi() == 1) score += 30;
-                break;
-
-            case 2: // 听障用户
-                // 重视：电子显示屏（通过无障碍设施字段判断）
-                if (route.getWuzhangaisheshi() != null && route.getWuzhangaisheshi().contains("电子显示屏")) {
-                    score += 50;
-                }
-                score += 30; // 听障用户对路线本身要求不高
-                break;
-
-            case 3: // 肢障用户
-                // 重视：轮椅设施、电梯
-                if (route.getWuzhangaisheshi() != null && route.getWuzhangaisheshi().contains("轮椅")) {
-                    score += 30;
-                }
-                if (route.getDiantifacilities() != null && !route.getDiantifacilities().isEmpty()) {
-                    score += 30;
-                }
-                break;
-
-            case 4: // 多重障碍
-                // 要求最高
-                if (route.getWuzhangaijibie() != null && route.getWuzhangaijibie() == 0) {
-                    score += 50;
-                }
-                break;
-
+    @Override
+    public String getAccessibilityLevelText(Integer level) {
+        if (level == null) return "未知";
+        switch (level) {
+            case 0:
+                return "完全无障碍";
+            case 1:
+                return "基本无障碍";
+            case 2:
+                return "部分障碍";
+            case 3:
+                return "有障碍";
             default:
-                score = 50.0;
+                return "未知";
         }
-
-        // 导盲犬支持
-        if (route.getDitezhichi() != null && route.getDitezhichi() == 1) {
-            if (userProfile.getFuzhugongju() != null && userProfile.getFuzhugongju().contains("导盲犬")) {
-                score += 20;
-            }
-        }
-
-        return Math.min(score + 20, 100.0); // 基础分20分
-    }
-
-    /**
-     * 计算综合评分
-     */
-    private double calculateTotalScore(GongjiaoluxianEntity route, double accessibilityScore,
-                                       String preferenceType, YonghuEntity userProfile) {
-        double score = accessibilityScore;
-
-        switch (preferenceType) {
-            case "ACCESSIBLE":
-                // 无障碍优先，无障碍评分权重最高
-                score = accessibilityScore * 0.8 + 20;
-                break;
-
-            case "TIME":
-                // 时间优先，假设站点越少时间越短
-                if (route.getTujingzhandian() != null) {
-                    int stationCount = route.getTujingzhandian().split(",").length;
-                    // 站点越少得分越高
-                    double timeScore = Math.max(0, 50 - stationCount * 2);
-                    score = accessibilityScore * 0.3 + timeScore * 0.7;
-                }
-                break;
-
-            case "DISTANCE":
-                // 距离优先，这里简化处理
-                score = accessibilityScore * 0.4 + 40; // 基础分40
-                break;
-
-            default: // AUTO
-                // 均衡考虑
-                score = accessibilityScore * 0.6 + 30;
-                break;
-        }
-
-        return Math.min(score, 100.0);
     }
 
     @Override
@@ -293,7 +188,416 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
         meta.put("pipeline", resolveRulePipeline());
         meta.put("weights", buildRuleWeightMap());
         meta.put("neutralScore", DEFAULT_NEUTRAL_SCORE);
+        meta.put("supportedProfiles", Arrays.asList(
+                buildProfileMeta(PROFILE_WHEELCHAIR),
+                buildProfileMeta(PROFILE_LOW_VISION),
+                buildProfileMeta(PROFILE_HEARING_TEXT),
+                buildProfileMeta(PROFILE_GENERAL)
+        ));
         return meta;
+    }
+
+    @Override
+    public String getProfileTypeLabel(String profileType) {
+        switch (normalizeProfileType(profileType)) {
+            case PROFILE_WHEELCHAIR:
+                return "轮椅 / 行动不便";
+            case PROFILE_LOW_VISION:
+                return "低视力";
+            case PROFILE_HEARING_TEXT:
+                return "听障（文本提示优先）";
+            case PROFILE_MULTI:
+                return "多重障碍";
+            default:
+                return "通用访客";
+        }
+    }
+
+    @Override
+    public String normalizeProfileType(String profileType) {
+        if (profileType == null) {
+            return "AUTO";
+        }
+        String normalized = profileType.trim().toUpperCase(Locale.ROOT);
+        if (normalized.isEmpty() || "AUTO".equals(normalized)) {
+            return "AUTO";
+        }
+        if (PROFILE_WHEELCHAIR.equals(normalized) || PROFILE_LOW_VISION.equals(normalized) || PROFILE_HEARING_TEXT.equals(normalized) || PROFILE_MULTI.equals(normalized) || PROFILE_GENERAL.equals(normalized)) {
+            return normalized;
+        }
+        return "AUTO";
+    }
+
+    @Override
+    public String getPreferenceLabel(String preferenceType) {
+        String normalized = normalizePreferenceType(preferenceType);
+        switch (normalized) {
+            case "ACCESSIBLE":
+                return "无障碍优先";
+            case "TIME":
+                return "时间优先";
+            case "DISTANCE":
+                return "距离优先";
+            default:
+                return "智能推荐";
+        }
+    }
+
+    private YonghuEntity resolveEffectiveUserProfile(Long userId, String requestedProfileType) {
+        if (!"AUTO".equals(requestedProfileType)) {
+            return buildVirtualProfile(requestedProfileType);
+        }
+        if (userId == null) {
+            return null;
+        }
+        return yonghuService.selectById(userId);
+    }
+
+    private YonghuEntity buildVirtualProfile(String profileType) {
+        YonghuEntity profile = new YonghuEntity();
+        String normalized = normalizeProfileType(profileType);
+        if (PROFILE_WHEELCHAIR.equals(normalized)) {
+            profile.setZhangaijibie(3);
+            profile.setFuzhugongju("轮椅");
+            profile.setPreferenceRouteType("ACCESSIBLE");
+            profile.setGaoduibidu(1);
+            profile.setJianpandaohang(1);
+            profile.setZitidaxiao(18);
+            return profile;
+        }
+        if (PROFILE_LOW_VISION.equals(normalized)) {
+            profile.setZhangaijibie(1);
+            profile.setFuzhugongju("低视力辅助");
+            profile.setPreferenceRouteType("ACCESSIBLE");
+            profile.setGaoduibidu(1);
+            profile.setYuyinbofang(1);
+            profile.setJianpandaohang(1);
+            profile.setZitidaxiao(20);
+            return profile;
+        }
+        if (PROFILE_HEARING_TEXT.equals(normalized)) {
+            profile.setZhangaijibie(2);
+            profile.setPreferenceRouteType("TIME");
+            profile.setGaoduibidu(1);
+            profile.setJianpandaohang(1);
+            profile.setZitidaxiao(16);
+            return profile;
+        }
+        if (PROFILE_MULTI.equals(normalized)) {
+            profile.setZhangaijibie(4);
+            profile.setPreferenceRouteType("ACCESSIBLE");
+            profile.setFuzhugongju("轮椅,导盲辅助");
+            profile.setGaoduibidu(1);
+            profile.setYuyinbofang(1);
+            profile.setJianpandaohang(1);
+            profile.setZitidaxiao(20);
+            return profile;
+        }
+        return null;
+    }
+
+    private String resolveProfileType(YonghuEntity profile, String requestedProfileType) {
+        String normalized = normalizeProfileType(requestedProfileType);
+        if (!"AUTO".equals(normalized)) {
+            return normalized;
+        }
+        if (profile == null || profile.getZhangaijibie() == null) {
+            return PROFILE_GENERAL;
+        }
+        switch (profile.getZhangaijibie()) {
+            case 1:
+                return PROFILE_LOW_VISION;
+            case 2:
+                return PROFILE_HEARING_TEXT;
+            case 3:
+                return PROFILE_WHEELCHAIR;
+            case 4:
+                return PROFILE_MULTI;
+            default:
+                return PROFILE_GENERAL;
+        }
+    }
+
+    private String normalizePreferenceType(String preferenceType) {
+        if (preferenceType == null || preferenceType.trim().isEmpty()) {
+            return "AUTO";
+        }
+        String normalized = preferenceType.trim().toUpperCase(Locale.ROOT);
+        if ("ACCESSIBLE".equals(normalized) || "TIME".equals(normalized) || "DISTANCE".equals(normalized) || "AUTO".equals(normalized)) {
+            return normalized;
+        }
+        return "AUTO";
+    }
+
+    private double calculateStationAccessibilityScore(GongjiaoluxianEntity route) {
+        if (route.getTujingzhandian() == null || route.getTujingzhandian().trim().isEmpty()) {
+            return DEFAULT_NEUTRAL_SCORE;
+        }
+        String[] stations = route.getTujingzhandian().split(",");
+        if (stations.length == 0) {
+            return DEFAULT_NEUTRAL_SCORE;
+        }
+        double total = 0.0;
+        int valid = 0;
+        for (String raw : stations) {
+            String stationName = raw == null ? "" : raw.trim();
+            if (stationName.isEmpty()) {
+                continue;
+            }
+            ZhandianWuzhangaiEntity station = zhandianWuzhangaiService.getByStationName(stationName);
+            if (station != null) {
+                total += calculateSingleStationScore(station);
+                valid += 1;
+            }
+        }
+        if (valid == 0) {
+            return DEFAULT_NEUTRAL_SCORE;
+        }
+        return roundToOneDecimal(total / valid);
+    }
+
+    private double calculateSingleStationScore(ZhandianWuzhangaiEntity station) {
+        double score = 20.0;
+        Integer level = station.getWuzhangaijibie();
+        if (level != null) {
+            score += Math.max(0, (3 - level) * 12.0);
+        }
+        if (station.getShengjiangtai() != null && station.getShengjiangtai() == 1) score += 18.0;
+        if (station.getMangdao() != null && station.getMangdao() == 1) score += 16.0;
+        if (station.getZhuizhu() != null && station.getZhuizhu() == 1) score += 8.0;
+        if (station.getCesuo() != null && station.getCesuo() == 1) score += 8.0;
+        if (station.getTingchechang() != null && station.getTingchechang() == 1) score += 6.0;
+        if (station.getZuoweishu() != null) score += Math.min(station.getZuoweishu(), 10);
+        return clampScore(score);
+    }
+
+    private double calculateUserMatchScore(GongjiaoluxianEntity route, YonghuEntity userProfile) {
+        if (userProfile == null || userProfile.getZhangaijibie() == null) {
+            return DEFAULT_NEUTRAL_SCORE;
+        }
+        double score = 20.0;
+        switch (userProfile.getZhangaijibie()) {
+            case 1: // 低视力 / 视障
+                if (route.getYuyintongbao() != null && route.getYuyintongbao() == 1) score += 35.0;
+                if (route.getMangdaozhichi() != null && route.getMangdaozhichi() == 1) score += 30.0;
+                if (route.getDitezhichi() != null && route.getDitezhichi() == 1) score += 10.0;
+                if (containsKeyword(route.getWuzhangaisheshi(), "语音", "盲道", "引导")) score += 10.0;
+                break;
+            case 2: // 听障
+                if (containsKeyword(route.getWuzhangaisheshi(), "电子显示屏", "字幕", "文字提示", "显示")) score += 40.0;
+                score += 15.0;
+                break;
+            case 3: // 轮椅 / 行动不便
+                if (containsKeyword(route.getWuzhangaisheshi(), "轮椅", "坡道", "低地板", "无障碍")) score += 35.0;
+                if (route.getDiantifacilities() != null && !route.getDiantifacilities().trim().isEmpty()) score += 25.0;
+                if (route.getWuzhangaijibie() != null && route.getWuzhangaijibie() <= 1) score += 10.0;
+                break;
+            case 4: // 多重障碍
+                if (route.getWuzhangaijibie() != null && route.getWuzhangaijibie() <= 1) score += 35.0;
+                if (route.getYuyintongbao() != null && route.getYuyintongbao() == 1) score += 15.0;
+                if (route.getMangdaozhichi() != null && route.getMangdaozhichi() == 1) score += 15.0;
+                if (route.getDiantifacilities() != null && !route.getDiantifacilities().trim().isEmpty()) score += 15.0;
+                break;
+            default:
+                score = DEFAULT_NEUTRAL_SCORE;
+        }
+        if (route.getDitezhichi() != null && route.getDitezhichi() == 1 && userProfile.getFuzhugongju() != null && userProfile.getFuzhugongju().contains("导盲犬")) {
+            score += 5.0;
+        }
+        return clampScore(score);
+    }
+
+    private double calculateTotalScore(GongjiaoluxianEntity route, double accessibilityScore, String preferenceType, YonghuEntity userProfile) {
+        int stationCount = 0;
+        if (route.getTujingzhandian() != null && !route.getTujingzhandian().trim().isEmpty()) {
+            stationCount = route.getTujingzhandian().split(",").length;
+        }
+        double timeScore = Math.max(0.0, 88.0 - stationCount * 3.0);
+        double distanceScore = Math.max(0.0, 82.0 - stationCount * 2.0);
+        String normalized = normalizePreferenceType(preferenceType);
+        if ("ACCESSIBLE".equals(normalized)) {
+            return roundToOneDecimal(accessibilityScore * 0.72 + timeScore * 0.12 + distanceScore * 0.16);
+        }
+        if ("TIME".equals(normalized)) {
+            return roundToOneDecimal(accessibilityScore * 0.35 + timeScore * 0.50 + distanceScore * 0.15);
+        }
+        if ("DISTANCE".equals(normalized)) {
+            return roundToOneDecimal(accessibilityScore * 0.35 + distanceScore * 0.50 + timeScore * 0.15);
+        }
+        return roundToOneDecimal(accessibilityScore * 0.55 + timeScore * 0.20 + distanceScore * 0.25);
+    }
+
+    private RouteAssessment assessRoute(GongjiaoluxianEntity route, YonghuEntity profile, String resolvedProfileType, double accessibilityScore) {
+        RouteAssessment assessment = new RouteAssessment();
+        assessment.recommendable = true;
+        assessment.decisionState = "READY";
+        assessment.riskHints = new ArrayList<>();
+        assessment.missingDataHints = new ArrayList<>();
+
+        double confidenceScore = 38.0;
+        if (route.getWuzhangaijibie() != null) confidenceScore += 14.0; else assessment.missingDataHints.add("路线无障碍等级缺失");
+        if (route.getWuzhangaisheshi() != null && !route.getWuzhangaisheshi().trim().isEmpty()) confidenceScore += 12.0; else assessment.missingDataHints.add("路线设施说明不足");
+        if (route.getYuyintongbao() != null) confidenceScore += 8.0;
+        if (route.getMangdaozhichi() != null) confidenceScore += 8.0;
+        if (route.getDitezhichi() != null) confidenceScore += 6.0;
+        if (route.getDiantifacilities() != null && !route.getDiantifacilities().trim().isEmpty()) confidenceScore += 8.0;
+        if (route.getAddtime() != null) confidenceScore += 6.0;
+        if (containsKeyword(route.getLuxianxiangqing(), "OpenStreetMap", "OSRM", "真实数据来源")) confidenceScore += 8.0;
+        if (containsKeyword(route.getLuxianxiangqing(), "演示")) confidenceScore += 4.0;
+        if (accessibilityScore >= 70) confidenceScore += 10.0;
+
+        boolean hasVoice = route.getYuyintongbao() != null && route.getYuyintongbao() == 1;
+        boolean hasBlindPath = route.getMangdaozhichi() != null && route.getMangdaozhichi() == 1;
+        boolean hasWheelchairFacilities = containsKeyword(route.getWuzhangaisheshi(), "轮椅", "坡道", "低地板", "无障碍");
+        boolean hasElevatorInfo = route.getDiantifacilities() != null && !route.getDiantifacilities().trim().isEmpty();
+
+        if (PROFILE_WHEELCHAIR.equals(resolvedProfileType)) {
+            if (!hasWheelchairFacilities) {
+                assessment.missingDataHints.add("轮椅/坡道信息不足");
+                assessment.riskHints.add("该路线缺少明确的轮椅坡道或低地板车辆说明");
+                confidenceScore -= 18.0;
+            }
+            if (!hasElevatorInfo) {
+                assessment.missingDataHints.add("电梯/无障碍换乘信息不足");
+                assessment.riskHints.add("关键换乘是否可达仍需现场或地图进一步核对");
+                confidenceScore -= 16.0;
+            }
+            if ((route.getWuzhangaijibie() != null && route.getWuzhangaijibie() >= 3) || (!hasWheelchairFacilities && !hasElevatorInfo)) {
+                assessment.recommendable = false;
+                assessment.decisionState = "REJECTED";
+                assessment.decisionMessage = "关键轮椅可达性信息不足，当前不直接推荐该路线。";
+            } else if (!hasWheelchairFacilities || !hasElevatorInfo || (route.getWuzhangaijibie() != null && route.getWuzhangaijibie() >= 2)) {
+                assessment.degraded = true;
+                assessment.decisionState = "DEGRADED";
+                assessment.decisionMessage = "该路线可作为候选，但关键换乘或设施信息仍需谨慎核对。";
+            }
+        } else if (PROFILE_LOW_VISION.equals(resolvedProfileType)) {
+            if (!hasVoice) {
+                assessment.missingDataHints.add("语音播报信息不足");
+                assessment.riskHints.add("该路线语音播报支持较弱");
+                confidenceScore -= 18.0;
+            }
+            if (!hasBlindPath) {
+                assessment.missingDataHints.add("盲道支持信息不足");
+                assessment.riskHints.add("该路线盲道支持信息不足");
+                confidenceScore -= 16.0;
+            }
+            if ((route.getWuzhangaijibie() != null && route.getWuzhangaijibie() >= 3) || (!hasVoice && !hasBlindPath)) {
+                assessment.recommendable = false;
+                assessment.decisionState = "REJECTED";
+                assessment.decisionMessage = "关键低视力支持信息不足，当前不直接推荐该路线。";
+            } else if (!hasVoice || !hasBlindPath || (route.getWuzhangaijibie() != null && route.getWuzhangaijibie() >= 2)) {
+                assessment.degraded = true;
+                assessment.decisionState = "DEGRADED";
+                assessment.decisionMessage = "该路线可作为候选，但语音或盲道信息仍需进一步核对。";
+            }
+        } else if (PROFILE_HEARING_TEXT.equals(resolvedProfileType)) {
+            if (!containsKeyword(route.getWuzhangaisheshi(), "电子显示屏", "字幕", "文字提示", "显示")) {
+                assessment.missingDataHints.add("文字提示设施信息不足");
+                assessment.riskHints.add("该路线缺少明确的电子显示或字幕提示说明");
+                confidenceScore -= 10.0;
+                assessment.degraded = true;
+                assessment.decisionState = "DEGRADED";
+                assessment.decisionMessage = "该路线可展示，但文字提示设施信息还不够完整。";
+            }
+        }
+
+        confidenceScore = clampScore(confidenceScore);
+        assessment.confidenceScore = roundToOneDecimal(confidenceScore);
+        assessment.confidenceLevelText = resolveConfidenceLevelText(assessment.confidenceScore);
+        if (assessment.confidenceScore < 60.0 && assessment.recommendable) {
+            assessment.degraded = true;
+            assessment.decisionState = "DEGRADED";
+            if (assessment.decisionMessage == null || assessment.decisionMessage.isEmpty()) {
+                assessment.decisionMessage = "该路线数据可信度一般，请结合风险提示谨慎核对。";
+            }
+        }
+        if (!assessment.recommendable && (assessment.decisionMessage == null || assessment.decisionMessage.isEmpty())) {
+            assessment.decisionMessage = "关键无障碍数据不足，当前不直接推荐该路线。";
+        }
+        if (assessment.recommendable && !assessment.degraded) {
+            assessment.decisionMessage = "关键无障碍信息相对完整，可作为优先候选路线。";
+        }
+        assessment.ruleBreakdown = new LinkedHashMap<>();
+        assessment.ruleBreakdown.put("confidence", assessment.confidenceScore);
+        assessment.ruleBreakdown.put("riskCount", (double) assessment.riskHints.size());
+        assessment.ruleBreakdown.put("missingCount", (double) assessment.missingDataHints.size());
+        return assessment;
+    }
+
+    private String generateRecommendationReason(GongjiaoluxianEntity route,
+                                                YonghuEntity userProfile,
+                                                String profileType,
+                                                String preferenceType,
+                                                double accessibilityScore,
+                                                RouteAssessment assessment) {
+        StringBuilder reason = new StringBuilder();
+        reason.append("面向").append(getProfileTypeLabel(profileType)).append("画像，按").append(getPreferenceLabel(preferenceType)).append("进行排序；");
+        if (accessibilityScore >= 80) {
+            reason.append("当前路线无障碍基础较完整");
+        } else if (accessibilityScore >= 60) {
+            reason.append("当前路线无障碍基础中等");
+        } else {
+            reason.append("当前路线无障碍基础较弱");
+        }
+        if (assessment.degraded) {
+            reason.append("，但存在需要进一步核对的风险点");
+        }
+        if (!assessment.recommendable) {
+            reason.append("，关键数据不足，当前不直接推荐");
+        }
+        return reason.toString();
+    }
+
+    private String booleanFeatureText(Integer value, String yesText, String noText) {
+        return value != null && value == 1 ? yesText : noText;
+    }
+
+    private Map<String, Object> buildProfileMeta(String profileType) {
+        Map<String, Object> meta = new LinkedHashMap<>();
+        meta.put("type", profileType);
+        meta.put("label", getProfileTypeLabel(profileType));
+        return meta;
+    }
+
+    private String resolveDataSourceText(GongjiaoluxianEntity route) {
+        String detail = route.getLuxianxiangqing() == null ? "" : route.getLuxianxiangqing();
+        if (containsKeyword(detail, "OpenStreetMap", "OSRM", "真实数据来源")) {
+            return "OpenStreetMap / OSRM 试点线路数据";
+        }
+        if (containsKeyword(detail, "演示")) {
+            return "试点演示数据（H2）";
+        }
+        return "项目内置线路数据";
+    }
+
+    private String resolveDataUpdatedAtText(GongjiaoluxianEntity route) {
+        if (route.getAddtime() == null) {
+            return "时间未知";
+        }
+        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(route.getAddtime());
+    }
+
+    private String resolveConfidenceLevelText(double confidenceScore) {
+        if (confidenceScore >= 80) {
+            return "高";
+        }
+        if (confidenceScore >= 60) {
+            return "中";
+        }
+        return "低";
+    }
+
+    private boolean containsKeyword(String text, String... keywords) {
+        if (text == null || text.trim().isEmpty()) {
+            return false;
+        }
+        for (String keyword : keywords) {
+            if (keyword != null && !keyword.isEmpty() && text.contains(keyword)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Map<String, ScoreRule> buildRuleRegistry() {
@@ -342,13 +646,9 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
         }
         Set<String> valid = new LinkedHashSet<>(defaultPipeline);
         List<String> pipeline = new ArrayList<>();
-        String[] items = scoreRulePipeline.split(",");
-        for (String item : items) {
+        for (String item : scoreRulePipeline.split(",")) {
             String key = item == null ? "" : item.trim();
-            if (key.isEmpty()) {
-                continue;
-            }
-            if (valid.contains(key) && !pipeline.contains(key)) {
+            if (!key.isEmpty() && valid.contains(key) && !pipeline.contains(key)) {
                 pipeline.add(key);
             }
         }
@@ -373,69 +673,14 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
         return Math.round(value * 10.0) / 10.0;
     }
 
-    @Override
-    public List<GongjiaoluxianEntity> getAllPossibleRoutes(String startStation, String endStation) {
-        Wrapper<GongjiaoluxianEntity> wrapper = new EntityWrapper<>();
-
-        // 查询包含起点或终点，或经过站点的路线
-        wrapper.like("qidianzhanming", startStation)
-                .or()
-                .like("zhongdianzhanming", endStation)
-                .or()
-                .like("tujingzhandian", startStation)
-                .or()
-                .like("tujingzhandian", endStation);
-
-        return gongjiaoluxianService.selectList(wrapper);
-    }
-
-    @Override
-    public String getAccessibilityLevelText(Integer level) {
-        if (level == null) return "未知";
-        switch (level) {
-            case 0:
-                return "完全无障碍";
-            case 1:
-                return "基本无障碍";
-            case 2:
-                return "部分障碍";
-            case 3:
-                return "有障碍";
-            default:
-                return "未知";
+    private String resolveDecisionStateText(String decisionState) {
+        if ("REJECTED".equals(decisionState)) {
+            return "不直接推荐";
         }
-    }
-
-    /**
-     * 生成推荐理由
-     */
-    private String generateRecommendationReason(GongjiaoluxianEntity route, YonghuEntity userProfile, double accessibilityScore) {
-        StringBuilder reason = new StringBuilder();
-
-        if (accessibilityScore >= 80) {
-            reason.append("无障碍设施完善");
-        } else if (accessibilityScore >= 60) {
-            reason.append("基本无障碍");
-        } else {
-            reason.append("无障碍设施有限");
+        if ("DEGRADED".equals(decisionState)) {
+            return "谨慎核对";
         }
-
-        if (route.getYuyintongbao() != null && route.getYuyintongbao() == 1) {
-            reason.append("，支持语音播报");
-        }
-
-        if (route.getDitezhichi() != null && route.getDitezhichi() == 1) {
-            reason.append("，支持导盲犬");
-        }
-
-        return reason.toString();
-    }
-
-    /**
-     * 布尔设施字段转换为可读文本，便于前端直出无障碍信息。
-     */
-    private String booleanFeatureText(Integer value, String yesText, String noText) {
-        return value != null && value == 1 ? yesText : noText;
+        return "可优先查看";
     }
 
     private interface ScoreRule {
@@ -463,5 +708,17 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
         public Map<String, Double> getRuleScores() {
             return ruleScores;
         }
+    }
+
+    private static class RouteAssessment {
+        private boolean recommendable;
+        private boolean degraded;
+        private double confidenceScore;
+        private String confidenceLevelText;
+        private String decisionState;
+        private String decisionMessage;
+        private List<String> riskHints;
+        private List<String> missingDataHints;
+        private Map<String, Double> ruleBreakdown;
     }
 }

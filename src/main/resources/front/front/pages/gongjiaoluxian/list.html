@@ -286,8 +286,17 @@ width: 100%;
 					<input type="text" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"140px","fontSize":"14px","borderStyle":"solid","height":"40px"}' name="zhongdianzhanming" id="zhongdianzhanming" placeholder="终点站名" autocomplete="off" class="layui-input">
 				</div>
 				<div class="item-list">
+					<div class="lable" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(0,0,0,0)","backgroundColor":"transparent","color":"rgba(19, 19, 19, 1)","borderRadius":"0","textAlign":"right","borderWidth":"0","width":"auto","fontSize":"16px","borderStyle":"solid"}'>服务画像</div>
+					<select id="profileType" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"170px","fontSize":"14px","borderStyle":"solid","height":"40px"}' class="layui-input">
+						<option value="AUTO" selected>自动识别 / 通用</option>
+						<option value="WHEELCHAIR">轮椅 / 行动不便</option>
+						<option value="LOW_VISION">低视力</option>
+						<option value="HEARING_TEXT">听障（文本提示优先）</option>
+					</select>
+				</div>
+				<div class="item-list">
 					<div class="lable" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(0,0,0,0)","backgroundColor":"transparent","color":"rgba(19, 19, 19, 1)","borderRadius":"0","textAlign":"right","borderWidth":"0","width":"auto","fontSize":"16px","borderStyle":"solid"}'>推荐偏好</div>
-					<select id="preferenceType" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"140px","fontSize":"14px","borderStyle":"solid","height":"40px"}' class="layui-input">
+					<select id="preferenceType" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"160px","fontSize":"14px","borderStyle":"solid","height":"40px"}' class="layui-input">
 						<option value="AUTO" selected>智能推荐</option>
 						<option value="ACCESSIBLE">无障碍优先</option>
 						<option value="TIME">时间优先</option>
@@ -313,6 +322,32 @@ width: 100%;
 			<div v-if="planNoticeText" class="route-plan-notice" role="status" aria-live="polite" :style='{"padding":"8px 12px","margin":"0 10px 12px 10px","borderRadius":"6px","fontSize":"13px","lineHeight":"1.5","border":"1px solid","borderColor":planNoticeType==="error"?"#d9534f":(planNoticeType==="warn"?"#f0ad4e":(planNoticeType==="success"?"#5cb85c":"#999")),"backgroundColor":planNoticeType==="error"?"#fbe9e7":(planNoticeType==="warn"?"#fff7e6":(planNoticeType==="success"?"#edf7ed":"#f7f7f7")),"color":planNoticeType==="error"?"#a94442":(planNoticeType==="warn"?"#8a6d3b":(planNoticeType==="success"?"#3c763d":"#555"))}'>
 				{{planNoticeText}}
 			</div>
+			<section v-if="planMeta" class="route-plan-summary">
+				<div class="route-plan-summary-grid">
+					<div class="summary-chip"><strong>服务画像</strong><span>{{planMeta.profileLabel || '通用'}}</span></div>
+					<div class="summary-chip"><strong>排序策略</strong><span>{{planMeta.preferenceLabel || planMeta.preferenceType || '智能推荐'}}</span></div>
+					<div class="summary-chip"><strong>决策状态</strong><span>{{planMeta.decisionStateText}}</span></div>
+					<div class="summary-chip"><strong>结果数量</strong><span>{{planMeta.count}} / 评估 {{planMeta.evaluatedCount}}</span></div>
+				</div>
+				<div v-if="planMeta.actionHints && planMeta.actionHints.length" class="summary-block">
+					<h4>建议操作</h4>
+					<ul>
+						<li v-for="(hint,index) in planMeta.actionHints" :key="'action-'+index">{{hint}}</li>
+					</ul>
+				</div>
+				<div v-if="planMeta.riskHints && planMeta.riskHints.length" class="summary-block risk">
+					<h4>全局风险提示</h4>
+					<ul>
+						<li v-for="(hint,index) in planMeta.riskHints" :key="'risk-'+index">{{hint}}</li>
+					</ul>
+				</div>
+				<div v-if="planMeta.rejectedRoutes && planMeta.rejectedRoutes.length" class="summary-block reject">
+					<h4>已过滤路线</h4>
+					<ul>
+						<li v-for="(item,index) in planMeta.rejectedRoutes" :key="'reject-'+index">{{item.routeName}}：{{item.decisionMessage}}</li>
+					</ul>
+				</div>
+			</section>
 		    <!-- 样式一 -->
 		    <div class="list" style="position: relative;">
 		      <div
@@ -344,15 +379,29 @@ width: 100%;
 							推荐分 {{Number(item.totalScore || 0).toFixed(1)}} / 无障碍 {{Number(item.accessibilityScore || 0).toFixed(1)}}
 						</div>
 						<div class="route-card-tags">
-							<span class="route-tag" :class="item.wuzhangaijibie <= 1 ? 'good' : 'warn'">无障碍等级：{{item.accessibilityLevelText || getAccessibilityLevelText(item.wuzhangaijibie)}}</span>
-							<span class="route-tag" :class="item.mangdaozhichi==1 ? 'good' : 'warn'">{{item.blindPathSupportText || ('盲道支持：' + (item.mangdaozhichi==1 ? '有' : '未知/无'))}}</span>
-							<span class="route-tag" :class="item.yuyintongbao==1 ? 'good' : 'warn'">{{item.voiceAnnounceText || ('语音提示：' + (item.yuyintongbao==1 ? '支持' : '未知/无'))}}</span>
-							<span v-if="item.guideDogSupportText || item.ditezhichi!=null" class="route-tag" :class="item.ditezhichi==1 ? 'good' : 'warn'">{{item.guideDogSupportText || ('导盲犬支持：' + (item.ditezhichi==1 ? '支持' : '未知/无'))}}</span>
-						</div>
-						<div v-if="item.recommendationReason" :style='{"padding":"4px 6px","margin":"4px 0 0 0","backgroundColor":"rgba(245, 247, 238, 1)","color":"rgba(46, 58, 31, 1)","borderRadius":"6px","textAlign":"center","width":"100%","fontSize":"12px"}'>
-							{{item.recommendationReason}}
-						</div>
+						<span class="route-tag" :class="item.wuzhangaijibie <= 1 ? 'good' : 'warn'">无障碍等级：{{item.accessibilityLevelText || getAccessibilityLevelText(item.wuzhangaijibie)}}</span>
+						<span class="route-tag" :class="getConfidenceClass(item)">置信度：{{item.confidenceLevelText || '未知'}} {{Number(item.confidenceScore || 0).toFixed(0)}}</span>
+						<span class="route-tag" :class="getDecisionClass(item)">状态：{{item.decisionStateText || '待核对'}}</span>
+						<span class="route-tag" :class="item.mangdaozhichi==1 ? 'good' : 'warn'">{{item.blindPathSupportText || ('盲道支持：' + (item.mangdaozhichi==1 ? '有' : '未知/无'))}}</span>
+						<span class="route-tag" :class="item.yuyintongbao==1 ? 'good' : 'warn'">{{item.voiceAnnounceText || ('语音提示：' + (item.yuyintongbao==1 ? '支持' : '未知/无'))}}</span>
+						<span v-if="item.guideDogSupportText || item.ditezhichi!=null" class="route-tag" :class="item.ditezhichi==1 ? 'good' : 'warn'">{{item.guideDogSupportText || ('导盲犬支持：' + (item.ditezhichi==1 ? '支持' : '未知/无'))}}</span>
 					</div>
+					<div class="route-card-meta">
+						<div>画像：{{item.resolvedProfileLabel || '通用'}}</div>
+						<div>策略：{{item.resolvedPreferenceLabel || item.resolvedPreferenceType || '智能推荐'}}</div>
+					</div>
+					<div class="route-card-meta">
+						<div>数据源：{{item.dataSourceText || '未知'}}</div>
+						<div>更新：{{item.dataUpdatedAtText || '未知'}}</div>
+					</div>
+					<div v-if="item.recommendationReason" :style='{"padding":"4px 6px","margin":"4px 0 0 0","backgroundColor":"rgba(245, 247, 238, 1)","color":"rgba(46, 58, 31, 1)","borderRadius":"6px","textAlign":"center","width":"100%","fontSize":"12px"}'>
+						{{item.recommendationReason}}
+					</div>
+					<div v-if="item.decisionMessage" class="route-card-decision">{{item.decisionMessage}}</div>
+					<ul v-if="item.riskHints && item.riskHints.length" class="route-risk-list">
+						<li v-for="(risk,index) in item.riskHints" :key="'risk-'+item.id+'-'+index">{{risk}}</li>
+					</ul>
+</div>
 		        </div>
 		      </div>
 			  <div v-if="!dataList || dataList.length===0" :style='{"padding":"30px 0","textAlign":"center","color":"rgba(90, 90, 90, 1)","fontSize":"14px"}'>
@@ -377,66 +426,80 @@ width: 100%;
   <script type="text/javascript">
     var vue = new Vue({
       el: '#app',
-	      data: {
-	        dataList: [],
-	baseurl:'',
-	swiperIndex: '-1',
-	isPlanMode: false,
-	planNoticeType: '',
-	planNoticeText: '',
-	a11yStatusText: '请输入起点与终点站名，点击“无障碍推荐”开始。'
-	      },
+      data: {
+        dataList: [],
+        baseurl: '',
+        swiperIndex: '-1',
+        isPlanMode: false,
+        planMeta: null,
+        planNoticeType: '',
+        planNoticeText: '',
+        a11yStatusText: '请输入起点与终点站名，点击“无障碍推荐”开始。'
+      },
       filters: {
         newsDesc: function(val) {
           if (val) {
             if (val.length > 60) {
               return val.substring(0, 60).replace(/<[^>]*>/g).replace(/undefined/g, '');
-            } else {
-              return val.replace(/<[^>]*>/g).replace(/undefined/g, '');
             }
+            return val.replace(/<[^>]*>/g).replace(/undefined/g, '');
           }
           return '';
         }
       },
       methods: {
-      	isAuth(tablename, button) {
-          return isFrontAuth(tablename, button)
+        isAuth: function(tablename, button) {
+          return isFrontAuth(tablename, button);
         },
-        jump(url) {
-          jump(url)
+        jump: function(url) {
+          jump(url);
         },
-		openRouteDetail(item) {
-		  if (!item || !item.id) return;
-		  jump(this.routeDetailUrl(item));
-		},
-		routeDetailUrl(item) {
-		  return '../gongjiaoluxian/detail.html?id=' + item.id;
-		},
-		onRouteCardKeydown(event, item) {
-		  if (!event) return;
-		  if (event.key === 'Enter' || event.key === ' ') {
-			event.preventDefault();
-			this.openRouteDetail(item);
-		  }
-		},
-		getAccessibilityLevelText(level) {
-		  var map = ['完全无障碍', '较高无障碍', '部分无障碍', '障碍较多'];
-		  var idx = Number(level);
-		  if (isNaN(idx) || idx < 0 || idx >= map.length) {
-			return '暂无';
-		  }
-		  return map[idx];
+        openRouteDetail: function(item) {
+          if (!item || !item.id) return;
+          jump(this.routeDetailUrl(item));
+        },
+        routeDetailUrl: function(item) {
+          return '../gongjiaoluxian/detail.html?id=' + item.id;
+        },
+        onRouteCardKeydown: function(event, item) {
+          if (!event) return;
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            this.openRouteDetail(item);
+          }
+        },
+        getAccessibilityLevelText: function(level) {
+          var map = ['完全无障碍', '较高无障碍', '部分无障碍', '障碍较多'];
+          var idx = Number(level);
+          if (isNaN(idx) || idx < 0 || idx >= map.length) {
+            return '暂无';
+          }
+          return map[idx];
+        },
+        getDecisionClass: function(item) {
+          if (!item || !item.decisionState) return 'warn';
+          if (item.decisionState === 'REJECTED') return 'danger';
+          if (item.decisionState === 'DEGRADED') return 'warn';
+          return 'good';
+        },
+        getConfidenceClass: function(item) {
+          var score = Number(item && item.confidenceScore ? item.confidenceScore : 0);
+          if (score >= 80) return 'good';
+          if (score >= 60) return 'warn';
+          return 'danger';
         }
       }
     });
 
-    layui.use(['layer', 'element', 'laypage', 'http', 'jquery','laydate'], function() {
+
+    layui.use(['layer', 'element', 'laypage', 'http', 'jquery','laydate', 'form'], function() {
 	var layer = layui.layer;
 	var element = layui.element;
 	var laypage = layui.laypage;
 	var http = layui.http;
 	var jquery = layui.jquery;
 	var laydate = layui.laydate;
+		var form = layui.form;
 	var routeStatePanel = FrontPageState.createPanel({
 		mount: function() { return document.querySelector('.page-route-list .list'); },
 		onAction: function(actionMode) {
@@ -536,6 +599,7 @@ width: 100%;
 
         http.request('gongjiaoluxian/list', 'get', param, function(res) {
           vue.isPlanMode = false;
+          vue.planMeta = null;
           clearPlanNotice();
           applyRouteStateForList(res, hasFilters);
           laypage.render({
@@ -598,7 +662,8 @@ width: 100%;
 	        var param = {
 	          startStation: startStation,
 	          endStation: endStation,
-	          preferenceType: jquery('#preferenceType').val() || 'AUTO'
+	          preferenceType: jquery('#preferenceType').val() || 'AUTO',
+	          profileType: jquery('#profileType').val() || 'AUTO'
 	        };
 	        var userId = localStorage.getItem('userid');
 	        if (userId && userId !== 'null' && userId !== 'undefined') {
@@ -647,20 +712,44 @@ width: 100%;
 	              route.blindPathSupportText = result.blindPathSupportText || '';
 	              route.guideDogSupportText = result.guideDogSupportText || '';
 	              route.isRecommended = true;
+	              route.resolvedProfileLabel = result.resolvedProfileLabel || '';
+	              route.resolvedPreferenceType = result.resolvedPreferenceType || '';
+	              route.resolvedPreferenceLabel = result.resolvedPreferenceLabel || '';
+	              route.confidenceScore = Number(result.confidenceScore || 0);
+	              route.confidenceLevelText = result.confidenceLevelText || '';
+	              route.dataSourceText = result.dataSourceText || '';
+	              route.dataUpdatedAtText = result.dataUpdatedAtText || '';
+	              route.riskHints = result.riskHints || [];
+	              route.decisionState = result.decisionState || '';
+	              route.decisionStateText = result.decisionStateText || '';
+	              route.decisionMessage = result.decisionMessage || '';
 	              list.push(route);
 	            });
 
 	            vue.isPlanMode = true;
+	            vue.planMeta = {
+	              count: Number(res.data.count || 0),
+	              evaluatedCount: Number(res.data.evaluatedCount || list.length),
+	              rejectedCount: Number(res.data.rejectedCount || 0),
+	              profileLabel: res.data.resolvedProfileLabel || '通用',
+	              preferenceType: res.data.preferenceType || param.preferenceType,
+	              preferenceLabel: res.data.preferenceLabel || '',
+	              decisionState: res.data.decisionState || 'OK',
+	              decisionStateText: res.data.decisionState === 'REJECT' ? '暂不推荐' : (res.data.decisionState === 'CAUTION' ? '有风险，谨慎核对' : '已生成推荐'),
+	              actionHints: res.data.actionHints || [],
+	              riskHints: res.data.riskHints || [],
+	              rejectedRoutes: res.data.rejectedRoutes || []
+	            };
 	            vue.dataList = list;
 	            clearPager();
 
 	            if (!list.length) {
-	              setPlanNotice('warn', '未找到匹配路线，请调整起终点或偏好后重试');
-	              layer.msg('未找到匹配路线，请调整起终点后重试');
+	              setPlanNotice(res.data.decisionState === 'REJECT' ? 'error' : 'warn', res.data.decisionState === 'REJECT' ? '关键无障碍数据不足，当前不直接推荐任何路线，请参考风险提示与已过滤路线。' : '未找到匹配路线，请调整起终点或偏好后重试');
+	              layer.msg(res.data.decisionState === 'REJECT' ? '关键无障碍数据不足，暂不推荐路线' : '未找到匹配路线，请调整起终点后重试');
 	              return;
 	            }
 
-	            setPlanNotice('success', '已返回 ' + list.length + ' 条推荐路线');
+	            setPlanNotice(res.data.rejectedCount > 0 ? 'warn' : 'success', res.data.rejectedCount > 0 ? ('已返回 ' + list.length + ' 条候选路线，并过滤 ' + res.data.rejectedCount + ' 条关键数据不足的路线') : ('已返回 ' + list.length + ' 条推荐路线'));
 	          },
 	          error: function(xhr, status, error) {
 	            vue.isPlanMode = true;

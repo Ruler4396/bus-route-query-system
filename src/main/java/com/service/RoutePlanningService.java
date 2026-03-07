@@ -2,27 +2,39 @@ package com.service;
 
 import com.entity.GongjiaoluxianEntity;
 import com.entity.YonghuEntity;
-import java.util.Map;
+
 import java.util.List;
+import java.util.Map;
 
 /**
  * 无障碍路线规划服务
- * 实现融合无障碍权重的路线规划算法
  */
 public interface RoutePlanningService {
 
-    /**
-     * 路线规划结果类
-     */
     class RouteResult {
         private GongjiaoluxianEntity route;
-        private double accessibilityScore;  // 无障碍评分
-        private double totalScore;          // 综合评分
-        private String recommendationReason; // 推荐理由
-        private String accessibilityLevelText; // 无障碍等级文本
-        private String voiceAnnounceText;      // 语音播报支持文本
-        private String blindPathSupportText;   // 盲道支持文本
-        private String guideDogSupportText;    // 导盲犬支持文本
+        private double accessibilityScore;
+        private double totalScore;
+        private String recommendationReason;
+        private String accessibilityLevelText;
+        private String voiceAnnounceText;
+        private String blindPathSupportText;
+        private String guideDogSupportText;
+        private String resolvedProfileType;
+        private String resolvedProfileLabel;
+        private String resolvedPreferenceType;
+        private String resolvedPreferenceLabel;
+        private double confidenceScore;
+        private String confidenceLevelText;
+        private String dataSourceText;
+        private String dataUpdatedAtText;
+        private List<String> riskHints;
+        private List<String> missingDataHints;
+        private boolean recommendable;
+        private String decisionState;
+        private String decisionStateText;
+        private String decisionMessage;
+        private Map<String, Double> ruleBreakdown;
 
         public GongjiaoluxianEntity getRoute() {
             return route;
@@ -87,51 +99,147 @@ public interface RoutePlanningService {
         public void setGuideDogSupportText(String guideDogSupportText) {
             this.guideDogSupportText = guideDogSupportText;
         }
+
+        public String getResolvedProfileType() {
+            return resolvedProfileType;
+        }
+
+        public void setResolvedProfileType(String resolvedProfileType) {
+            this.resolvedProfileType = resolvedProfileType;
+        }
+
+        public String getResolvedProfileLabel() {
+            return resolvedProfileLabel;
+        }
+
+        public void setResolvedProfileLabel(String resolvedProfileLabel) {
+            this.resolvedProfileLabel = resolvedProfileLabel;
+        }
+
+        public String getResolvedPreferenceType() {
+            return resolvedPreferenceType;
+        }
+
+        public void setResolvedPreferenceType(String resolvedPreferenceType) {
+            this.resolvedPreferenceType = resolvedPreferenceType;
+        }
+
+        public String getResolvedPreferenceLabel() {
+            return resolvedPreferenceLabel;
+        }
+
+        public void setResolvedPreferenceLabel(String resolvedPreferenceLabel) {
+            this.resolvedPreferenceLabel = resolvedPreferenceLabel;
+        }
+
+        public double getConfidenceScore() {
+            return confidenceScore;
+        }
+
+        public void setConfidenceScore(double confidenceScore) {
+            this.confidenceScore = confidenceScore;
+        }
+
+        public String getConfidenceLevelText() {
+            return confidenceLevelText;
+        }
+
+        public void setConfidenceLevelText(String confidenceLevelText) {
+            this.confidenceLevelText = confidenceLevelText;
+        }
+
+        public String getDataSourceText() {
+            return dataSourceText;
+        }
+
+        public void setDataSourceText(String dataSourceText) {
+            this.dataSourceText = dataSourceText;
+        }
+
+        public String getDataUpdatedAtText() {
+            return dataUpdatedAtText;
+        }
+
+        public void setDataUpdatedAtText(String dataUpdatedAtText) {
+            this.dataUpdatedAtText = dataUpdatedAtText;
+        }
+
+        public List<String> getRiskHints() {
+            return riskHints;
+        }
+
+        public void setRiskHints(List<String> riskHints) {
+            this.riskHints = riskHints;
+        }
+
+        public List<String> getMissingDataHints() {
+            return missingDataHints;
+        }
+
+        public void setMissingDataHints(List<String> missingDataHints) {
+            this.missingDataHints = missingDataHints;
+        }
+
+        public boolean isRecommendable() {
+            return recommendable;
+        }
+
+        public void setRecommendable(boolean recommendable) {
+            this.recommendable = recommendable;
+        }
+
+        public String getDecisionState() {
+            return decisionState;
+        }
+
+        public void setDecisionState(String decisionState) {
+            this.decisionState = decisionState;
+        }
+
+        public String getDecisionStateText() {
+            return decisionStateText;
+        }
+
+        public void setDecisionStateText(String decisionStateText) {
+            this.decisionStateText = decisionStateText;
+        }
+
+        public String getDecisionMessage() {
+            return decisionMessage;
+        }
+
+        public void setDecisionMessage(String decisionMessage) {
+            this.decisionMessage = decisionMessage;
+        }
+
+        public Map<String, Double> getRuleBreakdown() {
+            return ruleBreakdown;
+        }
+
+        public void setRuleBreakdown(Map<String, Double> ruleBreakdown) {
+            this.ruleBreakdown = ruleBreakdown;
+        }
     }
 
-    /**
-     * 无障碍路线规划
-     * @param startStation 起点站名
-     * @param endStation 终点站名
-     * @param userId 用户ID（可选，用于获取用户档案）
-     * @param preferenceType 偏好类型：AUTO(智能推荐)/DISTANCE(最短距离)/TIME(最短时间)/ACCESSIBLE(无障碍最优)
-     * @return 排序后的路线列表
-     */
-    List<RouteResult> planAccessibleRoute(String startStation, String endStation, Long userId, String preferenceType);
+    default List<RouteResult> planAccessibleRoute(String startStation, String endStation, Long userId, String preferenceType) {
+        return planAccessibleRoute(startStation, endStation, userId, preferenceType, "AUTO");
+    }
 
-    /**
-     * 根据用户障碍档案确定最佳排序策略
-     * @param userProfile 用户档案
-     * @return 策略类型
-     */
+    List<RouteResult> planAccessibleRoute(String startStation, String endStation, Long userId, String preferenceType, String profileType);
+
     String determineBestStrategy(YonghuEntity userProfile);
 
-    /**
-     * 计算路线的无障碍评分
-     * @param route 公交路线
-     * @param userProfile 用户档案（可选）
-     * @return 评分(0-100)
-     */
     double calculateAccessibilityScore(GongjiaoluxianEntity route, YonghuEntity userProfile);
 
-    /**
-     * 获取路线无障碍级别的文本描述
-     * @param level 级别代码
-     * @return 文本描述
-     */
     String getAccessibilityLevelText(Integer level);
 
-    /**
-     * 获取所有可行路线
-     * @param startStation 起点站
-     * @param endStation 终点站
-     * @return 路线列表
-     */
     List<GongjiaoluxianEntity> getAllPossibleRoutes(String startStation, String endStation);
 
-    /**
-     * 获取当前评分规则引擎配置元数据
-     * @return 规则引擎信息（规则管线、权重等）
-     */
     Map<String, Object> getRuleEngineMeta();
+
+    String getProfileTypeLabel(String profileType);
+
+    String normalizeProfileType(String profileType);
+
+    String getPreferenceLabel(String preferenceType);
 }

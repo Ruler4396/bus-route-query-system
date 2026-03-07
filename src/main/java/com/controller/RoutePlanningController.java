@@ -48,7 +48,8 @@ public class RoutePlanningController {
             @RequestParam String startStation,
             @RequestParam String endStation,
             @RequestParam(required = false) Long userId,
-            @RequestParam(defaultValue = "AUTO") String preferenceType) {
+            @RequestParam(defaultValue = "AUTO") String preferenceType,
+            @RequestParam(defaultValue = "AUTO") String profileType) {
 
         if (startStation == null || startStation.trim().isEmpty() ||
             endStation == null || endStation.trim().isEmpty()) {
@@ -56,12 +57,71 @@ public class RoutePlanningController {
         }
 
         List<RoutePlanningService.RouteResult> results =
-                routePlanningService.planAccessibleRoute(startStation, endStation, userId, preferenceType);
+                routePlanningService.planAccessibleRoute(startStation, endStation, userId, preferenceType, profileType);
+
+        List<RoutePlanningService.RouteResult> recommended = new ArrayList<>();
+        List<Map<String, Object>> rejectedRoutes = new ArrayList<>();
+        List<String> riskHints = new ArrayList<>();
+        String resolvedProfileLabel = routePlanningService.getProfileTypeLabel(profileType);
+        String resolvedPreferenceType = preferenceType;
+        String resolvedPreferenceLabel = routePlanningService.getPreferenceLabel(preferenceType);
+
+        for (RoutePlanningService.RouteResult item : results) {
+            if (item == null) {
+                continue;
+            }
+            if (item.getResolvedProfileLabel() != null) {
+                resolvedProfileLabel = item.getResolvedProfileLabel();
+            }
+            if (item.getResolvedPreferenceType() != null) {
+                resolvedPreferenceType = item.getResolvedPreferenceType();
+                resolvedPreferenceLabel = item.getResolvedPreferenceLabel();
+            }
+            if (item.isRecommendable()) {
+                recommended.add(item);
+            } else {
+                Map<String, Object> rejected = new HashMap<>();
+                rejected.put("routeId", item.getRoute() != null ? item.getRoute().getId() : null);
+                rejected.put("routeName", item.getRoute() != null ? item.getRoute().getLuxianmingcheng() : "未知路线");
+                rejected.put("decisionMessage", item.getDecisionMessage());
+                rejected.put("missingDataHints", item.getMissingDataHints());
+                rejectedRoutes.add(rejected);
+            }
+            if (item.getRiskHints() != null) {
+                for (String risk : item.getRiskHints()) {
+                    if (risk != null && !risk.trim().isEmpty() && !riskHints.contains(risk)) {
+                        riskHints.add(risk);
+                    }
+                }
+            }
+        }
+
+        String decisionState = recommended.isEmpty() ? (rejectedRoutes.isEmpty() ? "EMPTY" : "REJECT") : (rejectedRoutes.isEmpty() ? "OK" : "CAUTION");
+        List<String> actionHints = new ArrayList<>();
+        if ("REJECT".equals(decisionState)) {
+            actionHints.add("关键无障碍数据不足，当前不直接推荐任何路线，请改用试点线路关键词或查看地图页核对站点信息。");
+        } else if (recommended.isEmpty()) {
+            actionHints.add("未匹配到路线，请更换起终点关键词或放宽偏好。");
+        } else {
+            actionHints.add("优先查看第1条推荐路线，并进入地图页核对站点与 ETA。");
+            if (!rejectedRoutes.isEmpty()) {
+                actionHints.add("已有部分路线因关键无障碍数据不足被过滤，建议只比较当前可推荐结果。");
+            }
+        }
 
         Map<String, Object> data = new HashMap<>();
-        data.put("list", results);
-        data.put("count", results.size());
-        data.put("preferenceType", preferenceType);
+        data.put("list", recommended);
+        data.put("count", recommended.size());
+        data.put("evaluatedCount", results.size());
+        data.put("rejectedCount", rejectedRoutes.size());
+        data.put("decisionState", decisionState);
+        data.put("requestedProfileType", profileType);
+        data.put("resolvedProfileLabel", resolvedProfileLabel);
+        data.put("preferenceType", resolvedPreferenceType);
+        data.put("preferenceLabel", resolvedPreferenceLabel);
+        data.put("riskHints", riskHints);
+        data.put("actionHints", actionHints);
+        data.put("rejectedRoutes", rejectedRoutes);
         data.put("ruleEngine", routePlanningService.getRuleEngineMeta());
 
         return R.ok("路线规划成功").put("data", data);
@@ -78,6 +138,7 @@ public class RoutePlanningController {
             @RequestParam String endStation,
             @RequestParam(required = false) Long userId,
             @RequestParam(defaultValue = "AUTO") String preferenceType,
+            @RequestParam(defaultValue = "AUTO") String profileType,
             @RequestParam(defaultValue = "3") Integer topN) {
 
         if (startStation == null || startStation.trim().isEmpty()
@@ -87,15 +148,50 @@ public class RoutePlanningController {
 
         int limit = topN == null ? 3 : Math.max(1, Math.min(topN, 10));
         List<RoutePlanningService.RouteResult> results =
-                routePlanningService.planAccessibleRoute(startStation, endStation, userId, preferenceType);
+                routePlanningService.planAccessibleRoute(startStation, endStation, userId, preferenceType, profileType);
 
         List<Map<String, Object>> topRoutes = new ArrayList<>();
         List<String> actionHints = new ArrayList<>();
         List<String> riskHints = new ArrayList<>();
+        List<RoutePlanningService.RouteResult> recommended = new ArrayList<>();
+        List<Map<String, Object>> rejectedRoutes = new ArrayList<>();
+        String resolvedProfileLabel = routePlanningService.getProfileTypeLabel(profileType);
+        String resolvedPreferenceType = preferenceType;
+        String resolvedPreferenceLabel = routePlanningService.getPreferenceLabel(preferenceType);
 
-        int count = Math.min(limit, results.size());
+        for (RoutePlanningService.RouteResult item : results) {
+            if (item == null) {
+                continue;
+            }
+            if (item.getResolvedProfileLabel() != null) {
+                resolvedProfileLabel = item.getResolvedProfileLabel();
+            }
+            if (item.getResolvedPreferenceType() != null) {
+                resolvedPreferenceType = item.getResolvedPreferenceType();
+                resolvedPreferenceLabel = item.getResolvedPreferenceLabel();
+            }
+            if (item.isRecommendable()) {
+                recommended.add(item);
+            } else {
+                Map<String, Object> rejected = new HashMap<>();
+                rejected.put("routeId", item.getRoute() != null ? item.getRoute().getId() : null);
+                rejected.put("routeName", item.getRoute() != null ? item.getRoute().getLuxianmingcheng() : "未知路线");
+                rejected.put("decisionMessage", item.getDecisionMessage());
+                rejected.put("missingDataHints", item.getMissingDataHints());
+                rejectedRoutes.add(rejected);
+            }
+            if (item.getRiskHints() != null) {
+                for (String risk : item.getRiskHints()) {
+                    if (risk != null && !risk.trim().isEmpty() && !riskHints.contains(risk)) {
+                        riskHints.add(risk);
+                    }
+                }
+            }
+        }
+
+        int count = Math.min(limit, recommended.size());
         for (int i = 0; i < count; i++) {
-            RoutePlanningService.RouteResult item = results.get(i);
+            RoutePlanningService.RouteResult item = recommended.get(i);
             GongjiaoluxianEntity route = item.getRoute();
             if (route == null) {
                 continue;
@@ -114,22 +210,21 @@ public class RoutePlanningController {
             routeCard.put("voiceAnnounceText", item.getVoiceAnnounceText());
             routeCard.put("blindPathSupportText", item.getBlindPathSupportText());
             routeCard.put("guideDogSupportText", item.getGuideDogSupportText());
+            routeCard.put("confidenceScore", item.getConfidenceScore());
+            routeCard.put("confidenceLevelText", item.getConfidenceLevelText());
+            routeCard.put("dataSourceText", item.getDataSourceText());
+            routeCard.put("dataUpdatedAtText", item.getDataUpdatedAtText());
+            routeCard.put("decisionStateText", item.getDecisionStateText());
+            routeCard.put("decisionMessage", item.getDecisionMessage());
+            routeCard.put("riskHints", item.getRiskHints());
             topRoutes.add(routeCard);
-
-            if (route.getYuyintongbao() == null || route.getYuyintongbao() != 1) {
-                riskHints.add("路线「" + route.getLuxianmingcheng() + "」语音播报支持较弱");
-            }
-            if (route.getMangdaozhichi() == null || route.getMangdaozhichi() != 1) {
-                riskHints.add("路线「" + route.getLuxianmingcheng() + "」盲道支持信息不足");
-            }
         }
 
         if (topRoutes.isEmpty()) {
-            actionHints.add("未匹配到路线，请更换起终点关键词或放宽偏好");
+            actionHints.add("关键无障碍数据不足，当前不直接推荐路线，请改用试点线路关键词或查看地图页核对。");
         } else {
-            actionHints.add("优先查看第1条推荐路线，并进入地图核对站点细节");
-            actionHints.add("如需更快到达，可切换“时间优先”再比较结果");
-            actionHints.add("如需无障碍稳妥方案，可切换“无障碍优先”再比较结果");
+            actionHints.add("优先查看第1条推荐路线，并进入地图核对站点细节。");
+            actionHints.add("可切换不同画像对比路线排序差异。");
         }
 
         Map<String, Object> stationSummary = new HashMap<>();
@@ -150,8 +245,12 @@ public class RoutePlanningController {
         Map<String, Object> data = new HashMap<>();
         data.put("startStation", startStation);
         data.put("endStation", endStation);
-        data.put("preferenceType", preferenceType);
-        data.put("count", results.size());
+        data.put("preferenceType", resolvedPreferenceType);
+        data.put("preferenceLabel", resolvedPreferenceLabel);
+        data.put("resolvedProfileLabel", resolvedProfileLabel);
+        data.put("rejectedRoutes", rejectedRoutes);
+        data.put("count", recommended.size());
+        data.put("rejectedCount", rejectedRoutes.size());
         data.put("topRoutes", topRoutes);
         data.put("actionHints", actionHints);
         data.put("riskHints", riskHints);
@@ -241,25 +340,33 @@ public class RoutePlanningController {
     @RequestMapping("/score/{routeId}")
     public R calculateScore(
             @PathVariable("routeId") Long routeId,
-            @RequestParam(required = false) Long userId) {
+            @RequestParam(required = false) Long userId,
+            @RequestParam(defaultValue = "AUTO") String profileType) {
 
         GongjiaoluxianEntity route = gongjiaoluxianService.selectById(routeId);
         if (route == null) {
             return R.error("路线不存在");
         }
 
-        com.entity.YonghuEntity userProfile = null;
-        if (userId != null) {
-            userProfile = new com.entity.YonghuEntity();
-            userProfile.setId(userId);
+        List<RoutePlanningService.RouteResult> oneRoute = routePlanningService.planAccessibleRoute(route.getQidianzhanming(), route.getZhongdianzhanming(), userId, "ACCESSIBLE", profileType);
+        RoutePlanningService.RouteResult matched = null;
+        for (RoutePlanningService.RouteResult item : oneRoute) {
+            if (item.getRoute() != null && routeId.equals(item.getRoute().getId())) {
+                matched = item;
+                break;
+            }
         }
-
-        double score = routePlanningService.calculateAccessibilityScore(route, userProfile);
+        double score = matched != null ? matched.getAccessibilityScore() : routePlanningService.calculateAccessibilityScore(route, null);
 
         Map<String, Object> data = new HashMap<>();
         data.put("routeId", routeId);
         data.put("accessibilityScore", score);
         data.put("level", routePlanningService.getAccessibilityLevelText(route.getWuzhangaijibie()));
+        if (matched != null) {
+            data.put("confidenceScore", matched.getConfidenceScore());
+            data.put("confidenceLevelText", matched.getConfidenceLevelText());
+            data.put("decisionStateText", matched.getDecisionStateText());
+        }
 
         return R.ok().put("data", data);
     }
