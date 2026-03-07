@@ -1,7 +1,7 @@
 				var DEFAULT_IFRAME_URL = './pages/home/home.html';
 				var frameResizeTimer = null;
-				var frameDomObserver = null;
 				var frameResizeObserver = null;
+				var lastAppliedFrameHeight = 0;
 
 				function normalizeIframeUrl(rawUrl) {
 					var fallbackUrl = DEFAULT_IFRAME_URL;
@@ -21,10 +21,6 @@
 				}
 
 				function disconnectFrameSizeObservers() {
-					if (frameDomObserver) {
-						try { frameDomObserver.disconnect(); } catch (e) {}
-						frameDomObserver = null;
-					}
 					if (frameResizeObserver) {
 						try { frameResizeObserver.disconnect(); } catch (e) {}
 						frameResizeObserver = null;
@@ -41,28 +37,16 @@
 					var ResizeCtor = iframe.contentWindow.ResizeObserver || window.ResizeObserver;
 					if (ResizeCtor) {
 						frameResizeObserver = new ResizeCtor(function() {
-							scheduleFrameResize(0);
+							scheduleFrameResize(40);
 						});
 						frameResizeObserver.observe(observeTarget);
 						if (doc.documentElement && doc.documentElement !== observeTarget) {
 							frameResizeObserver.observe(doc.documentElement);
 						}
 					}
-					var MutationCtor = iframe.contentWindow.MutationObserver || window.MutationObserver;
-					if (MutationCtor) {
-						frameDomObserver = new MutationCtor(function() {
-							scheduleFrameResize(16);
-						});
-						frameDomObserver.observe(observeTarget, {
-							childList: true,
-							subtree: true,
-							attributes: true,
-							characterData: true
-						});
-					}
 					if (doc.fonts && doc.fonts.ready) {
 						doc.fonts.ready.then(function() {
-							scheduleFrameResize(0);
+							scheduleFrameResize(60);
 						}).catch(function() {});
 					}
 				}
@@ -314,10 +298,7 @@
 							}
 						}
 
-					// 低频兜底，避免极端场景下窗口尺寸感知延迟
-					setInterval(function(){
-						scheduleFrameResize(0);
-					}, 10000);
+	
 
 	      function readFrameHeight(doc) {
 	        if (!doc) return 0;
@@ -373,6 +354,10 @@
 	          nextHeight = Math.max(minHeight, viewportHeight - 120);
 	        }
 
+	        if (Math.abs(nextHeight - lastAppliedFrameHeight) <= 4) {
+	          return;
+	        }
+
 	        iframe.style.height = nextHeight + 'px';
 	        iframe.style.overflow = 'hidden';
 	        iframe.setAttribute('scrolling', 'no');
@@ -381,6 +366,7 @@
 	        document.body.style.overflowY = 'auto';
 	        document.documentElement.style.overflowX = 'hidden';
 	        document.documentElement.style.overflowY = 'auto';
+	        lastAppliedFrameHeight = nextHeight;
 	      };
 
 			//  窗口变化时候iframe自适应

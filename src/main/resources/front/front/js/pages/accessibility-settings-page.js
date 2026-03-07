@@ -1,3 +1,19 @@
+        function syncSettingsToShell() {
+            try {
+                if (window.parent && window.parent !== window && window.parent.AccessibilityUtils) {
+                    window.parent.AccessibilityUtils.saveSettings(AccessibilityUtils.getSettings());
+                    if (typeof window.parent.updateAssistStatus === 'function') {
+                        window.parent.updateAssistStatus();
+                    }
+                    if (typeof window.parent.syncAssistSettingsToIframe === 'function') {
+                        window.parent.syncAssistSettingsToIframe();
+                    }
+                }
+            } catch (err) {
+                console.warn('同步无障碍设置到壳层失败', err);
+            }
+        }
+
         // 初始化设置
         function initSettings() {
             var settings = AccessibilityUtils.getSettings();
@@ -29,14 +45,17 @@
             if (newSize >= 12 && newSize <= 24) {
                 AccessibilityUtils.setFontSize(newSize);
                 document.getElementById('fontSizeValue').textContent = newSize + 'px';
+                syncSettingsToShell();
             }
         }
 
         function applyPreset(presetKey) {
             var presetMap = {
                 lowVision: {
-                    speech: false,
+                    speech: true,
                     highContrast: true,
+                    reducedMotion: false,
+                    captionCenter: true,
                     keyboardNav: true,
                     haptic: false,
                     fontSize: 20,
@@ -44,7 +63,7 @@
                 },
                 hearing: {
                     speech: false,
-                    highContrast: true,
+                    highContrast: false,
                     reducedMotion: true,
                     captionCenter: true,
                     keyboardNav: true,
@@ -54,7 +73,7 @@
                 },
                 mobility: {
                     speech: true,
-                    highContrast: true,
+                    highContrast: false,
                     reducedMotion: true,
                     captionCenter: true,
                     keyboardNav: true,
@@ -76,6 +95,7 @@
                 haptic: preset.haptic,
                 fontSize: preset.fontSize
             });
+            syncSettingsToShell();
             initSettings();
             showMessage(preset.message);
             AccessibilityUtils.announce(preset.message);
@@ -94,6 +114,7 @@
             };
 
             AccessibilityUtils.saveSettings(settings);
+            syncSettingsToShell();
             showMessage('设置已保存');
             AccessibilityUtils.announce('设置已保存');
         }
@@ -111,6 +132,7 @@
             };
 
             AccessibilityUtils.saveSettings(defaultSettings);
+            syncSettingsToShell();
             initSettings();
             showMessage('已恢复默认设置');
             AccessibilityUtils.announce('已恢复默认设置');
@@ -129,35 +151,37 @@
 
         // 监听开关变化
         document.getElementById('contrastToggle').addEventListener('change', function(e) {
-            if (e.target.checked) {
-                AccessibilityUtils.enableHighContrast();
-            } else {
-                AccessibilityUtils.disableHighContrast();
-            }
+            AccessibilityUtils.saveSettings({ highContrast: !!e.target.checked });
+            syncSettingsToShell();
+            showMessage(e.target.checked ? '高对比度已开启' : '高对比度已关闭');
         });
 
         document.getElementById('speechToggle').addEventListener('change', function(e) {
             AccessibilityUtils.saveSettings({ speech: !!e.target.checked });
+            syncSettingsToShell();
         });
 
         document.getElementById('motionToggle').addEventListener('change', function(e) {
             AccessibilityUtils.saveSettings({ reducedMotion: !!e.target.checked });
+            syncSettingsToShell();
             showMessage(e.target.checked ? '减少动态效果已开启' : '减少动态效果已关闭');
         });
 
         document.getElementById('captionToggle').addEventListener('change', function(e) {
             AccessibilityUtils.saveSettings({ captionCenter: !!e.target.checked });
+            syncSettingsToShell();
             showMessage(e.target.checked ? '视觉字幕提示面板已开启' : '视觉字幕提示面板已关闭');
         });
 
         document.getElementById('keyboardToggle').addEventListener('change', function(e) {
             AccessibilityUtils.saveSettings({ keyboardNav: !!e.target.checked });
+            syncSettingsToShell();
         });
 
         document.getElementById('hapticToggle').addEventListener('change', function(e) {
             AccessibilityUtils.saveSettings({ haptic: !!e.target.checked });
+            syncSettingsToShell();
         });
 
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', initSettings);
-    

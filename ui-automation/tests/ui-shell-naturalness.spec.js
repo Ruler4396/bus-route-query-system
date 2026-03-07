@@ -58,6 +58,28 @@ test.describe('Shell Naturalness', () => {
     }
   });
 
+
+
+  test('Shell should not auto-scroll again after user reaches the page bottom', async ({ page }) => {
+    await page.goto('index.html', { waitUntil: 'domcontentloaded' });
+    const { frame } = await getIframe(page);
+    await frame.waitForSelector('.home-unified-sections', { timeout: 20_000 });
+    await page.waitForTimeout(1800);
+
+    await page.evaluate(() => {
+      window.scrollTo(0, document.documentElement.scrollHeight || document.body.scrollHeight || 0);
+    });
+    await page.waitForTimeout(500);
+
+    const before = await page.evaluate(() => Math.round(window.scrollY || window.pageYOffset || 0));
+    await page.waitForTimeout(4200);
+    const after = await page.evaluate(() => Math.round(window.scrollY || window.pageYOffset || 0));
+
+    if (Math.abs(after - before) > 12) {
+      throw new Error(`SHELL_AUTO_SCROLL_BOTTOM: 页面到底后出现自动滚动(before=${before}, after=${after})`);
+    }
+  });
+
   test('Announcement, messages and resource pages should suppress decorative banners', async ({ page }) => {
     await page.goto('index.html', { waitUntil: 'domcontentloaded' });
     const checks = [

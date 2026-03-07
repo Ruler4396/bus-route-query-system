@@ -80,25 +80,32 @@ test.describe('Accessibility Interaction Baseline', () => {
     const { frame } = await getIframe(page);
     await frame.waitForURL(/accessibility\/settings\.html/);
 
-    await frame.getByRole('button', { name: /低视力预设/ }).click();
+    await frame.evaluate(() => {
+      const btn = Array.from(document.querySelectorAll('.preset-btn')).find((node) => node.textContent.includes('低视力预设'));
+      if (btn) btn.click();
+    });
     await frame.waitForTimeout(300);
     let settings = await frame.evaluate(() => AccessibilityUtils.getSettings());
     expect(settings.highContrast).toBeTruthy();
     expect(settings.fontSize).toBeGreaterThanOrEqual(20);
 
-    await frame.getByRole('button', { name: /听障预设/ }).click();
+    await frame.evaluate(() => {
+      const btn = Array.from(document.querySelectorAll('.preset-btn')).find((node) => node.textContent.includes('听障预设'));
+      if (btn) btn.click();
+    });
     await frame.waitForTimeout(300);
     settings = await frame.evaluate(() => AccessibilityUtils.getSettings());
     expect(settings.captionCenter).toBeTruthy();
     expect(settings.reducedMotion).toBeTruthy();
     expect(settings.keyboardNav).toBeTruthy();
+    expect(settings.highContrast).toBeFalsy();
 
     const modeFlags = await frame.evaluate(() => ({
       highContrast: document.body.classList.contains('high-contrast'),
       reducedMotionBody: document.body.classList.contains('reduced-motion'),
       reducedMotionRoot: document.documentElement.classList.contains('reduced-motion')
     }));
-    expect(modeFlags.highContrast).toBeTruthy();
+    expect(modeFlags.highContrast).toBeFalsy();
     expect(modeFlags.reducedMotionBody || modeFlags.reducedMotionRoot).toBeTruthy();
   });
 });

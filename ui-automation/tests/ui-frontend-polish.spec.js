@@ -101,6 +101,46 @@ test.describe('Frontend Polish', () => {
     expect(copy.placeholder).toContain('输入公告标题关键词');
   });
 
+
+
+  test('Accessibility presets should not force high contrast for every profile and manual toggle must recover', async ({ page }) => {
+    await page.goto('index.html', { waitUntil: 'domcontentloaded' });
+    await page.locator('#header a', { hasText: '无障碍设置' }).first().click();
+    const { frame } = await getIframe(page);
+    await frame.waitForSelector('.preset-btn', { timeout: 20_000 });
+
+    await frame.evaluate(() => {
+      const btn = Array.from(document.querySelectorAll('.preset-btn')).find((node) => node.textContent.includes('听障预设'));
+      if (btn) btn.click();
+    });
+    await frame.waitForTimeout(600);
+    await expect(frame.locator('#contrastToggle')).not.toBeChecked();
+
+    await frame.evaluate(() => {
+      const btn = Array.from(document.querySelectorAll('.preset-btn')).find((node) => node.textContent.includes('行动不便预设'));
+      if (btn) btn.click();
+    });
+    await frame.waitForTimeout(600);
+    await expect(frame.locator('#contrastToggle')).not.toBeChecked();
+
+    await frame.evaluate(() => {
+      const btn = Array.from(document.querySelectorAll('.preset-btn')).find((node) => node.textContent.includes('低视力预设'));
+      if (btn) btn.click();
+    });
+    await frame.waitForTimeout(600);
+    await expect(frame.locator('#contrastToggle')).toBeChecked();
+
+    await frame.evaluate(() => {
+      const node = document.getElementById('contrastToggle');
+      if (node) node.click();
+    });
+    await frame.waitForTimeout(600);
+    await expect(frame.locator('#contrastToggle')).not.toBeChecked();
+
+    const shellHighContrast = await page.evaluate(() => document.body.classList.contains('high-contrast'));
+    expect(shellHighContrast).toBeFalsy();
+  });
+
   test('Demo mode should autoplay without showing a separate dialog window', async ({ page }) => {
     await page.goto('index.html', { waitUntil: 'domcontentloaded' });
     await page.keyboard.press('Alt+D');
