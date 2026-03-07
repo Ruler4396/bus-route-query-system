@@ -87,6 +87,15 @@ CREATE TABLE IF NOT EXISTS messages (
   cpicture VARCHAR(200),
   reply CLOB,
   rpicture VARCHAR(200),
+  feedback_type VARCHAR(100),
+  severity_level VARCHAR(50),
+  route_id BIGINT,
+  route_name VARCHAR(200),
+  station_name VARCHAR(200),
+  handle_status VARCHAR(50),
+  audit_owner VARCHAR(200),
+  review_notes CLOB,
+  reviewed_at TIMESTAMP,
   addtime TIMESTAMP
 );
 

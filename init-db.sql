@@ -100,6 +100,15 @@ CREATE TABLE IF NOT EXISTS `messages` (
   `cpicture` VARCHAR(200) DEFAULT NULL COMMENT '留言图片',
   `reply` TEXT DEFAULT NULL COMMENT '回复内容',
   `rpicture` VARCHAR(200) DEFAULT NULL COMMENT '回复图片',
+  `feedback_type` VARCHAR(100) DEFAULT NULL COMMENT '反馈类型',
+  `severity_level` VARCHAR(50) DEFAULT NULL COMMENT '严重级别',
+  `route_id` BIGINT DEFAULT NULL COMMENT '关联路线ID',
+  `route_name` VARCHAR(200) DEFAULT NULL COMMENT '关联路线名称',
+  `station_name` VARCHAR(200) DEFAULT NULL COMMENT '关联站点名称',
+  `handle_status` VARCHAR(50) DEFAULT NULL COMMENT '处理状态',
+  `audit_owner` VARCHAR(200) DEFAULT NULL COMMENT '审核人',
+  `review_notes` TEXT DEFAULT NULL COMMENT '审核备注',
+  `reviewed_at` DATETIME DEFAULT NULL COMMENT '审核时间',
   `addtime` DATETIME DEFAULT NULL COMMENT '新增时间',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='留言建议表';

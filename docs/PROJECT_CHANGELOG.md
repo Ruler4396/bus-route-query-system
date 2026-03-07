@@ -1,5 +1,14 @@
 # PJT-0001 · PROJECT_CHANGELOG
 
+## 2026-03-07 · CHG-20260307-012 · 用户反馈入口与最小审核闭环
+- 扩展 `messages` 数据结构，新增 `feedback_type / severity_level / route_name / station_name / handle_status / audit_owner / review_notes / reviewed_at` 等字段。
+- 前台留言页补充反馈分类、严重级别、关联路线/站点，并展示处理状态与审核信息。
+- 新增前台 `messages/review.html` 反馈处理看板，支持状态流转、审核人、审核备注与回复保存。
+- 演示数据中补充多种状态的反馈样本（待核查 / 核查中 / 已处理）。
+- 新增 `ui-automation/tests/ui-feedback-workflow.spec.js`，验证反馈入口与处理看板闭环。
+- 本轮完成 `ACCESSIBILITY_READINESS_TODO.md` 中的 `G01`、`G02`。
+- 对应提交：`56f1a2f`
+
 ## 2026-03-07 · CHG-20260307-011 · 数据源登记 / 置信度规则 / 试点样本治理
 - 新增 `src/main/resources/accessibility-governance.json`，集中记录数据源登记、置信度规则和试点人工样本基础。
 - `AccessibilityExternalDataService` / `AccessibilityExternalDataServiceImpl` 新增治理元数据读取能力，`/route/external/governance` 可返回治理摘要。

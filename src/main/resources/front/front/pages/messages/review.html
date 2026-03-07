@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>反馈处理看板</title>
+  <link rel="stylesheet" href="../../layui/css/layui.css">
+  <link rel="stylesheet" href="../../css/transit-business-ui.css">
+  <link rel="stylesheet" href="../../css/accessibility-sr-only.css">
+  <link rel="stylesheet" href="../../css/accessibility-high-contrast.css">
+</head>
+<body class="transit-ui transit-page page-feedback-review">
+  <a href="../../index.html" class="skip-link">返回壳层首页</a>
+  <div id="app" role="main" aria-label="反馈处理看板">
+    <section class="route-assist-panel">
+      <h2>反馈处理看板</h2>
+      <p>用于演示“用户反馈 -> 审核处理 -> 回复结论”的最小闭环。当前为前台演示看板，不等同于正式后台权限系统。</p>
+      <div id="reviewBoardStatus" class="route-live-status" role="status" aria-live="polite">正在加载反馈条目…</div>
+    </section>
+    <section class="route-governance-panel">
+      <div class="route-governance-grid">
+        <div class="governance-card"><h3>待核查</h3><p>{{stats.pending}} 条</p></div>
+        <div class="governance-card"><h3>核查中</h3><p>{{stats.inReview}} 条</p></div>
+        <div class="governance-card"><h3>已处理</h3><p>{{stats.resolved}} 条</p></div>
+      </div>
+    </section>
+    <section class="route-plan-summary" v-for="item in dataList" :key="item.id">
+      <div class="route-plan-summary-grid">
+        <div class="summary-chip"><strong>反馈类型</strong><span>{{item.feedbackType || 'OTHER'}}</span></div>
+        <div class="summary-chip"><strong>严重级别</strong><span>{{item.severityLevel || 'MEDIUM'}}</span></div>
+        <div class="summary-chip"><strong>处理状态</strong><span>{{item.handleStatus || 'PENDING'}}</span></div>
+        <div class="summary-chip"><strong>关联路线</strong><span>{{item.routeName || '未关联'}}</span></div>
+      </div>
+      <div class="summary-block"><h4>用户反馈</h4><p>{{item.content}}</p></div>
+      <div class="summary-block"><h4>关联站点</h4><p>{{item.stationName || '未关联'}}</p></div>
+      <div class="summary-block"><h4>处理操作</h4>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+          <select :value="item.handleStatus || 'PENDING'" @change="updateField(item, 'handleStatus', $event.target.value)">
+            <option value="PENDING">PENDING</option>
+            <option value="IN_REVIEW">IN_REVIEW</option>
+            <option value="RESOLVED">RESOLVED</option>
+          </select>
+          <input type="text" :value="item.auditOwner || ''" placeholder="审核人" @change="updateField(item, 'auditOwner', $event.target.value)">
+          <input type="text" :value="item.reviewNotes || ''" placeholder="审核备注" @change="updateField(item, 'reviewNotes', $event.target.value)">
+          <input type="text" :value="item.reply || ''" placeholder="回复内容" @change="updateField(item, 'reply', $event.target.value)">
+          <button type="button" class="demo-main-btn" @click="saveReview(item)">保存处理</button>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script src="../../layui/layui.js"></script>
+  <script src="../../js/vue.js"></script>
+  <script src="../../js/config.js"></script>
+  <script src="../../modules/config.js"></script>
+  <script src="../../js/utils.js"></script>
+  <script src="../../js/page-state.js"></script>
+  <script src="../../js/accessibility.js"></script>
+  <script src="../../js/pages/messages-review-page.js"></script>
+</body>
+</html>

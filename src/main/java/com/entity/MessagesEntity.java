@@ -86,6 +86,50 @@ public class MessagesEntity<T> implements Serializable {
 	 */
 					
 	private String rpicture;
+
+	/**
+	 * 反馈类型
+	 */
+	private String feedbackType;
+
+	/**
+	 * 严重级别
+	 */
+	private String severityLevel;
+
+	/**
+	 * 关联路线ID
+	 */
+	private Long routeId;
+
+	/**
+	 * 关联路线名称
+	 */
+	private String routeName;
+
+	/**
+	 * 关联站点名称
+	 */
+	private String stationName;
+
+	/**
+	 * 处理状态
+	 */
+	private String handleStatus;
+
+	/**
+	 * 审核人
+	 */
+	private String auditOwner;
+
+	/**
+	 * 审核备注
+	 */
+	private String reviewNotes;
+
+	@JsonFormat(locale="zh", timezone="GMT+8", pattern="yyyy-MM-dd HH:mm:ss")
+	@DateTimeFormat
+	private Date reviewedAt;
 	
 	
 	@JsonFormat(locale="zh", timezone="GMT+8", pattern="yyyy-MM-dd HH:mm:ss")
@@ -177,6 +221,61 @@ public class MessagesEntity<T> implements Serializable {
 	 */
 	public String getRpicture() {
 		return rpicture;
+	}
+
+	public String getFeedbackType() {
+		return feedbackType;
+	}
+	public void setFeedbackType(String feedbackType) {
+		this.feedbackType = feedbackType;
+	}
+	public String getSeverityLevel() {
+		return severityLevel;
+	}
+	public void setSeverityLevel(String severityLevel) {
+		this.severityLevel = severityLevel;
+	}
+	public Long getRouteId() {
+		return routeId;
+	}
+	public void setRouteId(Long routeId) {
+		this.routeId = routeId;
+	}
+	public String getRouteName() {
+		return routeName;
+	}
+	public void setRouteName(String routeName) {
+		this.routeName = routeName;
+	}
+	public String getStationName() {
+		return stationName;
+	}
+	public void setStationName(String stationName) {
+		this.stationName = stationName;
+	}
+	public String getHandleStatus() {
+		return handleStatus;
+	}
+	public void setHandleStatus(String handleStatus) {
+		this.handleStatus = handleStatus;
+	}
+	public String getAuditOwner() {
+		return auditOwner;
+	}
+	public void setAuditOwner(String auditOwner) {
+		this.auditOwner = auditOwner;
+	}
+	public String getReviewNotes() {
+		return reviewNotes;
+	}
+	public void setReviewNotes(String reviewNotes) {
+		this.reviewNotes = reviewNotes;
+	}
+	public Date getReviewedAt() {
+		return reviewedAt;
+	}
+	public void setReviewedAt(Date reviewedAt) {
+		this.reviewedAt = reviewedAt;
 	}
 
 }

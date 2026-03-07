@@ -103,13 +103,16 @@ VALUES
   (4, '广东省残疾人联合会', 'https://www.gddpf.org.cn/', 'front/img/a11y-covers/link-4.svg', 4, CURRENT_TIMESTAMP);
 
 MERGE INTO messages (
-  id, userid, username, content, cpicture, reply, rpicture, addtime
+  id, userid, username, content, cpicture, reply, rpicture,
+  feedback_type, severity_level, route_id, route_name, station_name,
+  handle_status, audit_owner, review_notes, reviewed_at, addtime
 )
 KEY(id)
 VALUES
-  (1, 1001, 'demo_user', '我想从东山口附近去医院，希望系统优先推荐轮椅更容易上下车的路线。', 'front/img/a11y-covers/hero-1.svg', '已收到，建议优先查看 1路 与 31路 的站点可达性与换乘风险提示。', '', DATEADD('MINUTE', -30, CURRENT_TIMESTAMP)),
-  (2, 1001, 'demo_user', '地图页能否标注哪些站点是演示范围内人工核验过的？', 'front/img/a11y-covers/hero-2.svg', '已纳入待办，后续会在试点范围内增加人工核验标识与可信度说明。', '', DATEADD('MINUTE', -20, CURRENT_TIMESTAMP)),
-  (3, 1001, 'demo_user', '友情链接页建议增加真实无障碍数据源，方便核对。', 'front/img/a11y-covers/hero-3.svg', '已补充 Wheelmap、OpenStreetMap、开放广东等入口，用于演示数据来源与核查路径。', '', DATEADD('MINUTE', -10, CURRENT_TIMESTAMP));
+  (1, 1001, 'demo_user', '我想从东山口附近去医院，希望系统优先推荐轮椅更容易上下车的路线。', 'front/img/a11y-covers/hero-1.svg', '已收到，建议优先查看 1路 与 31路 的站点可达性与换乘风险提示。', '', 'ROUTE_INACCURATE', 'HIGH', 1, '1路：东山署前路总站-芳村花园南门总站', '东山署前路总站', 'IN_REVIEW', '审核员A', '已转入路线规则核查，重点关注起点上落车可达性。', DATEADD('MINUTE', -25, CURRENT_TIMESTAMP), DATEADD('MINUTE', -30, CURRENT_TIMESTAMP)),
+  (2, 1001, 'demo_user', '地图页能否标注哪些站点是演示范围内人工核验过的？', 'front/img/a11y-covers/hero-2.svg', '已纳入待办，后续会在试点范围内增加人工核验标识与可信度说明。', '', 'FACILITY_ABNORMAL', 'MEDIUM', 3, '31路：解放北路应元路口总站-南石西地铁棣园站总站', '纸厂地铁燕岗站', 'PENDING', '', '等待确认该站点是否可作为人工样本核验对象。', NULL, DATEADD('MINUTE', -20, CURRENT_TIMESTAMP)),
+  (3, 1001, 'demo_user', '友情链接页建议增加真实无障碍数据源，方便核对。', 'front/img/a11y-covers/hero-3.svg', '已补充 Wheelmap、OpenStreetMap、开放广东等入口，用于演示数据来源与核查路径。', '', 'PAGE_USABILITY', 'LOW', NULL, '', '', 'RESOLVED', '审核员B', '已处理：资源页已补充数据源入口并展示治理面板。', DATEADD('MINUTE', -5, CURRENT_TIMESTAMP), DATEADD('MINUTE', -10, CURRENT_TIMESTAMP)),
+  (4, 1001, 'demo_user', '省中医院入口信息仍然偏少，建议补充主入口是否有坡道。', '', '', '', 'ENTRANCE_MISSING', 'HIGH', 2, '3路：如意坊总站-东山龟岗总站', '省中医院', 'PENDING', '', '等待线下核验入口级可达性。', NULL, DATEADD('MINUTE', -6, CURRENT_TIMESTAMP));
 
 MERGE INTO chat (
   id, userid, adminid, ask, reply, isreply, addtime
