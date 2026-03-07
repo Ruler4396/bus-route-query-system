@@ -37,4 +37,31 @@ test.describe('Caption and Announcement Stability', () => {
     await frame.waitForURL(/wangzhangonggao\/detail\.html\?id=/, { timeout: 20000 });
     await expect(frame.locator('body')).not.toContainText('请输入账号');
   });
+
+
+  test('Announcement detail should avoid nested white frame gaps and hide decorative media', async ({ page }) => {
+    await page.goto('index.html', { waitUntil: 'domcontentloaded' });
+    await page.locator('#header a', { hasText: '出行服务公告' }).first().click();
+    const { frame } = await getIframe(page);
+    await frame.locator('.list .list-item').first().click();
+    await frame.waitForURL(/wangzhangonggao\/detail\.html\?id=/, { timeout: 20000 });
+    const metrics = await frame.evaluate(() => {
+      const outer = document.querySelector('#app > .data-detail:nth-of-type(2)');
+      const article = document.querySelector('.layui-col-md7');
+      const swiper = document.getElementById('swiper');
+      const outerStyle = outer ? getComputedStyle(outer) : null;
+      const articleRect = article ? article.getBoundingClientRect() : null;
+      const outerRect = outer ? outer.getBoundingClientRect() : null;
+      return {
+        outerBg: outerStyle ? outerStyle.backgroundColor : '',
+        outerShadow: outerStyle ? outerStyle.boxShadow : '',
+        swiperDisplay: swiper ? getComputedStyle(swiper).display : 'none',
+        extraInset: outerRect && articleRect ? Math.round((articleRect.left - outerRect.left) + (outerRect.right - articleRect.right)) : 999
+      };
+    });
+    expect(metrics.outerBg).toBe('rgba(0, 0, 0, 0)');
+    expect(metrics.outerShadow === 'none' || metrics.outerShadow === '').toBeTruthy();
+    expect(metrics.swiperDisplay).toBe('none');
+    expect(metrics.extraInset).toBeLessThanOrEqual(12);
+  });
 });

@@ -47,6 +47,41 @@
     return String(text || '').replace(/\s+/g, '');
   }
 
+  function readAuthState() {
+    return {
+      Token: localStorage.getItem('Token'),
+      role: localStorage.getItem('role'),
+      userTable: localStorage.getItem('userTable'),
+      sessionTable: localStorage.getItem('sessionTable'),
+      adminName: localStorage.getItem('adminName'),
+      userid: localStorage.getItem('userid'),
+      vip: localStorage.getItem('vip')
+    };
+  }
+
+  function applyAuthState(state) {
+    state = state || {};
+    ['Token','role','userTable','sessionTable','adminName','userid','vip'].forEach(function(key) {
+      if (state[key]) {
+        localStorage.setItem(key, state[key]);
+      } else {
+        localStorage.removeItem(key);
+      }
+    });
+  }
+
+  function clearAuthState() {
+    applyAuthState({});
+  }
+
+  function scrollShellPageTo(offset) {
+    var iframe = byId('iframe');
+    if (!iframe) return;
+    var rect = iframe.getBoundingClientRect();
+    var top = (window.scrollY || window.pageYOffset || 0) + rect.top + (offset || 0);
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  }
+
   function setRunnerStatus(text) {
     document.body.setAttribute('data-demo-status-text', text || '');
     if (typeof global.updateAssistStatus === 'function') {
@@ -154,6 +189,7 @@
     currentIndex: 0,
     timerId: null,
     baseSettings: null,
+    baseAuthState: null,
     lastStatusText: '',
 
     init: function() {
@@ -327,6 +363,8 @@
       this.baseSettings = global.AccessibilityUtils && typeof global.AccessibilityUtils.getSettings === 'function'
         ? global.AccessibilityUtils.getSettings()
         : null;
+      this.baseAuthState = readAuthState();
+      clearAuthState();
       try {
         if (global.AccessibilityUtils && this.baseSettings) {
           global.AccessibilityUtils.saveSettings({
@@ -391,6 +429,9 @@
         if (global.AccessibilityUtils && this.baseSettings) {
           global.AccessibilityUtils.saveSettings(this.baseSettings);
           syncAssistSettings();
+        }
+        if (this.baseAuthState) {
+          applyAuthState(this.baseAuthState);
         }
       } catch (err) {
         console.warn('恢复演示默认设置失败', err);
@@ -554,6 +595,8 @@
 
     performMapWalkthrough: async function() {
       await this.openStepPage('./pages/gongjiaoluxian/map.html', '#routeSelect', 20000);
+      scrollShellPageTo(220);
+      await this.pause(1200);
       await this.narrate('路线确认之后，用户还需要在地图上核对站点顺序、相对位置和预计到站信息。这里我们切换多条试点线路，验证不是只支持一条演示线。', 9500);
       var select = await this.waitForFrameSelector('#routeSelect', 12000);
       var routeTexts = Array.prototype.map.call(select.options || [], function(option) {

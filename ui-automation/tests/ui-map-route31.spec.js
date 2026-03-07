@@ -33,6 +33,16 @@ test.describe('Map Route 31 Behavior', () => {
     const stationCount = await frame.locator('.station-item').count();
     expect(stationCount).toBeGreaterThanOrEqual(20);
 
+    const layout = await frame.evaluate(() => {
+      const wrapper = document.querySelector('.map-wrapper');
+      const map = document.getElementById('map');
+      if (!wrapper || !map) return { blankGap: 999 };
+      return {
+        blankGap: Math.max(0, Math.round(wrapper.getBoundingClientRect().height - map.getBoundingClientRect().height))
+      };
+    });
+    expect(layout.blankGap).toBeLessThanOrEqual(40);
+
     await frame.locator('#vehicleBtn').click();
     await frame.waitForTimeout(4200);
 

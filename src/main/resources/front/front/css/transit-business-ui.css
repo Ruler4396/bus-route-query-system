@@ -3142,3 +3142,127 @@ body.page-login #app {
   line-height: 1.65;
   color: #334155;
 }
+
+
+.page-route-map .map-container {
+  align-items: start !important;
+}
+
+.page-route-map .map-wrapper {
+  align-self: start;
+  min-height: 0 !important;
+}
+
+.page-route-map #map {
+  height: min(68vh, 680px) !important;
+  min-height: 520px;
+}
+
+html,
+body.page-login {
+  background: linear-gradient(135deg, #18231d 0%, #24322b 48%, #485449 100%) !important;
+}
+
+body.page-login {
+  min-height: 100vh;
+}
+
+body.page-login #app {
+  width: min(1320px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.page-notice-detail #swiper,
+.page-notice-detail .tool-container,
+.page-notice-detail .layui-col-md5 {
+  display: none !important;
+}
+
+.page-notice-detail #app {
+  width: min(1280px, calc(100% - 24px));
+  margin: 0 auto;
+}
+
+.page-notice-detail .data-detail-breadcrumb {
+  margin: 18px auto !important;
+  border-radius: 18px !important;
+}
+
+.page-notice-detail .data-detail > .layui-row {
+  width: 100% !important;
+  max-width: 1180px !important;
+  display: block !important;
+}
+
+
+.page-notice-detail .data-detail {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+.page-notice-detail #app > .data-detail:nth-of-type(2) {
+  width: min(1180px, 100%) !important;
+  margin: 0 auto 18px;
+  padding: 0 !important;
+}
+
+.page-notice-detail #app > .data-detail:nth-of-type(2) .layui-row {
+  width: 100% !important;
+  max-width: none !important;
+  padding: 0 !important;
+}
+
+.page-notice-detail .layui-col-md7 {
+  margin: 0 auto !important;
+}
+
+.page-notice-detail .layui-col-md7::before {
+  display: none !important;
+}
+
+.page-notice-detail .layui-col-md7 {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 24px !important;
+  border: 1px solid var(--ux-border) !important;
+  border-radius: 22px !important;
+  background: #fffdfa !important;
+  box-shadow: var(--ux-shadow-sm) !important;
+}
+
+.page-notice-detail .layui-col-md7 .title {
+  padding: 0 0 14px !important;
+  margin: 0 0 12px !important;
+  font-size: clamp(24px, 2.4vw, 34px) !important;
+  line-height: 1.4;
+  color: var(--ux-brand) !important;
+  border-bottom: 1px solid rgba(46, 57, 52, 0.12);
+}
+
+.page-notice-detail .detail-item {
+  display: grid !important;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 12px;
+  padding: 10px 0 !important;
+  border-bottom: 1px dashed rgba(46, 57, 52, 0.12);
+}
+
+.page-notice-detail .detail-item:last-of-type {
+  border-bottom: none;
+}
+
+.page-notice-detail .detail-item .desc {
+  padding: 0 !important;
+  line-height: 1.9 !important;
+  background: transparent !important;
+}
+
+.page-notice-detail .detail-tab {
+  width: min(1180px, 100%) !important;
+  margin: 18px auto 0 !important;
+}
+
+.page-notice-detail .layui-tab-content {
+  padding: 18px 20px !important;
+}
