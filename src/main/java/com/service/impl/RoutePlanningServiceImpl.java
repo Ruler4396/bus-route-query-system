@@ -98,6 +98,14 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
             result.setDecisionStateText(resolveDecisionStateText(assessment.decisionState));
             result.setDecisionMessage(assessment.decisionMessage);
             result.setRuleBreakdown(assessment.ruleBreakdown);
+            TravelPath path = resolveTravelPath(route, startStation, endStation);
+            result.setBoardingStationName(path.boardingStationName);
+            result.setAlightingStationName(path.alightingStationName);
+            result.setTravelStationCount(path.travelStationCount);
+            result.setTransferRequired(path.transferRequired);
+            List<Map<String, Object>> segments = buildRouteSegments(route, path, resolvedProfileType, assessment);
+            assessment.segments = segments;
+            result.setSegments(segments);
             result.setRecommendationReason(generateRecommendationReason(route, effectiveProfile, resolvedProfileType, resolvedPreferenceType, accessibilityScore, assessment));
             results.add(result);
         }
@@ -546,6 +554,9 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
         if (!assessment.recommendable) {
             reason.append("，关键数据不足，当前不直接推荐");
         }
+        if (assessment.segments != null && !assessment.segments.isEmpty()) {
+            reason.append("；已按步行、上下车、换乘段输出分段结果");
+        }
         return reason.toString();
     }
 
@@ -598,6 +609,212 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
             }
         }
         return false;
+    }
+
+    private TravelPath resolveTravelPath(GongjiaoluxianEntity route, String startStation, String endStation) {
+        List<String> orderedStations = buildOrderedStations(route);
+        TravelPath path = new TravelPath();
+        if (orderedStations.isEmpty()) {
+            path.boardingStationName = route.getQidianzhanming();
+            path.alightingStationName = route.getZhongdianzhanming();
+            path.travelStationCount = 1;
+        } else {
+            path.boardingStationName = findBestMatchingStationName(route, startStation, true);
+            path.alightingStationName = findBestMatchingStationName(route, endStation, false);
+            int boardingIndex = Math.max(0, orderedStations.indexOf(path.boardingStationName));
+            int alightingIndex = Math.max(boardingIndex, orderedStations.indexOf(path.alightingStationName));
+            path.travelStationCount = Math.max(1, alightingIndex - boardingIndex + 1);
+        }
+        path.boardingMatchType = resolveMatchType(startStation, path.boardingStationName, orderedStations, true);
+        path.alightingMatchType = resolveMatchType(endStation, path.alightingStationName, orderedStations, false);
+        path.transferRequired = false;
+        if (route.getDiantifacilities() != null && route.getDiantifacilities().contains("换乘")) {
+            path.transferRequired = true;
+        }
+        if (containsKeyword(route.getTujingzhandian(), "地铁", "广场", "文化公园", "海珠广场", "西门口")) {
+            path.transferRequired = true;
+        }
+        return path;
+    }
+
+    private List<String> buildOrderedStations(GongjiaoluxianEntity route) {
+        List<String> ordered = new ArrayList<>();
+        appendStationIfAbsent(ordered, route.getQidianzhanming());
+        if (route.getTujingzhandian() != null && !route.getTujingzhandian().trim().isEmpty()) {
+            for (String raw : route.getTujingzhandian().split(",")) {
+                appendStationIfAbsent(ordered, raw);
+            }
+        }
+        appendStationIfAbsent(ordered, route.getZhongdianzhanming());
+        return ordered;
+    }
+
+    private void appendStationIfAbsent(List<String> target, String stationName) {
+        String safe = stationName == null ? "" : stationName.trim();
+        if (!safe.isEmpty() && !target.contains(safe)) {
+            target.add(safe);
+        }
+    }
+
+    private String resolveMatchType(String keyword, String primaryStation, List<String> stations, boolean startSide) {
+        String safeKeyword = keyword == null ? "" : keyword.trim();
+        if (safeKeyword.isEmpty()) {
+            return "UNKNOWN";
+        }
+        if (primaryStation != null && (primaryStation.equalsIgnoreCase(safeKeyword) || primaryStation.contains(safeKeyword) || safeKeyword.contains(primaryStation))) {
+            return primaryStation.equalsIgnoreCase(safeKeyword) ? "EXACT" : "FUZZY";
+        }
+        for (String station : stations) {
+            if (station.contains(safeKeyword) || safeKeyword.contains(station)) {
+                return station.equalsIgnoreCase(safeKeyword) ? "EXACT" : "FUZZY";
+            }
+        }
+        if (startSide) {
+            return "HEURISTIC_START";
+        }
+        return "HEURISTIC_END";
+    }
+
+    private List<Map<String, Object>> buildRouteSegments(GongjiaoluxianEntity route, TravelPath path, String profileType, RouteAssessment assessment) {
+        List<Map<String, Object>> segments = new ArrayList<>();
+        ZhandianWuzhangaiEntity boardingStation = zhandianWuzhangaiService.getByStationName(path.boardingStationName);
+        ZhandianWuzhangaiEntity alightingStation = zhandianWuzhangaiService.getByStationName(path.alightingStationName);
+
+        segments.add(buildWalkSegment("origin_walk", "出发步行段", path.boardingStationName, path.boardingMatchType, profileType, true));
+        segments.add(buildStationSegment("boarding_access", "上车站可达性", path.boardingStationName, boardingStation, profileType));
+        segments.add(buildRideSegment(route, path, profileType, assessment));
+        segments.add(buildTransferSegment(route, path, profileType));
+        segments.add(buildStationSegment("alighting_access", "下车站可达性", path.alightingStationName, alightingStation, profileType));
+        segments.add(buildWalkSegment("destination_walk", "到达步行段", path.alightingStationName, path.alightingMatchType, profileType, false));
+        return segments;
+    }
+
+    private Map<String, Object> buildWalkSegment(String type, String title, String stationName, String matchType, String profileType, boolean origin) {
+        Map<String, Object> segment = new LinkedHashMap<>();
+        segment.put("type", type);
+        segment.put("title", title);
+        segment.put("stationName", stationName);
+        int distanceMeters;
+        String status;
+        String statusText;
+        String description;
+        if ("EXACT".equals(matchType)) {
+            distanceMeters = 80;
+            status = "READY";
+            statusText = "短距离可达";
+            description = "输入位置与站点匹配较好，预计步行接驳距离较短。";
+        } else if ("FUZZY".equals(matchType)) {
+            distanceMeters = 220;
+            status = "CAUTION";
+            statusText = "需核对步行接驳";
+            description = "当前按模糊匹配估算步行接驳，建议结合地图核对最后一段路径。";
+        } else {
+            distanceMeters = 450;
+            status = "CAUTION";
+            statusText = "步行段信息不足";
+            description = origin ? "起点未精确命中站点，当前仅给出启发式步行接驳估算。" : "终点入口级数据不足，当前只给出启发式到达步行段估算。";
+        }
+        if (PROFILE_WHEELCHAIR.equals(profileType) && distanceMeters > 250) {
+            status = "RISK";
+            statusText = "步行接驳偏长";
+        }
+        segment.put("status", status);
+        segment.put("statusText", statusText);
+        segment.put("estimatedDistanceMeters", distanceMeters);
+        segment.put("description", description);
+        segment.put("dataSourceText", "启发式步行接驳估算");
+        return segment;
+    }
+
+    private Map<String, Object> buildStationSegment(String type, String title, String stationName, ZhandianWuzhangaiEntity station, String profileType) {
+        Map<String, Object> segment = new LinkedHashMap<>();
+        segment.put("type", type);
+        segment.put("title", title);
+        segment.put("stationName", stationName);
+        if (station == null) {
+            segment.put("status", "RISK");
+            segment.put("statusText", "站点数据不足");
+            segment.put("description", "当前缺少该站点的无障碍详情，需要结合现场或后续试点核验。");
+            segment.put("dataSourceText", "站点无障碍数据缺失");
+            return segment;
+        }
+        boolean hasLift = station.getShengjiangtai() != null && station.getShengjiangtai() == 1;
+        boolean hasBlind = station.getMangdao() != null && station.getMangdao() == 1;
+        String status = "READY";
+        String statusText = "基础可达";
+        if (PROFILE_WHEELCHAIR.equals(profileType) && !hasLift) {
+            status = "RISK";
+            statusText = "轮椅上落需核对";
+        } else if (PROFILE_LOW_VISION.equals(profileType) && !hasBlind) {
+            status = "CAUTION";
+            statusText = "盲道信息不足";
+        }
+        segment.put("status", status);
+        segment.put("statusText", statusText);
+        segment.put("description", "无障碍等级：" + getAccessibilityLevelText(station.getWuzhangaijibie()) + "；升降台/坡道：" + (hasLift ? "有" : "未知/无") + "；盲道：" + (hasBlind ? "有" : "未知/无"));
+        segment.put("seatCount", station.getZuoweishu());
+        segment.put("accessibleToilet", station.getCesuo());
+        segment.put("parking", station.getTingchechang());
+        segment.put("dataSourceText", station.getBeizhu() == null ? "站点基础无障碍数据" : station.getBeizhu());
+        return segment;
+    }
+
+    private Map<String, Object> buildRideSegment(GongjiaoluxianEntity route, TravelPath path, String profileType, RouteAssessment assessment) {
+        Map<String, Object> segment = new LinkedHashMap<>();
+        segment.put("type", "ride_segment");
+        segment.put("title", "公交乘车段");
+        segment.put("status", assessment.recommendable ? (assessment.degraded ? "CAUTION" : "READY") : "RISK");
+        segment.put("statusText", assessment.recommendable ? (assessment.degraded ? "可乘坐但需谨慎" : "可优先乘坐") : "不建议直接依赖");
+        segment.put("stationSpan", path.travelStationCount);
+        segment.put("description", "乘坐线路：" + route.getLuxianmingcheng() + "；预计覆盖站数：" + path.travelStationCount + "；语音：" + booleanFeatureText(route.getYuyintongbao(), "支持", "未知/无") + "；盲道：" + booleanFeatureText(route.getMangdaozhichi(), "支持", "未知/无"));
+        segment.put("dataSourceText", resolveDataSourceText(route));
+        return segment;
+    }
+
+    private Map<String, Object> buildTransferSegment(GongjiaoluxianEntity route, TravelPath path, String profileType) {
+        Map<String, Object> segment = new LinkedHashMap<>();
+        segment.put("type", "transfer_access");
+        segment.put("title", "换乘设施评估");
+        segment.put("transferRequired", path.transferRequired);
+        if (!path.transferRequired) {
+            segment.put("status", "READY");
+            segment.put("statusText", "当前路线直达");
+            segment.put("description", "当前路线在本次推荐中按直达处理，无需额外换乘。");
+            segment.put("dataSourceText", "基于当前路线结构判断");
+            return segment;
+        }
+        boolean hasTransferFacility = route.getDiantifacilities() != null && !route.getDiantifacilities().trim().isEmpty();
+        segment.put("status", hasTransferFacility ? "CAUTION" : "RISK");
+        segment.put("statusText", hasTransferFacility ? "已识别换乘设施" : "换乘设施信息不足");
+        segment.put("description", hasTransferFacility ? route.getDiantifacilities() : "当前只识别到潜在换乘节点，但缺少明确电梯/通道/坡道说明。");
+        segment.put("dataSourceText", hasTransferFacility ? "路线换乘设施字段" : "潜在换乘节点启发式识别");
+        return segment;
+    }
+
+    private String findBestMatchingStationName(GongjiaoluxianEntity route, String keyword, boolean startSide) {
+        List<String> ordered = buildOrderedStations(route);
+        if (ordered.isEmpty()) {
+            return startSide ? route.getQidianzhanming() : route.getZhongdianzhanming();
+        }
+        String safeKeyword = keyword == null ? "" : keyword.trim();
+        if (safeKeyword.isEmpty()) {
+            return startSide ? ordered.get(0) : ordered.get(ordered.size() - 1);
+        }
+        if (startSide) {
+            for (String station : ordered) {
+                if (station.contains(safeKeyword) || safeKeyword.contains(station)) {
+                    return station;
+                }
+            }
+            return ordered.get(0);
+        }
+        for (int i = ordered.size() - 1; i >= 0; i--) {
+            String station = ordered.get(i);
+            if (station.contains(safeKeyword) || safeKeyword.contains(station)) {
+                return station;
+            }
+        }
+        return ordered.get(ordered.size() - 1);
     }
 
     private Map<String, ScoreRule> buildRuleRegistry() {
@@ -720,5 +937,15 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
         private List<String> riskHints;
         private List<String> missingDataHints;
         private Map<String, Double> ruleBreakdown;
+        private List<Map<String, Object>> segments;
+    }
+
+    private static class TravelPath {
+        private String boardingStationName;
+        private String alightingStationName;
+        private int travelStationCount;
+        private boolean transferRequired;
+        private String boardingMatchType;
+        private String alightingMatchType;
     }
 }

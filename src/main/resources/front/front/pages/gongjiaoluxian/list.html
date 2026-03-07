@@ -398,6 +398,20 @@ width: 100%;
 						{{item.recommendationReason}}
 					</div>
 					<div v-if="item.decisionMessage" class="route-card-decision">{{item.decisionMessage}}</div>
+					<div v-if="item.segments && item.segments.length" class="route-segment-list">
+						<div class="route-segment-item" v-for="(segment,segIndex) in item.segments" :key="'segment-'+item.id+'-'+segIndex">
+							<div class="segment-head">
+								<strong>{{segment.title}}</strong>
+								<span class="route-tag" :class="segment.status === "READY" ? "good" : (segment.status === "CAUTION" ? "warn" : "danger")">{{segment.statusText}}</span>
+							</div>
+							<div class="segment-desc">{{segment.description}}</div>
+							<div class="segment-meta">
+								<span v-if="segment.stationName">站点：{{segment.stationName}}</span>
+								<span v-if="segment.estimatedDistanceMeters">估算：{{segment.estimatedDistanceMeters}} 米</span>
+								<span v-if="segment.stationSpan">覆盖：{{segment.stationSpan}} 站</span>
+							</div>
+						</div>
+					</div>
 					<ul v-if="item.riskHints && item.riskHints.length" class="route-risk-list">
 						<li v-for="(risk,index) in item.riskHints" :key="'risk-'+item.id+'-'+index">{{risk}}</li>
 					</ul>

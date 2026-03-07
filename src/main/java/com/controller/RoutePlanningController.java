@@ -217,6 +217,11 @@ public class RoutePlanningController {
             routeCard.put("decisionStateText", item.getDecisionStateText());
             routeCard.put("decisionMessage", item.getDecisionMessage());
             routeCard.put("riskHints", item.getRiskHints());
+            routeCard.put("boardingStationName", item.getBoardingStationName());
+            routeCard.put("alightingStationName", item.getAlightingStationName());
+            routeCard.put("travelStationCount", item.getTravelStationCount());
+            routeCard.put("transferRequired", item.isTransferRequired());
+            routeCard.put("segments", item.getSegments());
             topRoutes.add(routeCard);
         }
 

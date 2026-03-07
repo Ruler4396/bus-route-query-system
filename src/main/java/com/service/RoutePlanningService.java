@@ -35,6 +35,11 @@ public interface RoutePlanningService {
         private String decisionStateText;
         private String decisionMessage;
         private Map<String, Double> ruleBreakdown;
+        private List<Map<String, Object>> segments;
+        private String boardingStationName;
+        private String alightingStationName;
+        private int travelStationCount;
+        private boolean transferRequired;
 
         public GongjiaoluxianEntity getRoute() {
             return route;
@@ -218,6 +223,46 @@ public interface RoutePlanningService {
 
         public void setRuleBreakdown(Map<String, Double> ruleBreakdown) {
             this.ruleBreakdown = ruleBreakdown;
+        }
+
+        public List<Map<String, Object>> getSegments() {
+            return segments;
+        }
+
+        public void setSegments(List<Map<String, Object>> segments) {
+            this.segments = segments;
+        }
+
+        public String getBoardingStationName() {
+            return boardingStationName;
+        }
+
+        public void setBoardingStationName(String boardingStationName) {
+            this.boardingStationName = boardingStationName;
+        }
+
+        public String getAlightingStationName() {
+            return alightingStationName;
+        }
+
+        public void setAlightingStationName(String alightingStationName) {
+            this.alightingStationName = alightingStationName;
+        }
+
+        public int getTravelStationCount() {
+            return travelStationCount;
+        }
+
+        public void setTravelStationCount(int travelStationCount) {
+            this.travelStationCount = travelStationCount;
+        }
+
+        public boolean isTransferRequired() {
+            return transferRequired;
+        }
+
+        public void setTransferRequired(boolean transferRequired) {
+            this.transferRequired = transferRequired;
         }
     }
 

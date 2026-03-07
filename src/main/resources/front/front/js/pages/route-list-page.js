@@ -297,6 +297,11 @@
 	              route.decisionState = result.decisionState || '';
 	              route.decisionStateText = result.decisionStateText || '';
 	              route.decisionMessage = result.decisionMessage || '';
+              route.segments = result.segments || [];
+              route.boardingStationName = result.boardingStationName || '';
+              route.alightingStationName = result.alightingStationName || '';
+              route.travelStationCount = Number(result.travelStationCount || 0);
+              route.transferRequired = !!result.transferRequired;
 	              list.push(route);
 	            });
 
