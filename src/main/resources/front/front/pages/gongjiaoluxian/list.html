@@ -419,7 +419,7 @@ width: 100%;
 						<div class="route-segment-item" v-for="(segment,segIndex) in item.segments" :key="'segment-'+item.id+'-'+segIndex">
 							<div class="segment-head">
 								<strong>{{segment.title}}</strong>
-								<span class="route-tag" :class="segment.status === "READY" ? "good" : (segment.status === "CAUTION" ? "warn" : "danger")">{{segment.statusText}}</span>
+								<span class="route-tag" :class="segment.status === 'READY' ? 'good' : (segment.status === 'CAUTION' ? 'warn' : 'danger')">{{segment.statusText}}</span>
 							</div>
 							<div class="segment-desc">{{segment.description}}</div>
 							<div class="segment-meta">

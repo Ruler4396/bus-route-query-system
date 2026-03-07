@@ -1,5 +1,9 @@
 # PJT-0001 · PROJECT_CHANGELOG
 
+## 2026-03-07 · CHG-20260307-014 · 分段状态标签语法修正
+- 修复路线规划页分段状态标签 `:class` 绑定中的引号问题，避免后续页面维护时出现模板解析风险。
+- 对应提交：`6f06073`
+
 ## 2026-03-07 · CHG-20260307-013 · 准真实用户验证任务与验证报告
 - 新增 `docs/ACCESSIBILITY_VALIDATION_TASKS.md`，定义 5 个准真实任务场景与成功标准。
 - 新增 `ui-automation/scripts/run-user-validation.mjs` 与 `package.json` 中的 `ui:validate` 脚本，用于生成准真实验证报告。
