@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600" role="img" aria-label="Service notice cover">
+  <rect width="960" height="600" fill="#2a352f"/>
+  <rect x="74" y="74" width="812" height="452" rx="24" fill="#fff8ef" fill-opacity="0.14"/>
+  <rect x="128" y="128" width="704" height="80" rx="12" fill="#b58a53"/>
+  <rect x="128" y="230" width="540" height="44" rx="10" fill="#fff8ef" fill-opacity="0.22"/>
+  <rect x="128" y="290" width="620" height="44" rx="10" fill="#fff8ef" fill-opacity="0.2"/>
+  <rect x="128" y="350" width="460" height="44" rx="10" fill="#fff8ef" fill-opacity="0.18"/>
+  <text x="156" y="182" fill="#ffffff" font-size="36" font-family="Arial, sans-serif" font-weight="700">ACCESSIBLE SERVICE NOTICE</text>
+  <text x="130" y="472" fill="#e9dbc8" font-size="28" font-family="Arial, sans-serif">Elevator outage and support desk updates</text>
+</svg>

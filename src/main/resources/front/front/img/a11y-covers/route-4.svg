@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600" role="img" aria-label="Barrier-free transfer route cover">
+  <rect width="960" height="600" fill="#202c28"/>
+  <rect x="50" y="50" width="860" height="500" rx="30" fill="#fff7eb" fill-opacity="0.1"/>
+  <rect x="108" y="132" width="340" height="320" rx="20" fill="#fff7eb" fill-opacity="0.2"/>
+  <path d="M170 292 L388 292" stroke="#b58a53" stroke-width="24" stroke-linecap="round"/>
+  <path d="M326 238 L388 292 L326 346" stroke="#b58a53" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <rect x="500" y="162" width="324" height="66" rx="12" fill="#fff7eb" fill-opacity="0.24"/>
+  <rect x="500" y="250" width="276" height="52" rx="10" fill="#fff7eb" fill-opacity="0.2"/>
+  <rect x="500" y="322" width="226" height="52" rx="10" fill="#fff7eb" fill-opacity="0.2"/>
+  <text x="114" y="516" fill="#f3e6d2" font-size="42" font-family="Arial, sans-serif" font-weight="700">SMOOTH TRANSFER PATH</text>
+</svg>

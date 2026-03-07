@@ -598,6 +598,417 @@
         }
     };
 
+    /**
+     * UI自愈规则引擎
+     * 仅处理已知且低风险的问题，避免对页面结构进行激进改动。
+     */
+    var UiSelfHealService = {
+        enabled: true,
+        intervalId: null,
+        mutationTimer: null,
+        mutationObserver: null,
+        stats: {
+            runs: 0,
+            fixes: {}
+        },
+
+        init: function() {
+            this.enabled = localStorage.getItem('ui_self_heal_disabled') !== 'true';
+            if (!this.enabled) return;
+
+            this.injectStyle();
+            this.runAllRules('init');
+            this.bindEvents();
+        },
+
+        injectStyle: function() {
+            if (document.getElementById('ui-self-heal-style')) return;
+            var style = document.createElement('style');
+            style.id = 'ui-self-heal-style';
+            style.type = 'text/css';
+            style.textContent = [
+                '.ui-heal-toast {',
+                '  position: fixed;',
+                '  right: 16px;',
+                '  bottom: 16px;',
+                '  z-index: 9999;',
+                '  max-width: min(420px, calc(100% - 20px));',
+                '  background: rgba(34, 44, 40, 0.95);',
+                '  color: #fff;',
+                '  border-radius: 10px;',
+                '  padding: 10px 12px;',
+                '  font-size: 13px;',
+                '  line-height: 1.45;',
+                '  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);',
+                '}',
+                '.ui-heal-toast strong { display: block; margin-bottom: 4px; font-weight: 700; }'
+            ].join('');
+            document.head.appendChild(style);
+        },
+
+        bindEvents: function() {
+            var self = this;
+            window.addEventListener('load', function() {
+                self.runAllRules('load');
+            });
+            window.addEventListener('resize', function() {
+                self.scheduleRun('resize', 80);
+            });
+            window.addEventListener('pageshow', function() {
+                self.scheduleRun('pageshow', 50);
+            });
+
+            this.intervalId = window.setInterval(function() {
+                self.runAllRules('interval');
+            }, 2800);
+
+            if ('MutationObserver' in window && document.body) {
+                this.mutationObserver = new MutationObserver(function() {
+                    self.scheduleRun('mutation', 120);
+                });
+                this.mutationObserver.observe(document.body, {
+                    childList: true,
+                    subtree: true,
+                    attributes: true,
+                    attributeFilter: ['style', 'class', 'aria-busy']
+                });
+            }
+        },
+
+        scheduleRun: function(trigger, delay) {
+            var self = this;
+            clearTimeout(this.mutationTimer);
+            this.mutationTimer = window.setTimeout(function() {
+                self.runAllRules(trigger);
+            }, delay || 80);
+        },
+
+        runAllRules: function(trigger) {
+            if (!this.enabled) return;
+            this.stats.runs += 1;
+            this.fixHeaderOverlap(trigger);
+            this.fixLegacyHeaderTheme(trigger);
+            this.fixDualVerticalScrollbar(trigger);
+            this.fixIframeCollapse(trigger);
+            this.fixMapBlankScroll(trigger);
+            this.fixFrozenLoading(trigger);
+            this.fixBlockedClicks(trigger);
+            this.fixMissingImageAlt(trigger);
+        },
+
+        markFix: function(ruleKey) {
+            if (!this.stats.fixes[ruleKey]) {
+                this.stats.fixes[ruleKey] = 0;
+            }
+            this.stats.fixes[ruleKey] += 1;
+        },
+
+        notify: function(title, message) {
+            var existing = document.getElementById('ui-heal-toast');
+            if (!existing) {
+                existing = document.createElement('div');
+                existing.id = 'ui-heal-toast';
+                existing.className = 'ui-heal-toast';
+                document.body.appendChild(existing);
+            }
+            existing.innerHTML = '<strong>' + title + '</strong><span>' + message + '</span>';
+            existing.style.display = 'block';
+            clearTimeout(existing._hideTimer);
+            existing._hideTimer = setTimeout(function() {
+                existing.style.display = 'none';
+            }, 4200);
+        },
+
+        sanitizeIframeUrl: function(rawUrl) {
+            var fallback = './pages/home/home.html';
+            var url = String(rawUrl || '').trim();
+            if (!url || url === 'null' || url === 'undefined') return fallback;
+            if (url.indexOf('javascript:') === 0 || url.indexOf('data:') === 0) return fallback;
+            if (url.indexOf('http://') === 0 || url.indexOf('https://') === 0) return fallback;
+            if (url.indexOf('//') === 0) return fallback;
+            var safePathPattern = /^\.\/pages\/[a-zA-Z0-9_\-/]+\.html(?:[?#].*)?$/;
+            return safePathPattern.test(url) ? url : fallback;
+        },
+
+        isIframeViewportScrollMode: function() {
+            var body = document.body;
+            if (!body || !body.classList) return false;
+            return (
+                body.classList.contains('transit-shell') &&
+                body.getAttribute('data-shell-scroll-mode') === 'iframe'
+            );
+        },
+
+        fixHeaderOverlap: function() {
+            var header = document.getElementById('header');
+            var main = document.getElementById('main-content');
+            if (!header || !main) return;
+
+            var style = window.getComputedStyle(header);
+            if (!style) return;
+            // Only fixed headers require artificial top padding.
+            // Sticky/relative headers stay in normal flow and should not be adjusted on scroll.
+            if (style.position !== 'fixed') {
+                if (main.getAttribute('data-ui-heal-header-padding') === '1') {
+                    main.style.paddingTop = '';
+                    main.removeAttribute('data-ui-heal-header-padding');
+                }
+                return;
+            }
+
+            var headerRect = header.getBoundingClientRect();
+            var assistStrip = document.querySelector('#header .transit-assist-strip');
+            var assistBottom = assistStrip ? assistStrip.getBoundingClientRect().bottom : 0;
+            var overlayBottom = Math.ceil(Math.max(headerRect.bottom, assistBottom));
+            var mainTop = Math.floor(main.getBoundingClientRect().top);
+            var isOverlay = overlayBottom >= mainTop;
+
+            if (isOverlay) {
+                main.style.paddingTop = (overlayBottom - mainTop + 10) + 'px';
+                main.setAttribute('data-ui-heal-header-padding', '1');
+                this.markFix('header_overlap');
+                return;
+            }
+
+            if (main.getAttribute('data-ui-heal-header-padding') === '1') {
+                main.style.paddingTop = '';
+                main.removeAttribute('data-ui-heal-header-padding');
+            }
+        },
+
+        fixLegacyHeaderTheme: function() {
+            var header = document.getElementById('header');
+            if (!header) return;
+            var style = window.getComputedStyle(header);
+            if (!style) return;
+            var hasLegacyRed =
+                style.backgroundColor === 'rgb(212, 46, 59)' ||
+                (parseFloat(style.borderBottomWidth || '0') > 0 &&
+                    style.borderBottomColor === 'rgb(6, 137, 125)');
+            if (!hasLegacyRed) return;
+
+            header.style.background = '#1e2724';
+            header.style.borderBottom = '0';
+            header.style.border = '0';
+            this.markFix('legacy_header_theme');
+        },
+
+        fixDualVerticalScrollbar: function() {
+            var iframe = document.getElementById('iframe');
+            if (!iframe) return;
+
+            if (this.isIframeViewportScrollMode()) {
+                document.body.style.overflowY = 'hidden';
+                document.documentElement.style.overflowY = 'hidden';
+                iframe.setAttribute('scrolling', 'auto');
+                iframe.style.overflow = 'auto';
+                this.markFix('single_scroll_iframe');
+                return;
+            }
+
+            if (iframe.getAttribute('scrolling') !== 'no') {
+                iframe.setAttribute('scrolling', 'no');
+                this.markFix('iframe_scrolling_attr');
+            }
+
+            var bodyStyle = window.getComputedStyle(document.body || document.documentElement);
+            if (!bodyStyle) return;
+            var bodyScrollable = ['auto', 'scroll', 'overlay'].indexOf(bodyStyle.overflowY) >= 0;
+            var iframeScrollable = false;
+
+            try {
+                var iframeWin = iframe.contentWindow || (iframe.contentDocument && iframe.contentDocument.parentWindow);
+                if (iframeWin && iframeWin.document && iframeWin.document.documentElement) {
+                    var iframeDocEl = iframeWin.document.documentElement;
+                    var iframeBody = iframeWin.document.body;
+                    var iframeStyle = iframeWin.getComputedStyle(iframeBody || iframeDocEl);
+                    var overflowY = iframeStyle ? iframeStyle.overflowY : '';
+                    var canScrollByHeight =
+                        (iframeDocEl.scrollHeight || 0) >
+                        (iframe.clientHeight + 12);
+                    iframeScrollable = ['auto', 'scroll', 'overlay'].indexOf(overflowY) >= 0 && canScrollByHeight;
+                }
+            } catch (e) {
+                // ignore cross-origin access
+            }
+
+            if (bodyScrollable && iframeScrollable) {
+                iframe.style.overflow = 'hidden';
+                this.markFix('dual_scrollbar');
+            }
+        },
+
+        fixIframeCollapse: function() {
+            var iframe = document.getElementById('iframe');
+            if (!iframe) return;
+
+            var safeUrl = this.sanitizeIframeUrl(localStorage.getItem('iframeUrl'));
+            var src = iframe.getAttribute('src') || '';
+            if (!src || src === 'about:blank') {
+                iframe.setAttribute('src', safeUrl);
+                this.markFix('iframe_empty_src');
+            }
+
+            var minHeight = 560;
+            var visualHeight = Math.round(iframe.getBoundingClientRect().height);
+            if (visualHeight < 240) {
+                iframe.style.height = minHeight + 'px';
+                this.markFix('iframe_too_short');
+            }
+
+            if (this.isIframeViewportScrollMode()) {
+                var header = document.getElementById('header');
+                var main = document.getElementById('main-content');
+                var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 900;
+                var headerHeight = header ? Math.ceil(header.getBoundingClientRect().height || header.offsetHeight || 0) : 0;
+                var mainStyle = main ? window.getComputedStyle(main) : null;
+                var padTop = mainStyle ? parseFloat(mainStyle.paddingTop || '0') : 0;
+                var padBottom = mainStyle ? parseFloat(mainStyle.paddingBottom || '0') : 0;
+                var targetHeight = Math.max(420, Math.floor(viewportHeight - headerHeight - padTop - padBottom - 2));
+                if (Math.abs(targetHeight - visualHeight) > 6) {
+                    iframe.style.height = targetHeight + 'px';
+                    this.markFix('iframe_viewport_height');
+                }
+                iframe.setAttribute('scrolling', 'auto');
+                iframe.style.overflow = 'auto';
+                return;
+            }
+
+            try {
+                var iframeWin = iframe.contentWindow || (iframe.contentDocument && iframe.contentDocument.parentWindow);
+                if (iframeWin && iframeWin.document) {
+                    var body = iframeWin.document.body;
+                    var docEl = iframeWin.document.documentElement;
+                    if (body && docEl) {
+                        var bodyHeight = Math.max(
+                            body.scrollHeight || 0,
+                            body.offsetHeight || 0,
+                            body.clientHeight || 0
+                        );
+                        var docHeight = Math.max(
+                            docEl.scrollHeight || 0,
+                            docEl.offsetHeight || 0,
+                            docEl.clientHeight || 0
+                        );
+                        var appNode = iframeWin.document.getElementById('app');
+                        var appHeight = appNode ? Math.max(
+                            appNode.scrollHeight || 0,
+                            appNode.offsetHeight || 0,
+                            appNode.clientHeight || 0
+                        ) : 0;
+                        var nextHeight = Math.max(bodyHeight, appHeight, minHeight);
+                        if (docHeight > 0 && docHeight <= nextHeight + 160) {
+                            nextHeight = Math.max(nextHeight, docHeight);
+                        }
+                        nextHeight += 20;
+                        // 保守策略：自愈规则只负责“补高”，避免与主壳层缩高逻辑互相打架导致抖动。
+                        if (nextHeight > visualHeight + 14) {
+                            iframe.style.height = nextHeight + 'px';
+                            this.markFix('iframe_height_sync');
+                        }
+                    }
+                }
+            } catch (e) {
+                // same-origin以外的场景不做处理
+            }
+        },
+
+        fixMapBlankScroll: function() {
+            var body = document.body;
+            if (!body || !body.classList || !body.classList.contains('page-route-map')) return;
+
+            var app = document.getElementById('app');
+            var container = document.querySelector('.map-container');
+            if (!app || !container) return;
+
+            var contentBottom = container.getBoundingClientRect().bottom + window.scrollY;
+            var totalHeight = Math.max(document.body.scrollHeight || 0, document.body.offsetHeight || 0);
+            var blankGap = Math.max(0, totalHeight - contentBottom);
+
+            if (blankGap > 220) {
+                app.style.paddingBottom = '10px';
+                body.style.marginBottom = '0';
+                this.markFix('map_blank_scroll');
+            }
+        },
+
+        fixFrozenLoading: function() {
+            var nodes = document.querySelectorAll(
+                '.layui-layer-loading, .loading, .loading-mask, .spinner, [aria-busy="true"], [data-loading="true"]'
+            );
+            if (!nodes.length) return;
+
+            var now = Date.now();
+            for (var i = 0; i < nodes.length; i++) {
+                var node = nodes[i];
+                if (!node || !node.getBoundingClientRect) continue;
+                var rect = node.getBoundingClientRect();
+                var visible = rect.width > 0 && rect.height > 0;
+                if (!visible) continue;
+
+                var startAt = Number(node.getAttribute('data-ui-heal-loading-start') || 0);
+                if (!startAt) {
+                    node.setAttribute('data-ui-heal-loading-start', String(now));
+                    continue;
+                }
+                if (now - startAt < 16000) continue;
+                if (node.getAttribute('data-ui-heal-loading-fixed') === '1') continue;
+
+                node.setAttribute('data-ui-heal-loading-fixed', '1');
+                if (window.layui && layui.layer && typeof layui.layer.closeAll === 'function') {
+                    layui.layer.closeAll('loading');
+                }
+                node.style.display = 'none';
+                this.markFix('frozen_loading');
+                this.notify('已自动恢复', '检测到加载状态超时，系统已自动关闭异常加载层。');
+            }
+        },
+
+        fixBlockedClicks: function() {
+            var selectors = '.assist-btn, .utility-link, .support-link, .navs a, button';
+            var buttons = document.querySelectorAll(selectors);
+            for (var i = 0; i < buttons.length; i++) {
+                var node = buttons[i];
+                var style = window.getComputedStyle(node);
+                if (!style) continue;
+                if (style.pointerEvents === 'none' && !node.disabled) {
+                    node.style.pointerEvents = 'auto';
+                    this.markFix('blocked_click');
+                }
+            }
+        },
+
+        fixMissingImageAlt: function() {
+            var images = document.querySelectorAll('img');
+            for (var i = 0; i < images.length; i++) {
+                var img = images[i];
+                var alt = (img.getAttribute('alt') || '').trim();
+                if (alt) continue;
+
+                var label = (img.getAttribute('aria-label') || img.getAttribute('title') || '').trim();
+                if (!label) {
+                    var src = (img.getAttribute('src') || '').trim();
+                    if (src) {
+                        var parts = src.split('/');
+                        label = parts[parts.length - 1].split('?')[0] || '页面图片';
+                    } else {
+                        label = '页面图片';
+                    }
+                }
+                img.setAttribute('alt', label);
+                this.markFix('missing_img_alt');
+            }
+        },
+
+        getStats: function() {
+            return {
+                enabled: this.enabled,
+                runs: this.stats.runs,
+                fixes: this.stats.fixes
+            };
+        }
+    };
+
     // 无障碍工具主对象
     var AccessibilityUtils = {
         // 初始化所有服务
@@ -606,6 +1017,7 @@
             HapticService.init();
             ThemeService.init();
             KeyboardService.init();
+            UiSelfHealService.init();
 
             console.log('无障碍工具库已初始化');
         },
@@ -719,6 +1131,15 @@
 
         setAriaCurrent: function(element, isCurrent) {
             AriaService.setCurrent(element, isCurrent);
+        },
+
+        runUiSelfHeal: function() {
+            UiSelfHealService.runAllRules('manual');
+            return UiSelfHealService.getStats();
+        },
+
+        getUiSelfHealStats: function() {
+            return UiSelfHealService.getStats();
         },
 
         // 获取所有设置

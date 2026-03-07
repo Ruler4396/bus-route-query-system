@@ -2,10 +2,32 @@
 layui.define(['jquery', 'layer'], function(exports) { //提示：模块也可以依赖其它模块，如：layui.define('layer', callback);
 	"use strict";
 	var jquery = layui.jquery,
-		layer = layui.layer,
-        baseurl = "http://localhost:8080/springbootmf383/";
+		layer = layui.layer;
+
+	function resolveRuntimeBaseUrl() {
+		if (window.__API_BASE_URL__) {
+			return /\/$/.test(window.__API_BASE_URL__) ? window.__API_BASE_URL__ : window.__API_BASE_URL__ + '/';
+		}
+		var origin = window.location.protocol + '//' + window.location.host;
+		var pathname = window.location.pathname || '';
+		var contextPath = '';
+		var frontIdx = pathname.indexOf('/front/');
+		if (frontIdx > 0) {
+			contextPath = pathname.substring(0, frontIdx);
+		} else {
+			var adminIdx = pathname.indexOf('/admin/');
+			if (adminIdx > 0) {
+				contextPath = pathname.substring(0, adminIdx);
+			} else {
+				contextPath = '/springbootmf383';
+			}
+		}
+		return origin + contextPath + '/';
+	}
+
+	var baseurl = resolveRuntimeBaseUrl();
 	var http = {
-        domain : "http://localhost:8080/springbootmf383/",
+        domain : baseurl,
 		baseurl: baseurl,
 		/**
 		 * 获取传递参数值(修改支持中文)
@@ -44,19 +66,21 @@ layui.define(['jquery', 'layer'], function(exports) { //提示：模块也可以
 							icon: 5
 						})
 					}
-					layer.close(index);
 				},
 				error: function(xhr, status, error) {
 					console.log(xhr, status, error)
-					if(xhr.responseJSON.code==401 || xhr.responseJSON.code==403) {
+					var responseCode = xhr && xhr.responseJSON ? xhr.responseJSON.code : null;
+					if(responseCode==401 || responseCode==403) {
                                                  window.parent.location.href = '../login/login.html';
 					} else {
 						layer.msg("请求接口失败", {
 							time: 2000,
 							icon: 5
 						})
-						layer.close(index);
 					}
+				},
+				complete: function() {
+					layer.close(index);
 				}
 			});
 		},
@@ -91,20 +115,22 @@ layui.define(['jquery', 'layer'], function(exports) { //提示：模块也可以
 							icon: 5
 						})
 					}
-					layer.close(index);
 				},
 				error: function(xhr, status, error) {
 					console.log(xhr, status, error)
-					if(xhr.responseJSON.code==401 || xhr.responseJSON.code==403) {
+					var responseCode = xhr && xhr.responseJSON ? xhr.responseJSON.code : null;
+					if(responseCode==401 || responseCode==403) {
                                                  window.parent.location.href = '../login/login.html';
 					} else {
 						layer.msg("请求接口失败", {
 							time: 2000,
 							icon: 5
 						})
-						layer.close(index);
 					}
 				},
+				complete: function() {
+					layer.close(index);
+				}
 			});
 		},
 		upload: function(file, fileName, callback) {
@@ -125,7 +151,7 @@ layui.define(['jquery', 'layer'], function(exports) { //提示：模块也可以
 				success: function(res) {
 					if (res.code == 0) {
 						callback(res);
-					} else if (res.code == 401 || result.code == 403) {
+					} else if (res.code == 401 || res.code == 403) {
 						window.parent.location.href = '../login/login.html';
 					} else {
 						layer.msg(res.msg, {

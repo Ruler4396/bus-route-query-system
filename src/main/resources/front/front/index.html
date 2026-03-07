@@ -17,29 +17,27 @@
 			height: 100%;
 		}
 
-		#header {
-			position: fixed;
-			top: 0;
-			left: 0;
-			width: 100%;
-			z-index: 20;
-		}
+			#header {
+				position: sticky;
+				top: 0;
+				width: 100%;
+				z-index: 20;
+			}
 
 		#iframe {
 			width: 100%;
 			border: 0;
 		}
 	</style>
-		<body class="transit-ui transit-shell">
+		<body class="transit-ui transit-shell" data-shell-scroll-mode="iframe">
 		<!-- 跳过导航链接（无障碍） -->
 		<a href="#main-content" class="skip-link">跳转到主要内容</a>
 		<!-- start 顶部导航栏 -->
-		<div id="header">
-			<div v-if='true' class="nav-top">
-			  <img v-if='false' class="nav-top-img" src='https://www.baidu.com/img/flexible/logo/pc/result@2.png'>
-			  <div v-if="true" class="nav-top-title">{{projectName}}</div>
-			  <div class="nav-top-tel"></div>
-			</div>
+			<div id="header">
+				<div v-if='true' class="nav-top">
+				  <div v-if="true" class="nav-top-title">{{projectName}}</div>
+				  <div class="nav-top-tel"></div>
+				</div>
 		    <div class="navs nav-reframed" role="navigation" aria-label="无障碍任务导航">
 				<div class="title" v-if="false" v-text="projectName"></div>
 				<div class="list nav-grid">
@@ -84,10 +82,13 @@
 			</div>
 								</div>
 		<!-- end 顶部导航栏 -->
-		<main id="main-content" tabindex="-1" aria-label="页面主要内容区域">
-			<iframe src="./pages/home/home.html" id="iframe" frameborder="0" scrolling="no" width="100%" title="业务内容区域" onload="changeFrameHeight"></iframe>
+			<main id="main-content" tabindex="-1" aria-label="页面主要内容区域">
+				<iframe src="./pages/home/home.html" id="iframe" frameborder="0" scrolling="auto" width="100%" title="业务内容区域" onload="changeFrameHeight()"></iframe>
 		</main>
-		<button class="accessibility-btn" type="button" aria-label="打开无障碍设置" onclick="navPage('./pages/accessibility/settings.html')">♿</button>
+		<button class="assist-entry-btn" type="button" aria-label="打开无障碍设置页面" onclick="navPage('./pages/accessibility/settings.html')">
+			<span class="assist-entry-icon" aria-hidden="true">♿</span>
+			<span>无障碍设置</span>
+		</button>
 
 		<script src="./xznstatic/js/jquery-1.11.3.min.js"></script>
 		<script src="./layui/layui.js"></script>
@@ -95,8 +96,43 @@
 		<script src="./js/config.js"></script>
 		<script src="./js/accessibility.js"></script>
 
-		<script>
-      var vue1 = new Vue({el: '#tabbar'})
+			<script>
+				var DEFAULT_IFRAME_URL = './pages/home/home.html';
+				var frameResizeTimer = null;
+
+				function normalizeIframeUrl(rawUrl) {
+					var fallbackUrl = DEFAULT_IFRAME_URL;
+					var url = (rawUrl || '').trim();
+					if (!url) return fallbackUrl;
+					if (url === 'null' || url === 'undefined') return fallbackUrl;
+					if (url.indexOf('javascript:') === 0) return fallbackUrl;
+					if (url.indexOf('data:') === 0) return fallbackUrl;
+					if (url.indexOf('http://') === 0 || url.indexOf('https://') === 0) return fallbackUrl;
+					if (url.indexOf('//') === 0) return fallbackUrl;
+					var safePathPattern = /^\.\/pages\/[a-zA-Z0-9_\-/]+\.html(?:[?#].*)?$/;
+					return safePathPattern.test(url) ? url : fallbackUrl;
+				}
+
+				function applyIframeUrl(url, persist) {
+					var iframe = document.getElementById('iframe');
+					if (!iframe) return;
+					var safeUrl = normalizeIframeUrl(url);
+					if (persist !== false) {
+						localStorage.setItem('iframeUrl', safeUrl);
+					}
+					if (vue) {
+						vue.activeNavUrl = safeUrl;
+					}
+					var currentSrc = iframe.getAttribute('src') || '';
+					if (currentSrc === safeUrl) {
+						scheduleFrameResize(30);
+						return;
+					}
+					iframe.src = safeUrl;
+					scheduleFrameResize(120);
+				}
+
+	      var vue1 = new Vue({el: '#tabbar'})
 
 			var vue = new Vue({
 				el: '#header',
@@ -124,13 +160,14 @@
 					jump(url) {
 						jump(url)
 					},
-					initNavStructure() {
-						var saved = localStorage.getItem('iframeUrl');
-						var role = localStorage.getItem('userTable');
-						this.showAdminEntry = role === 'users';
-						this.activeNavUrl = saved || './pages/home/home.html';
-						this.primaryNav = [];
-						this.supportNav = [];
+						initNavStructure() {
+							var saved = normalizeIframeUrl(localStorage.getItem('iframeUrl'));
+							var role = localStorage.getItem('userTable');
+							this.showAdminEntry = role === 'users';
+							this.activeNavUrl = saved || DEFAULT_IFRAME_URL;
+							localStorage.setItem('iframeUrl', this.activeNavUrl);
+							this.primaryNav = [];
+							this.supportNav = [];
 						for (var i = 0; i < this.indexNav.length; i++) {
 							var item = this.indexNav[i];
 							if (item.name.indexOf('友情链接') !== -1 || item.name.indexOf('资源') !== -1) {
@@ -156,10 +193,10 @@
 				}
 			});
 
-			layui.use(['element','layer'], function() {
-				var element = layui.element;
-				var layer = layui.layer;
-			});
+					layui.use(['element','layer'], function() {
+						var element = layui.element;
+						var layer = layui.layer;
+					});
 
 			function chatTap(){
 				var userTable = localStorage.getItem('userTable');
@@ -175,20 +212,20 @@
 				}
 			}
 
-			function updateAssistStatus() {
-				if (!window.AccessibilityUtils) return;
-				var settings = window.AccessibilityUtils.getSettings();
-				var status = [
-					settings.highContrast ? '高对比开启' : '高对比关闭',
-					'字体' + settings.fontSize + 'px',
-					settings.speech ? '语音开启' : '语音关闭',
-					settings.keyboardNav ? '键盘导航开启' : '键盘导航关闭'
-				].join(' | ');
-				var statusNode = document.getElementById('assistStatusText');
-				if (statusNode) {
-					statusNode.textContent = status;
+				function updateAssistStatus() {
+					if (!window.AccessibilityUtils) return;
+					var settings = window.AccessibilityUtils.getSettings();
+					var status = [
+						settings.highContrast ? '高对比开启' : '高对比关闭',
+						'字体' + settings.fontSize + 'px',
+						settings.speech ? '语音开启' : '语音关闭',
+						settings.keyboardNav ? '键盘导航开启' : '键盘导航关闭'
+					].join(' | ');
+					var statusNode = document.getElementById('assistStatusText');
+					if (statusNode) {
+						statusNode.textContent = status;
+					}
 				}
-			}
 
 			function syncAssistSettingsToIframe() {
 				if (!window.AccessibilityUtils) return;
@@ -238,61 +275,87 @@
 					syncAssistSettingsToIframe();
 					updateAssistStatus();
 				});
-				var iframe = document.getElementById('iframe');
-				if (iframe) {
-					iframe.addEventListener('load', function() {
-						syncAssistSettingsToIframe();
-						updateAssistStatus();
-					});
+						var iframe = document.getElementById('iframe');
+						if (iframe) {
+							iframe.addEventListener('load', function() {
+								syncAssistSettingsToIframe();
+								updateAssistStatus();
+								scheduleFrameResize(0);
+								scheduleFrameResize(300);
+								scheduleFrameResize(1000);
+							});
+							iframe.addEventListener('error', function() {
+								var statusNode = document.getElementById('assistStatusText');
+								if (statusNode) {
+									statusNode.textContent = '页面加载失败，已回退首页';
+								}
+								applyIframeUrl(DEFAULT_IFRAME_URL, true);
+							});
+						}
+					syncAssistSettingsToIframe();
+					updateAssistStatus();
 				}
-				syncAssistSettingsToIframe();
-				updateAssistStatus();
-			}
 
-			// 导航栏跳转
-			function navPage(url) {
-				localStorage.setItem('iframeUrl', url);
-				document.getElementById('iframe').src = url;
-				if (vue) {
-					vue.activeNavUrl = url;
-				}
-			}
+				// 导航栏跳转
+					function navPage(url) {
+						applyIframeUrl(url, true);
+					}
 
 			// 跳转到个人中心也
-			function centerPage() {
-				var userTable = localStorage.getItem('userTable');
-				if (userTable) {
-					var centerUrl = './pages/' + userTable + '/center.html';
-					localStorage.setItem('iframeUrl', centerUrl);
-					document.getElementById('iframe').src = centerUrl;
-					if (vue) {
-						vue.activeNavUrl = centerUrl;
+				function centerPage() {
+					var userTable = localStorage.getItem('userTable');
+					if (userTable) {
+						var centerUrl = './pages/' + userTable + '/center.html';
+						applyIframeUrl(centerUrl, true);
+						} else {
+							window.location.href = './pages/login/login.html'
+						}
 					}
-				} else {
-					window.location.href = './pages/login/login.html'
-				}
-			}
 
-			var iframeUrl = localStorage.getItem('iframeUrl');
-			document.getElementById('iframe').src = iframeUrl  || './pages/home/home.html';
+						var iframeUrl = normalizeIframeUrl(localStorage.getItem('iframeUrl'));
+						applyIframeUrl(iframeUrl, true);
+						function scheduleFrameResize(delay) {
+							clearTimeout(frameResizeTimer);
+							frameResizeTimer = setTimeout(changeFrameHeight, delay || 30);
+						}
 
-      // var i = 0;
-      setInterval(function(){
-        // i++;
-        // if(i<50) changeFrameHeight();
-        changeFrameHeight();
-      },200)
+						function syncShellOffset() {
+							var header = document.getElementById('header');
+							var main = document.getElementById('main-content');
+							if (!header || !main) return;
+							var computed = window.getComputedStyle(header);
+							if (computed && computed.position === 'fixed') {
+								main.style.paddingTop = (header.offsetHeight + 10) + 'px';
+							} else {
+								main.style.paddingTop = '';
+							}
+						}
 
-      function changeFrameHeight() {
-        var iframe = document.getElementById('iframe');
-        // iframe.height = 'auto';
-          if (iframe) {
-              var iframeWin = iframe.contentWindow || iframe.contentDocument.parentWindow;
-              if (iframeWin.document.body) {
-                  iframe.height = iframeWin.document.body.scrollHeight;
-              }
-          }
-      };
+					// 低频兜底，避免极端场景下窗口尺寸感知延迟
+					setInterval(function(){
+						scheduleFrameResize(0);
+					}, 10000);
+
+	      function changeFrameHeight() {
+	        var iframe = document.getElementById('iframe');
+	        if (!iframe) return;
+	        var main = document.getElementById('main-content');
+	        var header = document.getElementById('header');
+	        var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 900;
+	        var headerHeight = header ? Math.ceil(header.getBoundingClientRect().height || header.offsetHeight || 0) : 0;
+	        var mainStyle = main ? window.getComputedStyle(main) : null;
+	        var padTop = mainStyle ? parseFloat(mainStyle.paddingTop || '0') : 0;
+	        var padBottom = mainStyle ? parseFloat(mainStyle.paddingBottom || '0') : 0;
+	        var availableHeight = Math.max(420, Math.floor(viewportHeight - headerHeight - padTop - padBottom - 2));
+
+	        iframe.style.height = availableHeight + 'px';
+	        iframe.style.overflow = 'auto';
+	        iframe.setAttribute('scrolling', 'auto');
+
+	        // 单滚动策略：外层壳页面不滚动，滚动权交给 iframe 内页
+	        document.body.style.overflow = 'hidden';
+	        document.documentElement.style.overflow = 'hidden';
+	      };
 
 			//  窗口变化时候iframe自适应
 			// function changeFrameHeight() {
@@ -307,12 +370,15 @@
 				// ifm.width = document.documentElement.clientWidth;
 			// }
 
-			// reasize 事件 窗口大小变化后执行的方法
-			window.onresize = function() {
-				changeFrameHeight();
-			}
+				// reasize 事件 窗口大小变化后执行的方法
+						window.onresize = function() {
+							syncShellOffset();
+							scheduleFrameResize(30);
+						}
 
-			setTimeout(initAssistDeck, 300);
-		</script>
-	</body>
-</html>
+					setTimeout(initAssistDeck, 300);
+					syncShellOffset();
+					scheduleFrameResize(300);
+			</script>
+		</body>
+	</html>

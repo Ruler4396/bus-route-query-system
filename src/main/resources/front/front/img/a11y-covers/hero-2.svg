@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="720" viewBox="0 0 1600 720" role="img" aria-label="Blind path and elevator friendly transit">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#26332f"/>
+      <stop offset="100%" stop-color="#1c2522"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="720" fill="url(#bg)"/>
+  <path d="M0 600 L1600 470 L1600 720 L0 720 Z" fill="#c89a62" fill-opacity="0.28"/>
+  <rect x="130" y="132" width="1340" height="456" rx="28" fill="#fdf8ef" fill-opacity="0.08"/>
+  <rect x="180" y="190" width="410" height="336" rx="24" fill="#fdf8ef" fill-opacity="0.14"/>
+  <rect x="640" y="194" width="760" height="104" rx="18" fill="#fdf8ef" fill-opacity="0.13"/>
+  <rect x="640" y="324" width="330" height="66" rx="12" fill="#fdf8ef" fill-opacity="0.13"/>
+  <rect x="994" y="324" width="406" height="66" rx="12" fill="#fdf8ef" fill-opacity="0.13"/>
+  <rect x="640" y="412" width="760" height="64" rx="12" fill="#fdf8ef" fill-opacity="0.1"/>
+  <circle cx="318" cy="338" r="102" fill="#c89a62" fill-opacity="0.92"/>
+  <rect x="285" y="444" width="66" height="24" rx="12" fill="#c89a62"/>
+  <text x="650" y="258" fill="#f5e8d7" font-size="44" font-family="Arial, sans-serif" font-weight="700">ELEVATOR + TACTILE PATH STATUS</text>
+  <text x="650" y="448" fill="#d8c9b4" font-size="28" font-family="Arial, sans-serif">Reliable station accessibility information before departure</text>
+</svg>
