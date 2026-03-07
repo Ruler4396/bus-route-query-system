@@ -72,32 +72,97 @@
          * @param {string} text - 要播报的文本
          * @param {Object} options - 配置选项
          */
+        isSpeaking: false,
+        currentUtterance: null,
+
+        waitUntilIdle: function(timeoutMs) {
+            var self = this;
+            var timeout = typeof timeoutMs === 'number' ? timeoutMs : 12000;
+            return new Promise(function(resolve) {
+                var started = Date.now();
+                function poll() {
+                    if (!self.synth || (!self.synth.speaking && !self.isSpeaking)) {
+                        resolve(true);
+                        return;
+                    }
+                    if (Date.now() - started >= timeout) {
+                        resolve(false);
+                        return;
+                    }
+                    setTimeout(poll, 120);
+                }
+                poll();
+            });
+        },
+
         speak: function(text, options) {
             options = options || {};
 
-            if (!this.synth || !this.isEnabled || !text) return;
-
-            // 取消当前播报
-            this.synth.cancel();
-            if (this.synth.paused) {
-                this.synth.resume();
+            if (!this.synth || !this.isEnabled || !text) {
+                return Promise.resolve(false);
             }
 
-            var utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'zh-CN';
-            utterance.rate = options.rate || 1;
-            utterance.pitch = options.pitch || 1;
-            utterance.volume = options.volume || 1;
+            var self = this;
+            var interrupt = options.interrupt !== false;
+            var timeout = typeof options.waitTimeoutMs === 'number' ? options.waitTimeoutMs : 12000;
 
-            if (this.currentVoice) {
-                utterance.voice = this.currentVoice;
+            var startSpeak = function() {
+                if (interrupt) {
+                    self.synth.cancel();
+                    if (self.synth.paused) {
+                        self.synth.resume();
+                    }
+                }
+
+                var utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                utterance.rate = options.rate || 1;
+                utterance.pitch = options.pitch || 1;
+                utterance.volume = options.volume || 1;
+
+                if (self.currentVoice) {
+                    utterance.voice = self.currentVoice;
+                }
+
+                return new Promise(function(resolve) {
+                    utterance.onstart = function() {
+                        self.isSpeaking = true;
+                        self.currentUtterance = utterance;
+                    };
+                    utterance.onend = function() {
+                        if (self.currentUtterance === utterance) {
+                            self.currentUtterance = null;
+                            self.isSpeaking = false;
+                        }
+                        resolve(true);
+                    };
+                    utterance.onerror = function(err) {
+                        if (self.currentUtterance === utterance) {
+                            self.currentUtterance = null;
+                            self.isSpeaking = false;
+                        }
+                        console.warn('语音播报触发失败:', err);
+                        resolve(false);
+                    };
+
+                    try {
+                        self.synth.speak(utterance);
+                    } catch (err) {
+                        console.warn('语音播报触发失败:', err);
+                        self.currentUtterance = null;
+                        self.isSpeaking = false;
+                        resolve(false);
+                    }
+                });
+            };
+
+            if (!interrupt) {
+                return this.waitUntilIdle(timeout).then(function() {
+                    return startSpeak();
+                });
             }
 
-            try {
-                this.synth.speak(utterance);
-            } catch (err) {
-                console.warn('语音播报触发失败:', err);
-            }
+            return startSpeak();
         },
 
         /**
@@ -686,8 +751,9 @@
          * @param {string} message - 要宣告的消息
          * @param {string} priority - 优先级：polite/assertive
          */
-        announce: function(message, priority) {
+        announce: function(message, priority, options) {
             priority = priority || 'polite';
+            options = options || {};
 
             var announcer = document.getElementById('sr-announcer');
             if (!announcer) {
@@ -700,18 +766,19 @@
                 document.body.appendChild(announcer);
             }
 
-            // 先清空，再设置内容，确保屏幕阅读器会读取
             announcer.textContent = '';
             setTimeout(function() {
                 announcer.textContent = message;
             }, 100);
 
-            // 同步可见字幕提示，保证听障用户能看到系统反馈
             this.showVisualCaption(message);
 
-            // 若已开启语音播报，则同步语音提示，避免“按钮有反馈但没有声音”
-            if (SpeechService.isEnabled) {
-                SpeechService.speak(message, { rate: 1.02, pitch: 1 });
+            var shouldSpeak = SpeechService.isEnabled && !options.silentSpeech;
+            if (window.__demoMuteSystemAnnounce && !options.forceSpeech) {
+                shouldSpeak = false;
+            }
+            if (shouldSpeak) {
+                SpeechService.speak(message, { rate: 1.02, pitch: 1, interrupt: options.interrupt !== false });
             }
         },
 
@@ -1233,7 +1300,17 @@
 
         // 语音播报
         speak: function(text, options) {
-            SpeechService.speak(text, options);
+            return SpeechService.speak(text, options);
+        },
+
+        speakAndWait: function(text, options) {
+            options = options || {};
+            options.interrupt = false;
+            return SpeechService.speak(text, options);
+        },
+
+        waitForSpeechIdle: function(timeoutMs) {
+            return SpeechService.waitUntilIdle(timeoutMs);
         },
 
         speakRouteInfo: function(route) {
@@ -1346,8 +1423,8 @@
         },
 
         // ARIA
-        announce: function(message, priority) {
-            AriaService.announce(message, priority);
+        announce: function(message, priority, options) {
+            AriaService.announce(message, priority, options);
         },
 
         setAriaLabel: function(element, label) {

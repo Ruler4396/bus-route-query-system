@@ -9,10 +9,10 @@
     return !!byId('iframe') && typeof global.navPage === 'function';
   }
 
-  function safeAnnounce(message) {
+  function safeAnnounce(message, options) {
     try {
       if (global.AccessibilityUtils && typeof global.AccessibilityUtils.announce === 'function') {
-        global.AccessibilityUtils.announce(message);
+        global.AccessibilityUtils.announce(message, 'polite', options || {});
       }
     } catch (err) {
       console.warn('演示提示播报失败', err);
@@ -48,6 +48,11 @@
   }
 
   function setRunnerStatus(text) {
+    document.body.setAttribute('data-demo-status-text', text || '');
+    if (typeof global.updateAssistStatus === 'function') {
+      global.updateAssistStatus();
+      return;
+    }
     var statusNode = byId('assistStatusText');
     if (statusNode) {
       statusNode.textContent = text;
@@ -197,8 +202,31 @@
     },
 
     narrate: async function(message, minimumMs) {
-      safeAnnounce(message);
-      await this.pause(this.estimateNarrationMs(message, minimumMs));
+      safeAnnounce(message, { silentSpeech: true });
+      var estimate = this.estimateNarrationMs(message, minimumMs);
+      if (global.AccessibilityUtils && global.AccessibilityUtils.isSpeechEnabled && global.AccessibilityUtils.isSpeechEnabled()) {
+        if (typeof global.AccessibilityUtils.speakAndWait === 'function') {
+          await global.AccessibilityUtils.speakAndWait(message, { rate: 1, pitch: 1, waitTimeoutMs: estimate + 4000 });
+          await this.pause(600);
+          return;
+        }
+        if (typeof global.AccessibilityUtils.waitForSpeechIdle === 'function') {
+          await global.AccessibilityUtils.waitForSpeechIdle(estimate + 4000);
+          await this.pause(600);
+          return;
+        }
+      }
+      await this.pause(estimate);
+    },
+
+    openStepPage: async function(url, selector, timeoutMs) {
+      if (url && typeof global.navPage === 'function') {
+        global.navPage(url);
+      }
+      await this.pause(1600);
+      if (selector) {
+        await this.waitForFrameSelector(selector, timeoutMs || 20000);
+      }
     },
 
     waitForFrameSelector: async function(selector, timeoutMs) {
@@ -291,6 +319,8 @@
       }
       this.isRunning = true;
       document.body.setAttribute('data-demo-running', 'true');
+      document.body.setAttribute('data-demo-status-text', '演示准备中');
+      window.__demoMuteSystemAnnounce = true;
       this.isAutoplay = options.autoplay !== false;
       this.currentIndex = 0;
       this.lastStatusText = byId('assistStatusText') ? byId('assistStatusText').textContent : '';
@@ -323,6 +353,8 @@
       this.isRunning = false;
       document.body.setAttribute('data-demo-running', 'false');
       document.body.removeAttribute('data-demo-step');
+      document.body.removeAttribute('data-demo-status-text');
+      window.__demoMuteSystemAnnounce = false;
       this.isAutoplay = false;
       closeTransientLayers();
       this.restoreAssistiveDefaults();
@@ -340,6 +372,8 @@
       this.isRunning = false;
       document.body.setAttribute('data-demo-running', 'false');
       document.body.removeAttribute('data-demo-step');
+      document.body.removeAttribute('data-demo-status-text');
+      window.__demoMuteSystemAnnounce = false;
       this.isAutoplay = false;
       this.restoreAssistiveDefaults();
       setRunnerStatus('演示流程已完成，可按 Alt + D 重新开始。');
@@ -388,7 +422,7 @@
       document.body.setAttribute('data-demo-step', step.id);
       closeTransientLayers();
       setRunnerStatus('演示步骤 ' + (this.currentIndex + 1) + '/' + steps.length + '：' + step.title);
-      safeAnnounce('开始演示：' + step.title);
+      safeAnnounce('开始演示：' + step.title, { silentSpeech: true });
       if (step.url && typeof global.navPage === 'function') {
         global.navPage(step.url);
       }
@@ -402,7 +436,7 @@
       } catch (err) {
         if (err && err.message !== 'DEMO_STOPPED') {
           console.warn('演示步骤执行失败', step.id, err);
-          safeAnnounce('演示步骤执行失败：' + step.title + '，已继续后续步骤。');
+          safeAnnounce('演示步骤执行失败：' + step.title + '，已继续后续步骤。', { silentSpeech: true });
         }
       }
       if (!this.isRunning) return;
@@ -452,7 +486,7 @@
     },
 
     performIntro: async function() {
-      await this.waitForFrameSelector('.hero-command-center', 15000);
+      await this.openStepPage('./pages/home/home.html', '.hero-command-center', 20000);
       await this.narrate('先从首页开始。残障人士使用系统的第一步不是盲目出发，而是先确认目标用户范围和试点边界，避免被误导成全城都已无障碍。', 8500);
       await this.scrollFrameTo(0);
       await this.narrate('首页保留了统一卡片式的路线、公告和资源入口，删掉了影响判断的冗长说明，方便轮椅用户和低视力用户快速找到下一步操作。', 9000);
@@ -462,6 +496,7 @@
     },
 
     performAssistDeck: async function() {
+      await this.openStepPage('./pages/home/home.html', '.hero-command-center', 20000);
       await this.narrate('第二步演示全站快捷控制。这些按钮是残障人士真正需要的即时帮助入口，所以我们逐个切换，确认效果可见、可恢复。', 9000);
       await this.clickAssist('assistHighContrast');
       await this.narrate('先打开高对比度，模拟低视力用户在光照复杂环境下提升识别度。', 6500);
@@ -486,7 +521,7 @@
     },
 
     performWheelchairRoute: async function() {
-      await this.waitForFrameSelector('#qidianzhanming', 15000);
+      await this.openStepPage('./pages/gongjiaoluxian/list.html', '#qidianzhanming', 20000);
       await this.narrate('现在进入轮椅用户场景。假设用户要从东山口前往芳村花园附近的公共服务点，系统需要优先筛掉关键无障碍信息不足的路线。', 9200);
       await this.setFrameValue('#luxianmingcheng', '');
       await this.setFrameValue('#qidianzhanming', '东山口');
@@ -497,18 +532,14 @@
       await this.pause(2200);
       await this.scrollFrameElementIntoView('.route-plan-summary');
       await this.narrate('这里会展示推荐理由、已过滤路线以及门到门分段结果，重点告诉轮椅用户哪些路段安全，哪些地方仍待核查。', 8800);
-      var firstItem = await this.waitForFrameSelector('.list .list-item', 12000);
-      firstItem.click();
-      await this.pause(1800);
-      await this.scrollFrameTo(260);
-      await this.narrate('进入路线详情后，可以继续核对关键站点、设施标签和说明文字，避免只看一个分数就匆忙出发。', 8200);
+      await this.scrollFrameElementIntoView('.list .list-item');
+      await this.narrate('在卡片列表本身，用户就能继续核对路线等级、起终点和关键风险，不必被迫跳转才能理解结果。', 7800);
     },
 
     performLowVisionRoute: async function() {
-      global.navPage('./pages/gongjiaoluxian/list.html');
-      await this.pause(1800);
-      await this.waitForFrameSelector('#qidianzhanming', 15000);
+      await this.openStepPage('./pages/gongjiaoluxian/list.html', '#qidianzhanming', 20000);
       await this.narrate('接下来切换到低视力用户场景。此时更重要的是文本说明、分段提示和高可辨识的推荐排序。', 8400);
+      await this.setFrameValue('#luxianmingcheng', '');
       await this.setFrameValue('#qidianzhanming', '如意坊');
       await this.setFrameValue('#zhongdianzhanming', '东山龟岗');
       await this.setFrameSelectValue('#profileType', 'LOW_VISION');
@@ -517,15 +548,12 @@
       await this.pause(2200);
       await this.scrollFrameElementIntoView('.route-segment-list');
       await this.narrate('系统会把起点步行、上车、乘车、换乘和终点入口分开写清楚，这样用户即使看不清地图，也能理解实际出行过程。', 9000);
-      var secondItem = await this.waitForFrameSelector('.list .list-item', 12000);
-      secondItem.click();
-      await this.pause(1800);
-      await this.scrollFrameTo(340);
-      await this.narrate('路线详情页再次强调文字信息，帮助低视力用户在阅读器、放大镜和大字号环境下继续判断是否可行。', 8200);
+      await this.scrollFrameElementIntoView('.list .list-item');
+      await this.narrate('低视力用户可以继续依赖卡片中的文字信息和分段提示，而不必强依赖地图定位。', 7600);
     },
 
     performMapWalkthrough: async function() {
-      await this.waitForFrameSelector('#routeSelect', 15000);
+      await this.openStepPage('./pages/gongjiaoluxian/map.html', '#routeSelect', 20000);
       await this.narrate('路线确认之后，用户还需要在地图上核对站点顺序、相对位置和预计到站信息。这里我们切换多条试点线路，验证不是只支持一条演示线。', 9500);
       var select = await this.waitForFrameSelector('#routeSelect', 12000);
       var routeTexts = Array.prototype.map.call(select.options || [], function(option) {
@@ -568,7 +596,7 @@
     },
 
     performAnnouncementWalkthrough: async function() {
-      await this.waitForFrameSelector('#biaoti', 15000);
+      await this.openStepPage('./pages/wangzhangonggao/list.html', '#biaoti', 20000);
       await this.narrate('出行服务公告页不是装饰页，而是用来告诉用户当前试点边界、演示账号和注意事项。先演示关键词搜索，再看一条公告详情。', 9000);
       await this.setFrameValue('#biaoti', '试点');
       await this.clickFrame('#btn-search');
@@ -581,9 +609,7 @@
     },
 
     performResourceWalkthrough: async function() {
-      global.navPage('./pages/youqinglianjie/list.html');
-      await this.pause(1800);
-      await this.waitForFrameSelector('#lianjiemingcheng', 15000);
+      await this.openStepPage('./pages/youqinglianjie/list.html', '#lianjiemingcheng', 20000);
       await this.narrate('资源链接页用于告诉用户和答辩老师：系统背后依赖哪些公开数据源，以及后续可以去哪里补充人工核验。', 8600);
       await this.setFrameValue('#lianjiemingcheng', 'Wheelmap');
       await this.clickFrame('#btn-search');
@@ -596,9 +622,7 @@
     },
 
     performFeedbackWalkthrough: async function() {
-      global.navPage('./pages/messages/list.html');
-      await this.pause(1800);
-      await this.waitForFrameSelector('textarea[name="content"]', 15000);
+      await this.openStepPage('./pages/messages/list.html', 'textarea[name="content"]', 20000);
       var marker = new Date().toISOString().replace('T', ' ').slice(0, 19);
       await this.narrate('如果用户在现场发现盲道中断、电梯无法使用或页面信息不准，就需要通过反馈闭环把问题沉淀回来。', 8800);
       await this.setFrameValue('textarea[name="content"]', '演示巡检反馈：轮椅用户在换乘点需要再次确认电梯状态（' + marker + '）');
@@ -639,7 +663,7 @@
     },
 
     performSettingsWalkthrough: async function() {
-      await this.waitForFrameSelector('.preset-btn', 15000);
+      await this.openStepPage('./pages/accessibility/settings.html', '.preset-btn', 20000);
       await this.narrate('最后进入设置页做逐项验证。这里特别演示不同预设的差异，确保不是所有预设都强制打开高对比度。', 9000);
       var lowVisionBtn = this.findFrameButtonByText('低视力预设');
       if (lowVisionBtn) {
@@ -696,10 +720,7 @@
     },
 
     performSummary: async function() {
-      if (typeof global.navPage === 'function') {
-        global.navPage('./pages/home/home.html');
-      }
-      await this.pause(1800);
+      await this.openStepPage('./pages/home/home.html', '.hero-command-center', 20000);
       await this.scrollFrameTo(0);
       await this.narrate('回到首页，总结一遍残障人士的真实使用路径：先打开适合自己的无障碍控制，再按画像规划路线、核对地图和公告、查看资源入口，最后通过反馈闭环修正现场问题。', 9800);
       await this.scrollFrameToBottom();

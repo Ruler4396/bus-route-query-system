@@ -80,8 +80,6 @@
 					queueFrameResizeBurst();
 				}
 
-	      var vue1 = new Vue({el: '#tabbar'})
-
 			var vue = new Vue({
 				el: '#header',
 				data: {
@@ -169,9 +167,11 @@
 						settings.speech ? '语音开启' : '语音关闭',
 						settings.keyboardNav ? '键盘导航开启' : '键盘导航关闭'
 					].join(' | ');
+					var demoRunning = document.body.getAttribute('data-demo-running') === 'true';
+					var demoStatus = document.body.getAttribute('data-demo-status-text') || '';
 					var statusNode = document.getElementById('assistStatusText');
 					if (statusNode) {
-						statusNode.textContent = status;
+						statusNode.textContent = demoRunning && demoStatus ? (demoStatus + ' ｜ ' + status) : status;
 					}
 				}
 
