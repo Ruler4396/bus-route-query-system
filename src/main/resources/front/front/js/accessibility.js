@@ -382,6 +382,12 @@
                     self.openAccessibilitySettings();
                 }
 
+                // Alt + D 一键演示
+                if (e.altKey && (e.key === 'd' || e.key === 'D')) {
+                    e.preventDefault();
+                    self.openDemoMode();
+                }
+
                 // ESC 关闭弹窗或返回
                 if (e.key === 'Escape') {
                     var modals = document.querySelectorAll('.modal, .layui-layer');
@@ -469,6 +475,22 @@
             if (!openViaTopNav('./pages/accessibility/settings.html')) {
                 window.location.href = resolveFrontUrl('pages/accessibility/settings.html');
             }
+        },
+
+        openDemoMode: function() {
+            try {
+                if (typeof window.openDemoMode === 'function') {
+                    window.openDemoMode({ autoplay: false, source: 'local-shortcut' });
+                    return;
+                }
+            } catch (e) {}
+            try {
+                if (window.parent && window.parent !== window && typeof window.parent.openDemoMode === 'function') {
+                    window.parent.openDemoMode({ autoplay: false, source: 'iframe-shortcut' });
+                    return;
+                }
+            } catch (e2) {}
+            window.location.href = resolveFrontUrl('index.html?demo=1');
         },
 
         /**
@@ -1140,6 +1162,10 @@
 
         getUiSelfHealStats: function() {
             return UiSelfHealService.getStats();
+        },
+
+        openDemoMode: function() {
+            return KeyboardService.openDemoMode();
         },
 
         // 获取所有设置

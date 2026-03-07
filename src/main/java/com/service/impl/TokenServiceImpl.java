@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.baomidou.mybatisplus.plugins.Page;
 import com.baomidou.mybatisplus.service.impl.ServiceImpl;
@@ -46,12 +47,9 @@ public class TokenServiceImpl extends ServiceImpl<TokenDao, TokenEntity> impleme
         Date expiratedtime = new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000);
 
         // 删除该用户的旧token
-        this.delete(new Wrapper<TokenEntity>() {
-            @Override
-            public String getSqlSegment() {
-                return "userid = " + userid + " AND tablename = '" + tableName + "'";
-            }
-        });
+        this.delete(new EntityWrapper<TokenEntity>()
+                .eq("userid", userid)
+                .eq("tablename", tableName));
 
         // 保存新token
         TokenEntity tokenEntity = new TokenEntity(userid, username, tableName, role, token, expiratedtime);
@@ -63,12 +61,8 @@ public class TokenServiceImpl extends ServiceImpl<TokenDao, TokenEntity> impleme
 
     @Override
     public TokenEntity getTokenEntity(String token) {
-        Wrapper<TokenEntity> wrapper = new Wrapper<TokenEntity>() {
-            @Override
-            public String getSqlSegment() {
-                return "token = '" + token + "'";
-            }
-        };
+        Wrapper<TokenEntity> wrapper = new EntityWrapper<TokenEntity>()
+                .eq("token", token);
         return this.selectOne(wrapper);
     }
 }
