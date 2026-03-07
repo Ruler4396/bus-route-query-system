@@ -1,7 +1,7 @@
 # PJT-0001 · bus-route-query-system · PROJECT_RUNBOOK
 
 最后更新：2026-03-07  
-变更票据：`CHG-20260307-012`
+变更票据：`CHG-20260307-013`
 
 ## 1. 项目定位
 面向视障人士与行动不便人士的无障碍公交出行系统。当前以“演示稳定、远端可调试、线上可回滚”为首要目标。
@@ -34,6 +34,7 @@
 - 分段建模回归：`ui-automation/tests/ui-route-segments.spec.js`
 - 数据治理回归：`ui-automation/tests/ui-governance-panel.spec.js`
 - 反馈闭环回归：`ui-automation/tests/ui-feedback-workflow.spec.js`
+- 准真实验证脚本：`ui-automation/scripts/run-user-validation.mjs`
 - 演示数据重置：`bash scripts/remote-dev-reset-demo-db.sh`
 
 ## 5. 回归重点
@@ -62,6 +63,8 @@
 - 首轮试点范围：`docs/PILOT_SCOPE.md`
 - 中期检查演示文档：`docs/MIDTERM_DEMO_GUIDE.md`
 - 前端结构说明：`docs/FRONTEND_STRUCTURE_NOTES.md`
+- 任务验证文档：`docs/ACCESSIBILITY_VALIDATION_TASKS.md`
+- 验证报告：`docs/ACCESSIBILITY_VALIDATION_REPORT_2026-03-07.md`
 - 页面状态组件：`src/main/resources/front/front/js/page-state.js`
 - 画像推荐接口：`/route/plan?profileType=...`
 - 分段规划接口：`/route/plan` 返回 `segments`
