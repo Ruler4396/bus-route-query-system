@@ -714,12 +714,38 @@
         captionHistory: [],
         captionHistoryLimit: 8,
 
+        getCaptionHostService: function() {
+            try {
+                if (window.top && window.top !== window && window.top.location.origin === window.location.origin && window.top.__A11Y_ARIA_SERVICE) {
+                    return window.top.__A11Y_ARIA_SERVICE;
+                }
+            } catch (e) {}
+            return this;
+        },
+
+        cleanupLocalCaptionArtifacts: function() {
+            var panel = document.getElementById('a11y-caption-center');
+            if (panel && panel.parentNode) {
+                panel.parentNode.removeChild(panel);
+            }
+            var caption = document.getElementById('a11y-visual-caption');
+            if (caption && caption.parentNode) {
+                caption.parentNode.removeChild(caption);
+            }
+        },
+
         /**
          * 为听障用户显示可见字幕提示
          * @param {string} message
          */
         showVisualCaption: function(message) {
             if (!message) return;
+            var hostService = this.getCaptionHostService();
+            if (hostService !== this) {
+                this.cleanupLocalCaptionArtifacts();
+                hostService.showVisualCaption(message);
+                return;
+            }
             this.appendCaptionHistory(message);
 
             var caption = document.getElementById('a11y-visual-caption');
@@ -814,6 +840,11 @@
         },
 
         ensureCaptionCenter: function() {
+            var hostService = this.getCaptionHostService();
+            if (hostService !== this) {
+                this.cleanupLocalCaptionArtifacts();
+                return hostService.ensureCaptionCenter();
+            }
             var panel = document.getElementById('a11y-caption-center');
             if (!panel) {
                 panel = document.createElement('section');
@@ -836,6 +867,11 @@
 
         appendCaptionHistory: function(message) {
             if (!message) return;
+            var hostService = this.getCaptionHostService();
+            if (hostService !== this) {
+                hostService.appendCaptionHistory(message);
+                return;
+            }
             this.captionHistory.unshift({
                 text: message,
                 time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -845,6 +881,11 @@
         },
 
         renderCaptionHistory: function() {
+            var hostService = this.getCaptionHostService();
+            if (hostService !== this) {
+                hostService.renderCaptionHistory();
+                return;
+            }
             var panel = document.getElementById('a11y-caption-center');
             if (!panel) return;
             var list = panel.querySelector('.caption-center-list');
@@ -860,6 +901,11 @@
         setCaptionCenterEnabled: function(enabled) {
             this.captionDockEnabled = !!enabled;
             localStorage.setItem('accessibility_caption_center', this.captionDockEnabled ? 'true' : 'false');
+            var hostService = this.getCaptionHostService();
+            if (hostService !== this) {
+                this.cleanupLocalCaptionArtifacts();
+                return hostService.setCaptionCenterEnabled(enabled);
+            }
             var panel = this.ensureCaptionCenter();
             if (panel) {
                 panel.classList.toggle('show', this.captionDockEnabled);
@@ -871,6 +917,8 @@
             return this.setCaptionCenterEnabled(!this.captionDockEnabled);
         }
     };
+
+    window.__A11Y_ARIA_SERVICE = AriaService;
 
     /**
      * UI自愈规则引擎

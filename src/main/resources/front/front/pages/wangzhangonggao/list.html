@@ -372,16 +372,15 @@ width: 100%;
 				count: total,
 				actionLabel: hasKeyword ? '清空筛选并重试' : '重新加载',
 				actionMode: hasKeyword ? 'reset-search' : 'reload',
-				sourceLabel: '当前环境：试点演示数据'
+				sourceLabel: ''
 			});
 			return;
 		}
 		listStatePanel.setReady(total, {
-			title: '公告数据已同步',
-			description: '当前页面内容已完成加载，可继续打开详情页或返回首页浏览更多内容。',
-			sparseThreshold: 4,
-			sparseText: '当前公告条目较少，属于试点/演示样本，但已足够说明试点边界、演示模式和账号信息。',
-			sourceLabel: '当前环境：试点演示数据'
+			title: '',
+			description: '',
+			sparseThreshold: 0,
+			sourceLabel: ''
 		});
 	}
 
@@ -437,7 +436,7 @@ width: 100%;
         listStatePanel.setLoading({
           title: '正在加载页面数据',
           description: '系统正在同步当前页面的数据，请稍候。',
-          sourceLabel: '当前环境：试点演示数据'
+          sourceLabel: ''
         });
         var param = {
           page: 1,
@@ -478,7 +477,7 @@ width: 100%;
                       description: '分页数据请求失败，请稍后重试。',
                       actionLabel: '重新加载',
                       actionMode: 'reload',
-                      sourceLabel: '当前环境：试点演示数据'
+                      sourceLabel: ''
                     });
                   }
                 })
@@ -495,7 +494,7 @@ width: 100%;
               description: '当前页面数据请求失败，请稍后重试或检查开发实例。',
               actionLabel: '重新加载',
               actionMode: 'reload',
-              sourceLabel: '当前环境：试点演示数据'
+              sourceLabel: ''
             });
           }
         })

@@ -2412,14 +2412,25 @@ body.page-login #app {
   gap: 28px;
   align-items: center;
   background: radial-gradient(circle at 18% 18%, rgba(180, 138, 82, 0.24), transparent 24%), linear-gradient(135deg, #1f2925 0%, #2a3631 48%, #47544d 100%) !important;
+  background-image: radial-gradient(circle at 18% 18%, rgba(180, 138, 82, 0.24), transparent 24%), linear-gradient(135deg, #1f2925 0%, #2a3631 48%, #47544d 100%) !important;
   border-radius: 30px;
   padding: clamp(26px, 4vw, 42px);
   box-shadow: 0 22px 56px rgba(15, 23, 20, 0.28);
-  background-image: none !important;
 }
 
 .page-login .login-intro {
   color: #f5efe6;
+}
+
+
+.page-login .login {
+  color: #f8f2ea;
+}
+
+.page-login .login-summary,
+.page-login .login-feature-list,
+.page-login .login-note-card p {
+  opacity: 1 !important;
 }
 
 .page-login .login-eyebrow {

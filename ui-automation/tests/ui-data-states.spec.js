@@ -26,15 +26,19 @@ test.describe('UI Data States', () => {
     await expect(frame.locator('.list .list-item')).toHaveCount(0);
   });
 
-  test('Announcement and links pages should expose sparse but non-blank states', async ({ page }) => {
+  test('Announcement and links pages should stay non-blank without noisy sparse-state overlays', async ({ page }) => {
     await page.goto('index.html', { waitUntil: 'domcontentloaded' });
-    for (const navText of ['出行服务公告', '无障碍资源链接']) {
-      await page.locator('#header a', { hasText: navText }).first().click();
-      const { frame } = await getIframe(page);
-      await frame.waitForSelector('.front-page-state-panel', { timeout: 20000 });
-      await expect(frame.locator('.front-page-state-panel')).toContainText('数据较少');
-      await expect(frame.locator('.list .list-item').first()).toBeVisible();
-    }
+
+    await page.locator('#header a', { hasText: '出行服务公告' }).first().click();
+    let ctx = await getIframe(page);
+    await expect(ctx.frame.locator('.list .list-item').first()).toBeVisible();
+    await expect(ctx.frame.locator('body')).not.toContainText('公告数据已同步');
+    await expect(ctx.frame.locator('body')).not.toContainText('当前公告条目较少');
+    await expect(ctx.frame.locator('body')).not.toContainText('当前记录：');
+
+    await page.locator('#header a', { hasText: '无障碍资源链接' }).first().click();
+    ctx = await getIframe(page);
+    await expect(ctx.frame.locator('.list .list-item').first()).toBeVisible();
   });
 
   test('Messages page should show explicit empty or populated feedback state', async ({ page }) => {
