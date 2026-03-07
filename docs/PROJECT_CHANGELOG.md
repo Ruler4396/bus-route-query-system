@@ -7,7 +7,7 @@
 - 演示数据中补充多种状态的反馈样本（待核查 / 核查中 / 已处理）。
 - 新增 `ui-automation/tests/ui-feedback-workflow.spec.js`，验证反馈入口与处理看板闭环。
 - 本轮完成 `ACCESSIBILITY_READINESS_TODO.md` 中的 `G01`、`G02`。
-- 对应提交：`56f1a2f`
+- 对应提交：`e9e8796`
 
 ## 2026-03-07 · CHG-20260307-011 · 数据源登记 / 置信度规则 / 试点样本治理
 - 新增 `src/main/resources/accessibility-governance.json`，集中记录数据源登记、置信度规则和试点人工样本基础。
