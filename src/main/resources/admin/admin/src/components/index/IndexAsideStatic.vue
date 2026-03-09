@@ -1,26 +1,97 @@
 <template>
-  <el-aside class="index-aside" width="200px">
+  <el-aside class="index-aside" width="272px">
     <div class="index-aside-inner menulist">
-      <div v-for="item in menuList" :key="item.roleName" v-if="role==item.roleName" class="menulist-item">
-        <div class="menulistImg" v-if="false && 2 == 2">
-          <el-image :style='{"padding":"0","boxShadow":"0 0 6px rgba(0,0,0,0)","margin":"0","borderColor":"rgba(0,0,0,0)","borderRadius":"0","borderWidth":"0","width":"100%","borderStyle":"solid","height":"auto"}' v-if="'http://codegen.caihongy.cn/20201021/cc7d45d9c8164b58b18351764eba9be1.jpg'" src="http://codegen.caihongy.cn/20201021/cc7d45d9c8164b58b18351764eba9be1.jpg" fit="cover" />
+      <div class="admin-sidebar-brand">
+        <div class="admin-sidebar-brand__eyebrow">BACKSTAGE CONTROL</div>
+        <div class="admin-sidebar-brand__title">运营控制台</div>
+        <p class="admin-sidebar-brand__meta">更平直的企业后台导航，避免圆角卡片式堆叠。</p>
+      </div>
+
+      <div class="admin-sidebar-summary">
+        <div class="admin-sidebar-summary__item">
+          <span class="admin-sidebar-summary__label">当前角色</span>
+          <strong>{{ role || '未登录' }}</strong>
         </div>
-		<el-menu :mode="2 == 1? 'horizontal':'vertical'" :unique-opened="true" class="el-menu-demo" default-active="0">
-          <el-menu-item index="0" @click="menuHandler('')"><i v-if="false" class="el-icon-menu el-icon-s-home" />首页</el-menu-item>
-          <el-submenu :index="1+''">
+        <div class="admin-sidebar-summary__item">
+          <span class="admin-sidebar-summary__label">可用模块</span>
+          <strong>{{ moduleCount }} 个</strong>
+        </div>
+      </div>
+
+      <div v-if="currentRoleMenu" class="menulist-item">
+        <el-menu
+          :key="menuRenderKey"
+          :mode="'vertical'"
+          :unique-opened="true"
+          :default-active="activeIndex"
+          :default-openeds="openedMenus"
+          class="el-menu-demo admin-nav-menu"
+        >
+          <li class="admin-nav-section-heading" role="presentation">工作台</li>
+          <el-menu-item index="0" @click="menuHandler('', '0')">
+            <span class="admin-nav-row">
+              <span class="admin-nav-leading">{{ menuToken('首页') }}</span>
+              <span class="admin-nav-body">
+                <span class="admin-nav-label">首页</span>
+                <span class="admin-nav-kicker">{{ menuCaption('首页') }}</span>
+              </span>
+            </span>
+          </el-menu-item>
+
+          <li class="admin-nav-section-heading" role="presentation">账户设置</li>
+          <el-submenu index="1">
             <template slot="title">
-				<i v-if="false" class="el-icon-menu el-icon-user-solid" />
-				<span>个人中心</span>
+              <span class="admin-nav-row">
+                <span class="admin-nav-leading">{{ menuToken('个人中心') }}</span>
+                <span class="admin-nav-body">
+                  <span class="admin-nav-label">个人中心</span>
+                  <span class="admin-nav-kicker">{{ menuCaption('个人中心') }}</span>
+                </span>
+              </span>
             </template>
-            <el-menu-item :index="1-1" @click="menuHandler('updatePassword')">修改密码</el-menu-item>
-            <el-menu-item :index="1-2" @click="menuHandler('center')">个人信息</el-menu-item>
+            <el-menu-item index="1-1" @click="menuHandler('updatePassword', '1-1', '1')">
+              <span class="admin-subnav-row">
+                <span class="admin-subnav-dot"></span>
+                <span class="admin-subnav-text">修改密码</span>
+                <span class="admin-subnav-caption">{{ menuCaption('修改密码', 'child') }}</span>
+              </span>
+            </el-menu-item>
+            <el-menu-item index="1-2" @click="menuHandler('center', '1-2', '1')">
+              <span class="admin-subnav-row">
+                <span class="admin-subnav-dot"></span>
+                <span class="admin-subnav-text">个人信息</span>
+                <span class="admin-subnav-caption">{{ menuCaption('个人信息', 'child') }}</span>
+              </span>
+            </el-menu-item>
           </el-submenu>
-          <el-submenu v-for=" (menu,index) in item.backMenu" :key="menu.menu" :index="index+2+''">
+
+          <li v-if="currentRoleMenu.backMenu && currentRoleMenu.backMenu.length" class="admin-nav-section-heading" role="presentation">业务导航</li>
+          <el-submenu
+            v-for="(menu, index) in currentRoleMenu.backMenu"
+            :key="menu.menu"
+            :index="String(index + 2)"
+          >
             <template slot="title">
-				<i v-if="false" class="el-icon-menu" :class="icons[index]" />
-				<span>{{ menu.menu }}</span>
+              <span class="admin-nav-row">
+                <span class="admin-nav-leading">{{ menuToken(menu.menu) }}</span>
+                <span class="admin-nav-body">
+                  <span class="admin-nav-label">{{ menu.menu }}</span>
+                  <span class="admin-nav-kicker">{{ menuCaption(menu.menu) }}</span>
+                </span>
+              </span>
             </template>
-            <el-menu-item v-for=" (child,sort) in menu.child" :key="sort" :index="(index+2)+'-'+sort" @click="menuHandler(child.tableName)">{{ child.menu }}</el-menu-item>
+            <el-menu-item
+              v-for="(child, sort) in menu.child"
+              :key="sort"
+              :index="(index + 2) + '-' + sort"
+              @click="menuHandler(child.tableName, (index + 2) + '-' + sort, String(index + 2))"
+            >
+              <span class="admin-subnav-row">
+                <span class="admin-subnav-dot"></span>
+                <span class="admin-subnav-text">{{ child.menu }}</span>
+                <span class="admin-subnav-caption">{{ menuCaption(child.menu, 'child') }}</span>
+              </span>
+            </el-menu-item>
           </el-submenu>
         </el-menu>
       </div>
@@ -30,472 +101,147 @@
 
 <script>
 import menu from '@/utils/menu'
+
 export default {
   data() {
     return {
       menuList: [],
-      dynamicMenuRoutes: [],
       role: '',
-      icons: [
-        'el-icon-s-cooperation',
-        'el-icon-s-order',
-        'el-icon-s-platform',
-        'el-icon-s-fold',
-        'el-icon-s-unfold',
-        'el-icon-s-operation',
-        'el-icon-s-promotion',
-        'el-icon-s-release',
-        'el-icon-s-ticket',
-        'el-icon-s-management',
-        'el-icon-s-open',
-        'el-icon-s-shop',
-        'el-icon-s-marketing',
-        'el-icon-s-flag',
-        'el-icon-s-comment',
-        'el-icon-s-finance',
-        'el-icon-s-claim',
-        'el-icon-s-custom',
-        'el-icon-s-opportunity',
-        'el-icon-s-data',
-        'el-icon-s-check',
-        'el-icon-s-grid',
-        'el-icon-menu',
-        'el-icon-chat-dot-square',
-        'el-icon-message',
-        'el-icon-postcard',
-        'el-icon-position',
-        'el-icon-microphone',
-        'el-icon-close-notification',
-        'el-icon-bangzhu',
-        'el-icon-time',
-        'el-icon-odometer',
-        'el-icon-crop',
-        'el-icon-aim',
-        'el-icon-switch-button',
-        'el-icon-full-screen',
-        'el-icon-copy-document',
-        'el-icon-mic',
-        'el-icon-stopwatch',
-      ],
-      menulistStyle: '${template.back.menulist.menulistStyle}',
-	  menulistBorderBottom: {},
+      activeIndex: '0',
+      openedMenus: ['1'],
+      menuRenderKey: 0
+    }
+  },
+  computed: {
+    currentRoleMenu() {
+      return this.menuList.find((item) => item.roleName === this.role) || null
+    },
+    moduleCount() {
+      if (!this.currentRoleMenu || !Array.isArray(this.currentRoleMenu.backMenu)) {
+        return 2
+      }
+      return this.currentRoleMenu.backMenu.reduce((count, item) => count + ((item.child || []).length || 0), 2)
+    }
+  },
+  watch: {
+    '$route.path': {
+      immediate: true,
+      handler() {
+        this.syncMenuState()
+      }
+    },
+    currentRoleMenu() {
+      this.syncMenuState()
     }
   },
   mounted() {
     const menus = menu.list()
-    if(menus) {
-        this.menuList = menus
+    if (menus) {
+      this.menuList = menus
+      this.role = this.$storage.get('role')
+      this.syncMenuState()
     } else {
-        let params = {
-            page: 1,
-            limit: 1,
-            sort: 'id',
+      this.$http({
+        url: 'menu/list',
+        method: 'get',
+        params: {
+          page: 1,
+          limit: 1,
+          sort: 'id'
         }
-        this.$http({
-            url: "menu/list",
-            method: "get",
-            params: params
-        }).then(({
-            data
-        }) => {
-            if (data && data.code === 0) {
-                this.menuList = JSON.parse(data.data.list[0].menujson);
-                this.$storage.set("menus", this.menuList);
-            }
-        })
+      }).then(({ data }) => {
+        if (data && data.code === 0) {
+          this.menuList = JSON.parse(data.data.list[0].menujson)
+          this.$storage.set('menus', this.menuList)
+          this.role = this.$storage.get('role')
+          this.syncMenuState()
+        }
+      })
     }
-    this.role = this.$storage.get('role')
-  },
-  created(){
-    setTimeout(()=>{
-      this.menulistStyleChange()
-    },10)
-    this.icons.sort(()=>{
-      return (0.5-Math.random())
-    })
-	this.lineBorder()
   },
   methods: {
-	lineBorder() {
-		let style = '${template.back.menulist.menulistStyle}'
-		let w = '${template.back.menulist.menulistLineWidth}'
-		let s = '${template.back.menulist.menulistLineStyle}'
-		let c = '${template.back.menulist.menulistLineColor}'
-		if(style == 'vertical') {
-			this.menulistBorderBottom = {
-				borderBottomWidth: w,
-				borderBottomStyle: s,
-				borderBottomColor: c
-			}
-		} else {
-			this.menulistBorderBottom = {
-				borderRightWidth: w,
-				borderRightStyle: s,
-				borderRightColor: c
-			}
-		}
-	},
-    menuHandler(name) {
-      let router = this.$router
-      name = '/'+name
-      router.push(name)
+    menuHandler(name, index = '0', parentIndex = '') {
+      this.activeIndex = index
+      this.openedMenus = parentIndex ? [parentIndex] : []
+      this.menuRenderKey += 1
+      this.$router.push('/' + name)
     },
-    // 菜单
-    setMenulistHoverColor(){
-      let that = this
-	  return;
-      this.$nextTick(()=>{
-        document.querySelectorAll('.menulist .el-menu-item').forEach(el=>{
-          el.addEventListener("mouseenter", e => {
-            e.stopPropagation()
-            el.style.backgroundColor = "${template.back.menulist.menulistHoverColor}"
-          })
-          el.addEventListener("mouseleave", e => {
-            e.stopPropagation()
-            // el.style.backgroundColor = "${template.back.menulist.menulistBgColor}"
-			el.style.background = "none"
-          })
-          el.addEventListener("focus", e => {
-            e.stopPropagation()
-            el.style.backgroundColor = "${template.back.menulist.menulistHoverColor}"
-          })
-        })
-        document.querySelectorAll('.menulist .el-submenu__title').forEach(el=>{
-          el.addEventListener("mouseenter", e => {
-            e.stopPropagation()
-            el.style.backgroundColor = "${template.back.menulist.menulistHoverColor}"
-          })
-          el.addEventListener("mouseleave", e => {
-            e.stopPropagation()
-            // el.style.backgroundColor = "${template.back.menulist.menulistBgColor}"
-			el.style.background = "none"
-          })
-        })
-      })
-    },
-    setMenulistIconColor() {
-      this.$nextTick(()=>{
-        document.querySelectorAll('.menulist .el-submenu__title .el-submenu__icon-arrow').forEach(el=>{
-          el.style.color = "${template.back.menulist.menulistIconColor}"
-        })
-      })
-    },
-    menulistStyleChange() {
-      this.setMenulistIconColor()
-      this.setMenulistHoverColor()
-      this.setMenulistStyleHeightChange()
-      let str = "2"
-      if(1 == str) {
-        this.$nextTick(()=>{
-          document.querySelectorAll('.el-container .el-container').forEach(el=>{
-            el.style.display = "block"
-            el.style.paddingTop = "80px" // header 高度
-          })
-          document.querySelectorAll('.el-aside').forEach(el=>{
-            el.style.width = "100%"
-            el.style.height = "auto"
-            el.style.paddingTop = '0'
-          })
-          document.querySelectorAll('.index-aside .index-aside-inner').forEach(el=>{
-            el.style.paddingTop = '0'
-			el.style.width = "100%"
-          })
-        })
+    syncMenuState() {
+      const path = String((this.$route && this.$route.path) || '').replace(/\/+$/, '') || '/index'
+      if (path === '/index' || path === '/') {
+        this.activeIndex = '0'
+        this.openedMenus = []
+        this.menuRenderKey += 1
+        return
       }
-      if(2 === str) {
-        this.$nextTick(()=>{
-          document.querySelectorAll('.index-aside .index-aside-inner').forEach(el=>{
-            el.style.paddingTop = "80px"
-          })
-        })
+      if (path === '/updatePassword') {
+        this.activeIndex = '1-1'
+        this.openedMenus = ['1']
+        this.menuRenderKey += 1
+        return
       }
+      if (path === '/center') {
+        this.activeIndex = '1-2'
+        this.openedMenus = ['1']
+        this.menuRenderKey += 1
+        return
+      }
+      if (this.currentRoleMenu && Array.isArray(this.currentRoleMenu.backMenu)) {
+        for (let groupIndex = 0; groupIndex < this.currentRoleMenu.backMenu.length; groupIndex += 1) {
+          const group = this.currentRoleMenu.backMenu[groupIndex]
+          const items = Array.isArray(group.child) ? group.child : []
+          for (let itemIndex = 0; itemIndex < items.length; itemIndex += 1) {
+            if (`/${items[itemIndex].tableName}` === path) {
+              this.activeIndex = `${groupIndex + 2}-${itemIndex}`
+              this.openedMenus = [String(groupIndex + 2)]
+              this.menuRenderKey += 1
+              return
+            }
+          }
+        }
+      }
+      this.activeIndex = '0'
+      this.openedMenus = []
+      this.menuRenderKey += 1
     },
-    setMenulistStyleHeightChange() {
-		return;
-      this.$nextTick(()=>{
-        document.querySelectorAll('.menulist-item>.el-menu--horizontal>.el-menu-item').forEach(el=>{
-          el.style.height = "${template.back.menulist.menulistHeight}"
-          el.style.lineHeight = "${template.back.menulist.menulistHeight}"
-        })
-        document.querySelectorAll('.menulist-item>.el-menu--horizontal>.el-submenu>.el-submenu__title').forEach(el=>{
-          el.style.height = "${template.back.menulist.menulistHeight}"
-          el.style.lineHeight = "${template.back.menulist.menulistHeight}"
-        })
-      })
+    menuToken(label) {
+      const clean = String(label || '').replace(/\s+/g, '')
+      if (!clean) return 'NA'
+      if (/^[A-Za-z]/.test(clean)) {
+        return clean.slice(0, 2).toUpperCase()
+      }
+      return clean.slice(0, 2)
     },
+    menuCaption(label, level = 'primary') {
+      const clean = String(label || '').trim()
+      if (level === 'primary') {
+        if (clean === '首页') return 'ENTRY'
+        if (clean === '个人中心') return 'ACCOUNT'
+        if (/用户|会员/.test(clean)) return 'USER'
+        if (/公告|新闻|文章|资讯/.test(clean)) return 'CONTENT'
+        if (/留言|评论|反馈/.test(clean)) return 'REVIEW'
+        if (/路线|公交|站点|地图/.test(clean)) return 'TRANSIT'
+        return 'MODULE'
+      }
+      if (clean === '修改密码') return 'SECURITY'
+      if (clean === '个人信息') return 'PROFILE'
+      if (/审核|回复/.test(clean)) return 'ACTION'
+      if (/留言|评论|反馈/.test(clean)) return 'REVIEW'
+      if (/统计|报表/.test(clean)) return 'REPORT'
+      return 'SCREEN'
+    }
   }
 }
 </script>
+
 <style lang="scss" scoped>
-	.el-container {
-		display: block;
-	}
-  .index-aside {
-    position: relative;
-    overflow: hidden;
-	display: flex;
-	flex-wrap: wrap;
-
-    .menulistImg {
-		font-size: 0;
-		box-sizing: border-box;
-
-      .el-image {
-        margin: 0 auto;
-        width: 100px;
-        height: 100px;
-        border-radius: 100%;
-        display: block;
-      }
-    }
-	
-	    .index-aside-inner {
-      height: 100%;
-      margin-right: -17px;
-      margin-bottom: -17px;
-      overflow: scroll;
-      overflow-x: hidden !important;
-      padding-top: 80px;
-      box-sizing: border-box;
-
-      &:focus {
-        outline: none;
-      }
-
-      & /deep/ .el-menu {
-        border: 0;
-		background-color: transparent;
-      }
-    }
-		
-			.index-aside .index-aside-inner.menulist {
-		height: auto !important;
-	}
-	.menulist-item {
-		width: 200px;
-		padding: 15px 20px;
-		margin: 0;
-		border-radius: 0;
-		border-width: 0 !important;
-		border-style: solid !important;
-		border-color: rgba(0,0,0,.3) !important;
-		background: #2D845E !important;
-		box-shadow: 0 0 6px rgba(30, 144, 255, .2);
-		box-sizing: border-box;
-	}
-			.el-menu-demo {
-		box-sizing: border-box;
-		min-height: calc(100vh - 80px);
-			
-		&>.el-menu-item {
-			width: auto;
-			height: auto !important;
-			line-height: 24px !important;
-			padding: 10px 22px 10px 10px;
-			margin: 0 0 10px 0;
-			color: rgba(255, 255, 255, 1);
-			font-size: 14px;
-			border-radius: 0;
-			border-width: 5px;
-			border-style: solid;
-			border-color: #fff !important;
-			background-color: rgba(45, 132, 94, 1) !important;
-			box-shadow: 0 0 6px rgba(255,255,255,0);
-			box-sizing: initial;
-			display: flex;
-			align-items: center;
-			justify-content: flex-start;
-			box-sizing: border-box;
-            
-            .el-icon-menu {
-            	margin: 0 5px 0 0;
-            	padding: 0;
-            	width: 24px;
-            	line-height: 24px;
-            	color: rgba(199, 21, 133, 1);
-            	font-size: 16px;
-            	border-radius: 0;
-            	border-width: 0;
-            	border-style: solid;
-            	border-color: #fff;
-            	background-color: rgba(255,255,255,0);
-            	box-shadow: 0 0 6px rgba(255,255,255,0);
-            }
-		}
-		
-		.el-submenu {
-			margin: 0 0 10px 0;
-		}
-		
-		& /deep/ .el-submenu__title {
-			width: auto;
-			height: auto !important;
-			line-height: 24px !important;
-			padding: 10px 22px 10px 10px;
-			color: rgba(255, 255, 255, 1);
-			font-size: 14px;
-			border-radius: 0;
-			border-width: 5px;
-			border-style: solid;
-			border-color: #fff !important;
-			background-color: rgba(45, 132, 94, 1) !important;
-			box-shadow: 0 0 6px rgba(255,255,255,0);
-			box-sizing: initial;
-			display: flex;
-			align-items: center;
-			justify-content: flex-start;
-			box-sizing: border-box;
-			
-			.el-icon-menu {
-				margin: 0 5px 0 0;
-				padding: 0;
-				width: 24px;
-				line-height: 24px;
-				color: rgba(199, 21, 133, 1);
-				font-size: 16px;
-				border-radius: 0;
-				border-width: 0;
-				border-style: solid;
-				border-color: #fff;
-				background-color: rgba(255,255,255,0);
-				box-shadow: 0 0 6px rgba(255,255,255,0);
-			}
-			
-			.el-submenu__icon-arrow {
-				margin: 0 10px 0 0;
-				padding: 0;
-				width: 12px;
-				line-height: 12px;
-				color: rgba(255, 255, 255, 1) !important;
-				font-size: 12px;
-				border-radius: 0;
-				border-width: 0;
-				border-style: solid;
-				border-color: #fff;
-				background-color: rgba(45, 132, 94, 1);
-				box-shadow: 0 0 6px rgba(255,255,255,0);
-				position: absolute;
-				top: 50%;
-				right: 0;
-				transform: translateY(-50%);
-				text-align: center;
-								display: block;
-											}
-		}
-		
-		& /deep/ .el-menu.el-menu--inline {
-			width: 150px;
-			height: auto;
-			padding: 0;
-			margin: 5px 10px;
-			border-radius: 4px;
-			border-width: 0;
-			border-style: solid;
-			border-color: rgba(0,0,0,.3);
-			background-color: #fff;
-			box-shadow: 0 0 6px rgba(0, 0, 0, .3);
-			
-			.el-menu-item {
-				width: 100%;
-				height: 44px;
-				line-height: 44px;
-				padding: 0 !important;
-				margin: 0;
-				color: rgba(45, 132, 94, 1) !important;
-				font-size: 14px;
-				border-radius: 0;
-				border-width: 1px;
-				border-style: solid;
-				border-color: rgba(45, 132, 94, 1);
-				background-color: #fff !important;
-				box-shadow: 0 0 6px rgba(30, 144, 255, 0);
-				text-align: center;
-				min-width: auto;
-                
-                &.is-active {
-                    width: 100%;
-                    height: 44px;
-                    line-height: 44px;
-                    padding: 0 !important;
-                    margin: 0;
-                    color: rgba(255, 255, 255, 1) !important;
-                    font-size: 14px;
-                    border-radius: 0;
-                    border-width: 0;
-                    border-style: solid;
-                    border-color: rgba(0, 0, 0, 0);
-                    background-color: rgba(45, 132, 94, 1) !important;
-                    box-shadow: 0 0 6px rgba(30, 144, 255, 0);
-                    text-align: center;
-                }
-				 
-				&:hover {
-					width: 100%;
-					height: 44px;
-					line-height: 44px;
-					padding: 0 !important;
-					margin: 0;
-					color: #fff !important;
-					font-size: 14px;
-					border-radius: 0;
-					border-width: 0;
-					border-style: solid;
-					border-color: rgba(0, 0, 0, 0);
-					background-color: rgba(45, 132, 94, 1) !important;
-					box-shadow: 0 0 6px rgba(30, 144, 255, 0);
-					text-align: center;
-				}
-			}
-		}
-	}
+.index-aside {
+  .admin-sidebar-brand,
+  .admin-sidebar-summary,
+  .admin-nav-section-heading,
+  .admin-nav-row,
+  .admin-subnav-row {
+    list-style: none;
   }
-</style>
-<style>
-
-.el-menu--horizontal .el-menu--popup {
-		width: 150px;
-		height: auto;
-		padding: 0;
-		margin: 5px 10px;
-		border-radius: 4px;
-		border-width: 0;
-		border-style: solid;
-		border-color: rgba(0,0,0,.3);
-		background-color: #fff;
-		box-shadow: 0 0 6px rgba(0, 0, 0, .3);
-		min-width: auto;
-		}
-.el-menu--horizontal .el-menu--popup .el-menu-item {
-			width: 100%;
-			height: 44px;
-			line-height: 44px;
-			padding: 0;
-			margin: 0;
-			color: rgba(45, 132, 94, 1) !important;
-			font-size: 14px;
-			border-radius: 0;
-			border-width: 1px;
-			border-style: solid;
-			border-color: rgba(45, 132, 94, 1);
-			background-color: #fff !important;
-			box-shadow: 0 0 6px rgba(30, 144, 255, 0);
-			text-align: center;
-			min-width: auto;
-			} 
-	.el-menu--horizontal .el-menu--popup .el-menu-item:hover {
-				width: 100%;
-				height: 44px;
-				line-height: 44px;
-				padding: 0;
-				margin: 0;
-				color: #fff !important;
-				font-size: 14px;
-				border-radius: 0;
-				border-width: 0;
-				border-style: solid;
-				border-color: rgba(0, 0, 0, 0);
-				background-color: rgba(45, 132, 94, 1) !important;
-				box-shadow: 0 0 6px rgba(30, 144, 255, 0);
-				text-align: center;
-			}
+}
 </style>

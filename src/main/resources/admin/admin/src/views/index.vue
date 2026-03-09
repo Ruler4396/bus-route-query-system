@@ -1,32 +1,34 @@
 <template>
-	<el-container>
-		<index-header></index-header>
-		<el-container>
-			<index-aside></index-aside>
-			<index-main></index-main>
-		</el-container>
-	</el-container>
+  <el-container class="admin-shell">
+    <index-header></index-header>
+    <el-container class="admin-shell__body">
+      <index-aside></index-aside>
+      <index-main></index-main>
+    </el-container>
+  </el-container>
 </template>
 <script>
-	import IndexHeader from '@/components/index/IndexHeader'
-	import IndexAside from '@/components/index/IndexAsideStatic'
-	import IndexMain from '@/components/index/IndexMain'
-	export default {
-		components: {
-			IndexHeader,
-			IndexAside,
-			IndexMain
-		}
-	}
+import IndexHeader from '@/components/index/IndexHeader'
+import IndexAside from '@/components/index/IndexAsideStatic'
+import IndexMain from '@/components/index/IndexMain'
+
+export default {
+  components: {
+    IndexHeader,
+    IndexAside,
+    IndexMain
+  }
+}
 </script>
 
 <style lang="scss" scoped>
-	// 铺满全屏
-	.el-container {
-		position: absolute;
-		width: 100%;
-		top: 0;
-		left: 0;
-		bottom: 0;
-	}
+.admin-shell {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+}
+
+.admin-shell__body {
+  min-height: 0;
+}
 </style>

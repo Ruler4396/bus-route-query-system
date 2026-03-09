@@ -1,5 +1,194 @@
 # PJT-0001 · PROJECT_CHANGELOG
 
+
+## 2026-03-09 · CHG-20260309-054 · 后台壳层改为扁平中台风格（侧栏去圆角卡片化）
+- 按“登录后的侧边栏不要圆角卡片式设计”的要求，重新定义后台壳层语言：顶部改为深色运营条带，左侧改为扁平导轨式导航，一级/二级菜单全部取消圆角卡片感，改成直线分隔、左侧激活导轨和更清晰的层级排布。
+- 源码层同步重写：
+  - `src/main/resources/admin/admin/src/views/login.vue` 改为“后台简介 + 登录表单”双栏结构；
+  - `src/main/resources/admin/admin/src/components/index/IndexHeader.vue` 改为品牌条 + 环境标识 + 操作区；
+  - `src/main/resources/admin/admin/src/components/index/IndexAsideStatic.vue` 增加角色/模块摘要、路由态联动与更平直的目录式导航；
+  - `src/main/resources/admin/admin/src/components/index/IndexMain.vue`、`src/components/common/BreadCrumbs.vue`、`src/views/index.vue` 去除旧模板内联背景/圆角盒子写法。
+- 资源层同步落地：
+  - `src/main/resources/admin/admin/public/css/transit-admin-theme.css` 整份改为扁平中台主题；
+  - `src/main/resources/admin/admin/public/js/transit-admin-sidebar-dom.js` 扩展为运行时兼容脚本，在旧 `dist` 骨架未重编译时也能重组登录页 / 头部 / 侧栏 DOM；
+  - 同一套主题与脚本已镜像到 `src/main/resources/admin/admin/dist/css/transit-admin-theme.css`、`src/main/resources/admin/admin/dist/js/transit-admin-sidebar-dom.js`，并把 `public/index.html` / `dist/index.html` 资源版本统一到 `v=20260309-120`。
+- 本地静态校验：`node -c src/main/resources/admin/admin/public/js/transit-admin-sidebar-dom.js`、`node -c src/main/resources/admin/admin/dist/js/transit-admin-sidebar-dom.js` 通过；`public/index.html` / `dist/index.html` 已确认同时命中 `transit-admin-theme.css?v=20260309-120` 与 `transit-admin-sidebar-dom.js?v=20260309-120`。
+- 阻塞说明：远端 `8.134.206.52` 在本轮执行中出现 SSH banner exchange timeout，HTTP 8134 也超时，导致暂未完成“推送远端 → package → 重启 8134”这一步；本次未触碰 `8133` 生产实例。
+- 对应提交：`TBD`
+
+## 2026-03-09 · CHG-20260309-053 · 后台方案 B 补齐品牌头顶距并刷新资源版本
+- 继续复核方案 B 的截图后，修正后台侧栏品牌头被顶栏遮挡的问题：把 `admin/dist|public/css/transit-admin-theme.css` 中的侧栏内边距顶部由 `26px` 提高到 `74px`，保证“运营控制台”品牌头完整露出，不再贴顶。
+- 为避免浏览器继续命中旧缓存，后台入口资源版本升级为：`transit-admin-theme.css?v=20260309-053`、`transit-admin-sidebar-dom.js?v=20260309-053`（`admin/dist/index.html` + `admin/public/index.html`）。
+- 本轮验证：复用 `bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、`bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh`，并重新执行后台专项 Playwright 回归与截图 spot check；截图复核后删除临时 PNG。
+- 说明：仅验证 `8134` 开发实例，未触碰 `8133` 生产实例；未执行上线操作。
+- 对应提交：`TBD`
+
+## 2026-03-09 · CHG-20260309-052 · 后台侧栏改为方案 B（目录式企业控制台导航）
+- 根据“不要圆角卡片展开式、尽量不要和现在一样”的反馈，后台左侧栏继续重构为更克制的方案 B：目录式企业控制台导航，而不是卡片堆叠。
+- 本轮实现：
+  - `src/main/resources/admin/admin/src/components/index/IndexAsideStatic.vue` 调整为“品牌头 + 分组标题 + 目录行 + 内缩子列表”的源码骨架，一级项改为扁平行式信息结构，二级项补齐右侧 caption；
+  - `src/main/resources/admin/admin/dist/js/transit-admin-sidebar-dom.js` 与 `admin/public/js/transit-admin-sidebar-dom.js` 同步改成方案 B 的运行时 DOM 重组，确保当前 `dist` 页面立即看到新骨架；
+  - `src/main/resources/admin/admin/dist/css/transit-admin-theme.css` 与 `admin/public/css/transit-admin-theme.css` 追加 v052 覆盖：去掉菜单项圆角卡片感、去掉 badge 方块背景、改成细分隔线 + 左导轨 + 内缩树形子导航。
+- 后台入口资源版本升级：`transit-admin-theme.css?v=20260309-052`、`transit-admin-sidebar-dom.js?v=20260309-052`（`admin/dist/index.html` + `admin/public/index.html`）。
+- 回归同步更新：`ui-automation/tests/ui-admin-theme.spec.js`、`ui-automation/tests/ui-real-route-admin-theme.spec.js` 改为断言“无卡片圆角 / 无菜单渐变 / 左导轨 + 目录式网格骨架”的方案 B 约束。
+- 本轮验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、`bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh`、`cd ui-automation && UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npx playwright test tests/ui-admin-theme.spec.js --workers=1`、`cd ui-automation && UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npx playwright test tests/ui-real-route-admin-theme.spec.js -g "Admin login and dashboard should load transit-aligned theme styles" --workers=1`。
+- 说明：仅验证 `8134` 开发实例，未触碰 `8133` 生产实例；未执行上线操作。
+- 对应提交：`TBD`
+
+## 2026-03-09 · CHG-20260309-051 · 后台菜单 DOM 结构重做（品牌头 / 分组标题 / 双层导航骨架）
+- 不再只通过 CSS 覆盖旧后台菜单，而是直接引入新的 DOM 骨架：
+  - `src/main/resources/admin/admin/src/components/index/IndexAsideStatic.vue` 已改为新的结构化模板（品牌头、工作台/账户设置/业务导航分组、一级导航双行内容、二级导航行内结构）。
+  - 为了让当前 `dist` 产物立即生效，新增 `src/main/resources/admin/admin/dist/js/transit-admin-sidebar-dom.js` 与 `src/main/resources/admin/admin/public/js/transit-admin-sidebar-dom.js`，在运行时对旧菜单 DOM 做一次性重组。
+- 新骨架设计语言参考官方商业后台模式：GitHub Primer NavList、GitLab Pajamas Navigation Sidebar、Microsoft Fluent Navigation、Ant Design Sider，落地为：
+  - 真实品牌头（替换纯伪元素标题）；
+  - 菜单分组标题（工作台 / 账户设置 / 业务导航）；
+  - 一级菜单 = badge + kicker + label 的双层信息结构；
+  - 二级菜单 = dot + text + caption 的层级信息结构。
+- 后台入口资源版本升级：`transit-admin-theme.css?v=20260309-051`、`transit-admin-sidebar-dom.js?v=20260309-051`（`admin/dist/index.html` + `admin/public/index.html`）。
+- 回归同步更新：`ui-automation/tests/ui-admin-theme.spec.js` 现在直接断言 `.admin-sidebar-brand`、`.admin-nav-section-heading`、`.admin-nav-row`、`.admin-subnav-row` 等新 DOM 节点已经存在。
+- 本轮验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、`bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh` 通过；`cd ui-automation && UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npx playwright test tests/ui-admin-theme.spec.js --workers=1` = `1 passed`；`cd ui-automation && UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npx playwright test tests/ui-real-route-admin-theme.spec.js -g "Admin login and dashboard should load transit-aligned theme styles" --workers=1` = `1 passed`。
+- 说明：仅验证 `8134` 开发实例，未触碰 `8133` 生产实例；未执行上线操作。
+- 对应提交：`TBD`
+
+## 2026-03-09 · CHG-20260309-050 · 管理后台主题文件整份重写（商业侧栏范式重新落地）
+- 按“彻底删除旧样式、重新参考优秀商业后台侧栏”的要求，直接整份重写 `admin/dist/css/transit-admin-theme.css` 与 `admin/public/css/transit-admin-theme.css`，不再叠加旧补丁块。
+- 设计参考改为官方商业设计系统的通用原则：GitHub Primer NavList、GitLab Pajamas Navigation Sidebar、Microsoft Fluent Navigation、Ant Design Sider；本轮落地为：
+  - 浅色纸面式侧栏背景，去掉旧模板的深色厚块和胶囊堆叠；
+  - 一级菜单采用“左导轨 + 底部分隔 + 轻 hover/active”的列表式导航；
+  - 二级菜单采用“垂直导轨 + 文本项 + 小圆点”的层级式展开，而非内嵌卡片盒；
+  - 顶栏与主内容区继续收敛到前台一致的深绿 / 米白设计语言。
+- 样式缓存版本升级：`transit-admin-theme.css?v=20260309-050`（`admin/dist/index.html` + `admin/public/index.html`）。
+- 回归同步更新：`ui-automation/tests/ui-admin-theme.spec.js` 重新对齐到新侧栏范式（宽度、左导轨、去 box-shadow、二级导轨容器等约束）。
+- 本轮验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、`bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh` 通过；`cd ui-automation && UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npx playwright test tests/ui-admin-theme.spec.js --workers=1` = `1 passed`；`cd ui-automation && UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npx playwright test tests/ui-real-route-admin-theme.spec.js -g "Admin login and dashboard should load transit-aligned theme styles" --workers=1` = `1 passed`。
+- 说明：`ui-real-route-admin-theme.spec.js` 内另一个“前台路由同步”用例存在历史性超时，与本轮后台样式重写无直接关联，本轮未继续改动该链路；本次仅以后台专项回归结果作为验收依据。
+- 对应提交：`TBD`
+
+## 2026-03-09 · CHG-20260309-049 · 管理后台左栏样式再重构（前台同色系导轨导航）
+- 针对“后台左侧风格仍不统一、看起来还是旧模板”的反馈，新增 v049 主题覆盖（admin/dist/css/transit-admin-theme.css + admin/public/css/transit-admin-theme.css）：
+  - 一级菜单改为前台同色系的扁平导轨样式（2px 左导轨 + 底部分隔线），去掉旧版胶囊卡片堆叠感。
+  - 二级菜单改为“垂直导轨 + 轻量文本项 + 圆点引导”，去掉内嵌卡片盒与渐变大块。
+  - 统一顶部栏/主内容区配色到前台 transit-business-ui 语言（深绿 + 米白），并修正菜单 box-sizing 与宽度，降低错位概率。
+- 样式缓存版本升级：transit-admin-theme.css?v=20260309-049（admin/dist/index.html + admin/public/index.html）。
+- 回归补强：ui-automation/tests/ui-admin-theme.spec.js 新增“扁平导轨约束”断言（一级菜单小圆角、左边线、上边框为 0、二级容器左导轨和子项非胶囊背景）。
+- 本轮验证：bash scripts/remote-dev-check.sh、bash scripts/remote-dev-build.sh、bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh 通过；cd ui-automation && UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npx playwright test tests/ui-admin-theme.spec.js tests/ui-real-route-admin-theme.spec.js --workers=1 = 3 passed。
+- 说明：仅验证 8134 开发实例，未触碰 8133 生产实例；未执行上线操作。
+- 对应提交：TBD
+
+
+## 2026-03-09 · CHG-20260309-047 · 左栏样式“同质化”纠偏：改为扁平导轨式导航（v048）
+- 针对“左栏怎么改都还是同一类胶囊卡片”的反馈，执行样式范式重置：
+  - 一级菜单由“整块胶囊卡”改为“扁平条目 + 左侧状态导轨 + 底部分隔线”；
+  - 二级菜单由“内嵌卡片组”改为“垂直导轨层级 + 轻量文本项”，去掉遗留胶囊块感；
+  - 交互反馈保留（hover / active / opened），但改为更克制的信息化反馈而非重装饰块面。
+- 根因修正：补强 `data-v-10547812` 范围选择器覆盖，清除旧版子菜单项的渐变/边框残留，避免新样式被历史规则“顶回去”。
+- 样式缓存版本升级：`transit-admin-theme.css?v=20260309-048`（`admin/dist/index.html` + `admin/public/index.html`）。
+- 截图产物：
+  - 新版侧栏：`runtime/remote-dev/admin-sidebar-after-v048.png`
+  - 上一版对比：`runtime/remote-dev/admin-sidebar-after-v047.png`
+  - 并排图：`runtime/remote-dev/admin-sidebar-compare-v048.png`
+- 本轮验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、`bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh`；`cd ui-automation && UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npx playwright test tests/ui-admin-theme.spec.js tests/ui-real-route-admin-theme.spec.js --workers=1` = `3 passed`。
+- 说明：仅验证 `8134` 开发实例，未触碰 `8133` 生产实例；未执行上线操作。
+- 对应提交：`TBD`
+
+## 2026-03-09 · CHG-20260309-046 · 管理后台 UI 全量重做（商业化侧栏范式）
+- 按“商业后台侧栏”方向重做 `admin` 主题（v047），重点参考并落地以下官方设计体系：GitLab Pajamas Navigation Sidebar、GitHub Primer NavList、Microsoft Fluent 2 Nav、Ant Design 常用布局。
+- 新版后台视觉语言（`transit-admin-theme.css`）完成全量覆盖：
+  - 顶栏：浅色玻璃质感 + 轻渐变，右侧操作按钮改为胶囊态；
+  - 侧栏：深色 SaaS 风格，一级菜单加入导引条、hover 位移、active 强化；
+  - 层级：二级面板独立容器化（导引线 + 子项圆点 + 激活态高对比）；
+  - 主区：内容卡片、面包屑、按钮语义色统一到新配色体系。
+- 样式缓存版本升级：`transit-admin-theme.css?v=20260309-047`（`admin/dist/index.html` + `admin/public/index.html`），避免浏览器继续读取旧样式。
+- 侧栏对比截图（同视口 `1850x700`）已生成：
+  - 重做前：`runtime/remote-dev/admin-sidebar-before-v045-recheck.png`
+  - 重做后：`runtime/remote-dev/admin-sidebar-after-v047.png`
+  - 并排图：`runtime/remote-dev/admin-sidebar-compare-v047.png`
+  - 差异图：`runtime/remote-dev/admin-sidebar-diff-v047.png`
+- 本轮验证：
+  - `bash scripts/remote-dev-check.sh`
+  - `bash scripts/remote-dev-build.sh`
+  - `bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh`
+  - `cd ui-automation && UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npx playwright test tests/ui-admin-theme.spec.js tests/ui-real-route-admin-theme.spec.js --workers=1` = `3 passed`
+- 说明：仅验证 `8134` 开发实例，未触碰 `8133` 生产实例；未执行上线操作。
+- 对应提交：`TBD`
+
+## 2026-03-09 · CHG-20260309-045 · 管理后台侧栏“无反馈感”修复 + 前后截图对比
+- 针对“左侧栏点击后几乎没反应”的反馈，继续强化后台侧栏层级与交互反馈（`transit-admin-theme.css` v046）：
+  - 一级菜单增加左侧高亮导引条、更明显的 hover/active 位移与阴影；
+  - 展开父级与激活项采用更高对比渐变、边框与光感，展开状态更易辨认；
+  - 二级面板加深层级底色、导引线与子项圆点节奏，强化“父级 -> 子级”阅读路径。
+- 缓存收敛继续前移：`admin/dist/index.html` 与 `admin/public/index.html` 的主题样式链接升级为 `transit-admin-theme.css?v=20260309-046`，避免浏览器继续命中旧样式。
+- 已按同视口生成前后对比截图（`1850x700`）：
+  - 修复前：`runtime/remote-dev/admin-sidebar-before-v045-recheck.png`
+  - 修复后：`runtime/remote-dev/admin-sidebar-after-v046.png`
+  - 并排对比：`runtime/remote-dev/admin-sidebar-compare-v046.png`
+  - 差异图：`runtime/remote-dev/admin-sidebar-diff-v046.png`
+- 本轮验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、`bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh` 通过；`cd ui-automation && UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npx playwright test tests/ui-admin-theme.spec.js tests/ui-real-route-admin-theme.spec.js --workers=1` = `3 passed`。
+- 说明：仅验证 `8134` 开发实例，未触碰 `8133` 生产实例；未执行上线操作。
+- 对应提交：`TBD`
+
+## 2026-03-09 · CHG-20260309-044 · 管理后台管理员专用登录 + 强制刷新缓存收敛
+- 后台登录改为“管理员专用入口”：不再要求手动选择“用户/管理员”角色；登录逻辑默认锁定管理员角色（`users` 表），避免管理员每次登录多一步选择。
+- 修复“强制刷新后样式看起来没变化”的问题：`admin/dist/index.html` 的主题样式链接追加版本参数 `?v=20260309-044`，确保浏览器刷新后获取最新左侧层级样式。
+- 对已运行前端产物做最小可回滚修补：
+  - `admin/dist/js/app.bf34ee1b.js`：替换登录角色判定逻辑，移除“请选择角色”分支，默认管理员角色。
+  - `admin/dist/css/transit-admin-theme.css`：登录页隐藏角色单选区，保持管理员专用文案与层级视觉一致性。
+- 同步保留源码侧改动：`admin/src/views/login.vue`、`admin/public/index.html`、`admin/public/css/transit-admin-theme.css`，用于后续正式前端构建时继承同一行为。
+- 回归补强：`ui-automation/tests/ui-admin-theme.spec.js` 增加“登录页无可见角色选择控件”断言；`ui-real-route-admin-theme.spec.js` 调整为匹配带版本参数的主题 CSS 链接。
+- 本轮验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、`bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh` 通过；`cd ui-automation && UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npx playwright test tests/ui-admin-theme.spec.js tests/ui-real-route-admin-theme.spec.js --workers=1` = `3 passed`。
+- 说明：仅验证 `8134` 开发实例，未触碰 `8133` 生产实例；未执行上线操作。
+- 对应提交：`TBD`
+
+## 2026-03-09 · CHG-20260309-043 · 管理后台左侧层级导航美化（商业化层级展开）
+- 继续优化 `admin/dist/css/transit-admin-theme.css` 的侧栏层级视觉：
+  - 一级菜单保持统一胶囊卡片；二级展开区改为独立“分组面板”（内阴影 + 渐变底 + 左侧导引线），弱化模板式堆叠感。
+  - 二级菜单项加入层级圆点、缩进节奏与激活高亮，提升“父级 -> 子级”阅读路径，避免文字块突兀贴边。
+  - 清理菜单标题/子项文本上的异常背景色残留，避免出现蓝色文字底块，保证展开态更干净。
+- `ui-automation/tests/ui-admin-theme.spec.js` 补强层级断言：新增子菜单面板缩进、边框、子项圆角/内边距、文本背景透明等约束，防止后续回归破坏层级观感。
+- 本轮验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、`bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh` 通过；`cd ui-automation && UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npx playwright test tests/ui-admin-theme.spec.js tests/ui-real-route-admin-theme.spec.js --workers=1` = `3 passed`。
+- 说明：仅验证 `8134` 开发实例，未触碰 `8133` 生产实例；未执行上线操作。
+- 对应提交：`TBD`
+
+## 2026-03-09 · CHG-20260309-042 · 管理后台 UI 推翻重做（前后台设计语言统一）
+- 对 `admin/dist/css/transit-admin-theme.css` 做整文件重写：登录页、顶部栏、侧栏、面包屑、主内容卡片、按钮、输入框、表格统一切换为与前台 `transit-business-ui` 同一套色板与圆角/阴影节奏，去除模板遗留的高饱和绿底、粗边框和层级错位。
+- 重点处理“登录后左侧不统一/错位”问题：覆盖 `IndexAsideStatic` 的 scoped 样式（含 `data-v-10547812` 选择器），把侧栏菜单改为统一胶囊卡片与渐变激活态，移除旧模板的 `200px` 固定菜单盒与大块底色。
+- 新增后台专项回归 `ui-automation/tests/ui-admin-theme.spec.js`，覆盖登录卡片留白、侧栏宽度/贴边、菜单背景非透明、主内容区与侧栏对齐、无横向溢出等关键约束。
+- 本轮验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、`bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh` 通过；`cd ui-automation && UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npx playwright test tests/ui-admin-theme.spec.js --workers=1` = `1 passed`。
+- 说明：仅验证 `8134` 开发实例，未触碰 `8133` 生产实例；本轮未执行上线操作。
+- 对应提交：`TBD`
+
+## 2026-03-09 · CHG-20260309-041 · 管理后台 UI 二次重构（登录页 + 侧栏 + 面包屑）
+- 针对后台视觉残留模板问题继续重构 `admin/dist/css/transit-admin-theme.css`：
+  - 登录页移除旧模板遗留的外层厚边框/悬浮大按钮，改为单卡片登录结构（统一圆角、边框、阴影、输入框与主按钮节奏）。
+  - 后台侧栏移除“粗白边+高饱和背景”的旧样式，统一为与前台一致的深色中性底 + 低对比边框 + 渐变激活态。
+  - 面包屑条去掉旧版虚线边框与异常上边距，改为轻卡片条形结构，和内容区同一设计语言。
+  - 表格操作按钮去掉双线边框与模板色块，统一主/危/成功按钮语义色与圆角。
+- 该轮为“强覆盖”方案，面向已编译 `admin/dist` 产物，不改业务逻辑，仅做视觉统一与布局修复。
+- 本轮验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、`bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh` 通过；`UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npx playwright test tests/ui-real-route-admin-theme.spec.js -g "Admin login and dashboard should load transit-aligned theme styles" --workers=1` = `1 passed`。
+- 说明：仅验证 `8134` 开发实例，未触碰 `8133` 生产实例。
+- 对应提交：`TBD`
+
+
+## 2026-03-09 · CHG-20260309-040 · 前台真实路由落地 + 管理后台视觉统一
+- 前台壳层 `front/index.html` + `shell-page.js` 新增真实路由机制：顶部导航切换时会同步写入 `?route=...`，支持直接访问 `index.html?route=map/messages/...`，并在首次加载时按地址栏路由恢复页面，不再只依赖单一 URL + 隐式 iframe 状态。
+- 保留原有 iframe 内容承载方式，但补齐地址栏路由语义：导航链接改为真实 `href`（`buildNavHref` / `buildCenterHref`），`window.navPage()` 统一同步 URL 与 iframe src，地址栏可复制分享具体页面入口。
+- `accessibility.js` 的快捷导航兜底已改为壳层路由地址（如 `index.html?route=routes`），保证在非壳层页面触发快捷键时也会进入带真实路由的壳层入口。
+- 管理后台 `admin/dist` 新增 `css/transit-admin-theme.css` 并在 `admin/dist/index.html` 引入：登录页、顶部栏、侧栏菜单、内容卡片、按钮与输入框风格对齐前台的 `transit-business-ui` 设计语言，避免后台与前台视觉割裂。
+- 新增回归 `ui-automation/tests/ui-real-route-admin-theme.spec.js`：覆盖“前台 route URL 与 iframe 同步”与“后台主题样式已注入且核心容器样式生效”两项约束。
+- 本轮验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、`bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh` 通过；`UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npx playwright test tests/ui-real-route-admin-theme.spec.js --workers=1` = `2 passed`。
+- 说明：本轮仅验证 `8134` 开发实例，未触碰 `8133` 生产实例。
+- 对应提交：`TBD`
+
+## 2026-03-09 · CHG-20260309-039 · 管理后台独立入口 + 自动演示入口隐藏
+- Git 远端仓库已调整 `origin` 的 push URL 为 SSH：`git@github.com:Ruler4396/bus-route-query-system.git`，避免 HTTPS 口令缺失导致推送失败。
+- 前台首页已移除“开始 10 分钟演示”“Alt + D 一键启动演示”等可见入口文案；`Alt + D` 快捷键触发逻辑保留。
+- `accessibility.js` 与 `shell-page.js` 的快捷键帮助播报已去掉演示文案，避免页面可见提示再次暴露自动演示入口。
+- 新增独立管理员入口 `/springbootmf383/console/index.html`（`src/main/resources/static/console/index.html`），会跳转到后台应用 `/springbootmf383/admin/dist/index.html#/login`；前台 `adminurl` 已改为该独立入口。
+- 登录页新增“管理员后台入口”按钮，并明确管理员与普通用户前台地址分离。
+- 公告推荐与公告列表已过滤自动演示相关公告标题，避免页面继续出现“10 分钟自动演示”相关显示。
+- 新增回归 `ui-automation/tests/ui-portal-separation.spec.js`，覆盖“前台无 10 分钟演示可见入口 + Alt+D 仍可触发 + 管理后台走独立 URL”三项约束。
+- 本轮验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh` 通过；`cd ui-automation && UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npx playwright test tests/ui-portal-separation.spec.js --workers=1` 通过；本轮仅验证 `8134`，未触碰 `8133`。
+- 对应提交：`TBD`
+
 ## 2026-03-09 · CHG-20260309-038 · 手机端按钮 / 弹窗适配收口
 - 已复现并修复两个手机端高频异常：① 游客登录提示弹窗在窄屏下按钮因 `flex-basis` 被拉到异常高；② 登录后的“在线提问”仍使用固定 `600px × 600px` 弹窗，在 `390px` 宽手机视口中会横向溢出。
 - `front/css/transit-business-ui.css` 现为游客登录提示与在线提问弹窗补充手机端安全区、最大高度、滚动容器与紧凑按钮样式；同时把壳层快捷控制按钮在 `<=560px` 视口下改为更适合手指点击的双列触控网格。
