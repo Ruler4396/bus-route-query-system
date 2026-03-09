@@ -47,6 +47,34 @@
     return String(text || '').replace(/\s+/g, '');
   }
 
+  var DEMO_REFRESH_STORAGE_KEY = 'demo_presentation_refresh_state';
+
+  function cloneJsonSafe(value) {
+    try {
+      return JSON.parse(JSON.stringify(value == null ? null : value));
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function clearDemoQueryParamFromUrl() {
+    try {
+      var href = global.location && global.location.href ? global.location.href : '';
+      if (!href || !global.history || typeof global.history.replaceState !== 'function') {
+        return;
+      }
+      var url = new URL(href);
+      if (!url.searchParams.has('demo')) {
+        return;
+      }
+      url.searchParams.delete('demo');
+      var next = url.pathname + (url.search ? url.search : '') + (url.hash || '');
+      global.history.replaceState(global.history.state, document.title, next);
+    } catch (err) {
+      console.warn('清理演示模式 query 参数失败', err);
+    }
+  }
+
   function readAuthState() {
     return {
       Token: localStorage.getItem('Token'),
@@ -194,13 +222,72 @@
 
     init: function() {
       if (!shellAvailable()) return;
+      if (this.restoreAfterRefresh()) {
+        return;
+      }
       this.handleQueryStart();
+    },
+
+    persistRefreshState: function() {
+      try {
+        if (!global.sessionStorage) return;
+        global.sessionStorage.setItem(DEMO_REFRESH_STORAGE_KEY, JSON.stringify({
+          savedAt: Date.now(),
+          baseSettings: cloneJsonSafe(this.baseSettings),
+          baseAuthState: cloneJsonSafe(this.baseAuthState),
+          lastStatusText: this.lastStatusText || ''
+        }));
+      } catch (err) {
+        console.warn('记录演示恢复快照失败', err);
+      }
+    },
+
+    clearRefreshState: function() {
+      try {
+        if (!global.sessionStorage) return;
+        global.sessionStorage.removeItem(DEMO_REFRESH_STORAGE_KEY);
+      } catch (err) {
+        console.warn('清理演示恢复快照失败', err);
+      }
+    },
+
+    restoreAfterRefresh: function() {
+      try {
+        if (!global.sessionStorage) return false;
+        var raw = global.sessionStorage.getItem(DEMO_REFRESH_STORAGE_KEY);
+        if (!raw) return false;
+        global.sessionStorage.removeItem(DEMO_REFRESH_STORAGE_KEY);
+        clearDemoQueryParamFromUrl();
+        var payload = JSON.parse(raw) || {};
+        this.isRunning = false;
+        this.isAutoplay = false;
+        this.timerId = null;
+        this.baseSettings = payload.baseSettings || null;
+        this.baseAuthState = payload.baseAuthState || null;
+        this.lastStatusText = payload.lastStatusText || '';
+        closeTransientLayers();
+        this.restoreAssistiveDefaults();
+        document.body.setAttribute('data-demo-running', 'false');
+        document.body.removeAttribute('data-demo-step');
+        document.body.removeAttribute('data-demo-status-text');
+        window.__demoMuteSystemAnnounce = false;
+        if (typeof global.updateAssistStatus === 'function') {
+          global.updateAssistStatus();
+        } else if (this.lastStatusText) {
+          setRunnerStatus(this.lastStatusText);
+        }
+        return true;
+      } catch (err) {
+        console.warn('刷新后恢复演示默认状态失败', err);
+        return false;
+      }
     },
 
     handleQueryStart: function() {
       try {
         var params = new URLSearchParams(global.location.search || '');
         if (params.get('demo') === '1' || params.get('demo') === 'auto') {
+          clearDemoQueryParamFromUrl();
           var self = this;
           setTimeout(function() {
             self.open({ autoplay: true, source: 'query-auto' });
@@ -364,6 +451,7 @@
         ? global.AccessibilityUtils.getSettings()
         : null;
       this.baseAuthState = readAuthState();
+      this.persistRefreshState();
       clearAuthState();
       try {
         if (global.AccessibilityUtils && this.baseSettings) {
@@ -396,6 +484,7 @@
       this.isAutoplay = false;
       closeTransientLayers();
       this.restoreAssistiveDefaults();
+      this.clearRefreshState();
       if (typeof global.updateAssistStatus === 'function') {
         global.updateAssistStatus();
       } else if (this.lastStatusText) {
@@ -414,6 +503,7 @@
       window.__demoMuteSystemAnnounce = false;
       this.isAutoplay = false;
       this.restoreAssistiveDefaults();
+      this.clearRefreshState();
       setRunnerStatus('演示流程已完成，可按 Alt + D 重新开始。');
       safeAnnounce('演示流程已完成，已恢复默认显示设置。');
       var self = this;

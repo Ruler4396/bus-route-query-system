@@ -1,7 +1,7 @@
 # PJT-0001 · bus-route-query-system · PROJECT_RUNBOOK
 
-最后更新：2026-03-07  
-变更票据：`CHG-20260307-014`
+最后更新：2026-03-09  
+变更票据：`CHG-20260309-038`
 
 ## 1. 项目定位
 面向视障人士与行动不便人士的无障碍公交出行系统。当前以“演示稳定、远端可调试、线上可回滚”为首要目标。
@@ -24,8 +24,10 @@
 7. 停止开发实例：`bash scripts/remote-dev-stop.sh`
 
 ## 4. 关键路径与访问地址
-- 生产地址：`http://8.134.206.52:8133/springbootmf383/front/index.html`
-- 开发地址：`http://8.134.206.52:8134/springbootmf383/front/index.html`
+- 开发环境 TTS 兜底依赖：`runtime/tts-venv/`（edge-tts）、缓存目录：`runtime/tts-cache/`。
+- 生产公共入口：`http://8.134.206.52:8133/springbootmf383/front/index.html`（游客默认进入首页总览）
+- 开发公共入口：`http://8.134.206.52:8134/springbootmf383/front/index.html`（游客默认进入首页总览）
+- 开发登录入口：`http://8.134.206.52:8134/springbootmf383/front/pages/login/login.html`（收藏 / 个人中心 / 留言提交等个性化动作按需跳转）
 - 开发日志：`runtime/remote-dev/app.log`
 - 开发 PID：`runtime/remote-dev/server.pid`
 - 页面级状态回归：`ui-automation/tests/ui-data-states.spec.js`
@@ -36,9 +38,19 @@
 - 反馈闭环回归：`ui-automation/tests/ui-feedback-workflow.spec.js`
 - 准真实验证脚本：`ui-automation/scripts/run-user-validation.mjs`
 - 屏幕阅读器代理回归：`ui-automation/tests/ui-screen-reader-baseline.spec.js`
+- UI 布局审查：`ui-automation/scripts/run-layout-audit.mjs` / `cd ui-automation && npm run ui:audit:layout`（默认覆盖 `14` 个关键场景，检查溢出 / 贴边 / 遮挡，并在结束后自动删除 PNG；如需保留截图，加 `UI_LAYOUT_AUDIT_KEEP_SCREENSHOTS=1`）
+- 登录 / 游客访问 / 个人中心 / 收藏 / 手机语音定向回归：`cd ui-automation && npx playwright test tests/ui-login-layout.spec.js tests/ui-user-center.spec.js tests/ui-storeup-layout.spec.js tests/ui-guest-access.spec.js tests/ui-resource-detail.spec.js tests/ui-caption-announcement.spec.js tests/ui-mobile-speech.spec.js tests/ui-speech-diagnostics.spec.js tests/ui-mobile-speech-fallback.spec.js --workers=1`
 - 演示数据重置：`bash scripts/remote-dev-reset-demo-db.sh`
+- 自动演示刷新退出回归：`ui-automation/tests/ui-demo-refresh-exit.spec.js`
+- 手机端壳层按钮 / 弹窗回归：`ui-automation/tests/ui-mobile-shell-layout.spec.js`
 
 ## 5. 回归重点
+- 手机端排查顺序：先点“测试提示音”确认设备媒体音量，再点“测试语音”，最后查看“语音诊断信息”中的手势解锁/原生支持/最近报错。
+- 手机端语音：优先从无障碍设置页点击“测试语音”确认已解除静音/媒体音量限制；iframe 页面中的语音播报会委托给壳层统一执行。
+- 个性化入口（个人中心 / 收藏 / 留言提交 / 在线提问）是否先显示轻提示卡片，再由用户决定是否登录。
+- 游客进入首页后是否仍可浏览公共功能，且只在收藏、留言提交、个人中心等个性化动作时要求登录。
+- 自动演示通过 `?demo=1` / `?demo=auto` 启动后，地址栏是否已自动清理 `demo` 参数；刷新当前页时是否自动退出演示并恢复进入前设置。
+- 手机端壳层快捷控制按钮是否仍有足够触控高度；游客登录提示、在线提问等弹窗是否完整落在视口内且按钮没有被拉伸。
 - 首页推荐区、快捷控制栏、友情链接区域是否出现遮挡。
 - 页面底部内容是否完整可见，是否再次出现双滚动条。
 - 导航按钮热区是否完整，点击文字外围也能切换。

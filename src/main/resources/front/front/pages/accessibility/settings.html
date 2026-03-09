@@ -238,6 +238,52 @@
                 opacity: 1;
             }
         }
+        .speech-test-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .speech-diagnostics {
+            margin-top: 16px;
+            padding: 16px 18px;
+            border-radius: 10px;
+            background: #f7f8f4;
+            border: 1px solid #e6e8dc;
+        }
+        .speech-diagnostics h4 {
+            margin: 0 0 10px;
+            font-size: 15px;
+            color: #2d342f;
+        }
+        .speech-diagnostics p {
+            margin: 0 0 12px;
+            color: #64706a;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+        .speech-diagnostics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+        }
+        .speech-diagnostics-item {
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: #fff;
+            border: 1px solid #ecefe5;
+        }
+        .speech-diagnostics-item strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #425149;
+            font-size: 12px;
+        }
+        .speech-diagnostics-item span {
+            color: #1e2724;
+            font-size: 13px;
+            word-break: break-word;
+        }
     </style>
 </head>
 <body class="transit-ui page-accessibility-settings">
@@ -294,13 +340,23 @@
             <div class="setting-item">
                 <div class="setting-label">
                     <h4>测试语音</h4>
-                    <p>点击测试当前语音设置</p>
+                    <p>建议先点“测试提示音”确认手机媒体音量正常，再点“测试语音”确认浏览器支持语音播报。</p>
                 </div>
                 <div class="setting-control">
-                    <button class="btn btn-secondary" onclick="testSpeech()" style="padding: 8px 16px;">
-                        <i class="layui-icon">&#xe688;</i> 测试
-                    </button>
+                    <div class="speech-test-actions">
+                        <button class="btn btn-secondary" type="button" onclick="testTone()" style="padding: 8px 16px;">
+                            <i class="layui-icon">&#xe683;</i> 测试提示音
+                        </button>
+                        <button class="btn btn-secondary" type="button" onclick="testSpeech()" style="padding: 8px 16px;">
+                            <i class="layui-icon">&#xe688;</i> 测试语音
+                        </button>
+                    </div>
                 </div>
+            </div>
+            <div class="speech-diagnostics" aria-live="polite">
+                <h4>语音诊断信息</h4>
+                <p>若手机端仍然没有声音，请先查看下面状态：是否支持原生语音、是否已完成手势解锁、当前是否在 iframe 中委托给壳层播报。</p>
+                <div class="speech-diagnostics-grid" id="speechDiagnostics"></div>
             </div>
             <div class="setting-item">
                 <div class="setting-label">

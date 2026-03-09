@@ -144,19 +144,80 @@
 						var layer = layui.layer;
 					});
 
-			function chatTap(){
-				var userTable = localStorage.getItem('userTable');
-				if (userTable) {
-					layui.layer.open({
-						type: 2,
-						title: '在线提问',
-						area: ['600px', '600px'],
-						content: './pages/chat/chat.html'
-					});
-				} else {
-					window.location.href = './pages/login/login.html'
-				}
+		function redirectToLogin(frameUrl) {
+			if (frameUrl) {
+				localStorage.setItem('iframeUrl', normalizeIframeUrl(frameUrl));
 			}
+			scrollShellToTop();
+			window.location.href = './pages/login/login.html';
+		}
+
+		function openGuestLoginPrompt(options) {
+			var guard = window.TransitLoginGuard;
+			var fallbackFrameUrl = options && options.frameUrl ? normalizeIframeUrl(options.frameUrl) : DEFAULT_IFRAME_URL;
+			if (!guard || typeof guard.open !== 'function') {
+				redirectToLogin(fallbackFrameUrl);
+				return;
+			}
+			guard.open({
+				title: options && options.title,
+				description: options && options.description,
+				highlights: options && options.highlights,
+				confirmLabel: options && options.confirmLabel ? options.confirmLabel : '去登录',
+				cancelLabel: options && options.cancelLabel ? options.cancelLabel : '先浏览公共功能',
+				onConfirm: function() {
+					redirectToLogin(fallbackFrameUrl);
+				}
+			});
+		}
+
+		function getViewportSize() {
+			return {
+				width: window.innerWidth || document.documentElement.clientWidth || 1280,
+				height: window.innerHeight || document.documentElement.clientHeight || 720
+			};
+		}
+
+		function getChatLayerOptions() {
+			var viewport = getViewportSize();
+			var isCompact = viewport.width <= 640;
+			var horizontalGap = isCompact ? 10 : 24;
+			var verticalGap = isCompact ? 12 : 40;
+			var width = Math.min(600, Math.max(320, viewport.width - horizontalGap * 2));
+			var height = Math.min(640, Math.max(420, viewport.height - verticalGap * 2));
+			if (height > viewport.height - 16) {
+				height = Math.max(320, viewport.height - 16);
+			}
+			return {
+				type: 2,
+				title: '在线提问',
+				area: [width + 'px', height + 'px'],
+				maxmin: !isCompact,
+				resize: false,
+				shadeClose: isCompact,
+				offset: isCompact ? '12px' : 'auto',
+				skin: 'transit-chat-layer',
+				content: './pages/chat/chat.html'
+			};
+		}
+
+		function chatTap(){
+			var userTable = localStorage.getItem('userTable');
+			if (userTable) {
+				layui.layer.open(getChatLayerOptions());
+			} else {
+				openGuestLoginPrompt({
+					title: '在线提问需要登录后使用',
+					description: '你仍可先浏览路线、公告与资源；登录后再进入在线提问，系统会保留你当前浏览位置。',
+					highlights: [
+						'公共信息与无障碍设置可继续浏览，不会受影响。',
+						'登录后可进入个人中心、我的收藏、留言提交与在线提问。'
+					],
+					frameUrl: vue && vue.activeNavUrl ? vue.activeNavUrl : DEFAULT_IFRAME_URL,
+					confirmLabel: '去登录后继续'
+				});
+			}
+		}
 
 				function updateAssistStatus() {
 					if (!window.AccessibilityUtils) return;
@@ -165,6 +226,7 @@
 						settings.highContrast ? '高对比开启' : '高对比关闭',
 						'字体' + settings.fontSize + 'px',
 						settings.speech ? '语音开启' : '语音关闭',
+						settings.visualCaption ? '左下提示开启' : '左下提示关闭',
 						settings.keyboardNav ? '键盘导航开启' : '键盘导航关闭'
 					].join(' | ');
 					var demoRunning = document.body.getAttribute('data-demo-running') === 'true';
@@ -212,7 +274,13 @@
 					updateAssistStatus();
 				});
 				bind('assistSpeech', function() {
+					if (!AccessibilityUtils.isSpeechEnabled() && typeof AccessibilityUtils.prepareSpeech === 'function') {
+						AccessibilityUtils.prepareSpeech();
+					}
 					var enabled = AccessibilityUtils.toggleSpeech();
+					if (enabled && typeof AccessibilityUtils.prepareSpeech === 'function') {
+						AccessibilityUtils.prepareSpeech();
+					}
 					AccessibilityUtils.announce(enabled ? '语音播报已开启' : '语音播报已关闭');
 					syncAssistSettingsToIframe();
 					updateAssistStatus();
@@ -226,6 +294,12 @@
 				bind('assistCaption', function() {
 					var enabled = AccessibilityUtils.toggleCaptionCenter();
 					AccessibilityUtils.announce(enabled ? '字幕提示面板已开启' : '字幕提示面板已关闭');
+					syncAssistSettingsToIframe();
+					updateAssistStatus();
+				});
+				bind('assistVisualHint', function() {
+					var enabled = AccessibilityUtils.toggleVisualCaption();
+					AccessibilityUtils.announce(enabled ? '左下角无障碍提示已开启' : '左下角无障碍提示已关闭');
 					syncAssistSettingsToIframe();
 					updateAssistStatus();
 				});
@@ -275,7 +349,16 @@
 						var centerUrl = './pages/' + userTable + '/center.html';
 						applyIframeUrl(centerUrl, true);
 						} else {
-							window.location.href = './pages/login/login.html'
+							openGuestLoginPrompt({
+						title: '进入个人中心前请先登录',
+						description: '个人资料、我的收藏与账号信息属于个性化内容，登录后再继续会更顺畅。',
+						highlights: [
+							'首页总览、路线规划、公告、资源与无障碍设置仍可直接浏览。',
+							'登录后可直接进入个人中心，并继续访问收藏和留言服务。'
+						],
+						frameUrl: './pages/yonghu/center.html',
+						confirmLabel: '去登录并进入个人中心'
+					});
 						}
 					}
 

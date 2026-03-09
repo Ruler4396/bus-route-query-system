@@ -88,10 +88,10 @@ color: rgba(255, 255, 255, 1) !important;
 					<a><cite :style='{"padding":"8px 15px","boxShadow":"0 0 0px rgba(255,0,0,.3)","margin":"0 15px","borderColor":"rgba(255,0,0,.3)","backgroundColor":"rgba(255, 255, 255, 0)","color":"rgba(218, 218, 218, 1)","borderRadius":"4px","borderWidth":"0","fontSize":"16px","borderStyle":"solid"}'>{{title}}</cite></a>
 				</span>
 				
-	     <a v-if='authReady && storeupFlag' :style='{"padding":"0 12px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","borderColor":"rgba(255,0,0,.3)","backgroundColor":"rgba(255, 255, 255, 1)","color":"rgba(77, 79, 54, 1)","borderRadius":"4px","borderWidth":"0","fontSize":"16px","lineHeight":"34px","borderStyle":"solid"}' @click="storeUp()" href="javascript:void(0)">
+	     <a v-if='storeupFlag' :style='{"padding":"0 12px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","borderColor":"rgba(255,0,0,.3)","backgroundColor":"rgba(255, 255, 255, 1)","color":"rgba(77, 79, 54, 1)","borderRadius":"4px","borderWidth":"0","fontSize":"16px","lineHeight":"34px","borderStyle":"solid"}' @click="storeUp()" href="javascript:void(0)">
 		<i class="layui-icon" style="font-size: 20px;color: red;" v-if='true' :style='{"color":"rgba(77, 79, 54, 1)","padding":"0 2px 0 0","fontSize":"18px"}'>&#xe67a;</i>取消收藏
 	     </a>
-	     <a v-if='authReady && !storeupFlag' :style='{"padding":"0 12px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","borderColor":"rgba(255,0,0,.3)","backgroundColor":"rgba(255, 255, 255, 1)","color":"rgba(77, 79, 54, 1)","borderRadius":"4px","borderWidth":"0","fontSize":"16px","lineHeight":"34px","borderStyle":"solid"}' @click="storeUp()" href="javascript:void(0)">
+	     <a v-if='!storeupFlag' :style='{"padding":"0 12px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","borderColor":"rgba(255,0,0,.3)","backgroundColor":"rgba(255, 255, 255, 1)","color":"rgba(77, 79, 54, 1)","borderRadius":"4px","borderWidth":"0","fontSize":"16px","lineHeight":"34px","borderStyle":"solid"}' @click="storeUp()" href="javascript:void(0)">
 		<i class="layui-icon" style="font-size: 20px;color: red;" v-if='true' :style='{"color":"rgba(77, 79, 54, 1)","padding":"0 2px 0 0","fontSize":"18px"}'>&#xe67b;</i>点我收藏
 	     </a>
 				
@@ -261,6 +261,7 @@ color: rgba(255, 255, 255, 1) !important;
 	<script src="../../modules/config.js"></script>
 	<!-- 工具方法 -->
 	<script src="../../js/utils.js"></script>
+		<script src="../../js/login-guard-prompt.js"></script>
 
 	<script>
 		var vue = new Vue({
@@ -513,9 +514,42 @@ color: rgba(255, 255, 255, 1) !important;
 
 
 	    // 收藏商品
+				buildStoreupReturnUrl() {
+					var guard = window.TransitLoginGuard;
+					if (guard && typeof guard.buildFrontRelativeUrl === 'function') {
+						return guard.buildFrontRelativeUrl(window.location);
+					}
+					return './pages/home/home.html';
+				},
+				redirectToLoginForStoreup() {
+					localStorage.setItem('iframeUrl', this.buildStoreupReturnUrl());
+					window.parent.location.href = '../login/login.html';
+				},
+				promptLoginForStoreup() {
+					var guard = window.TransitLoginGuard;
+					var vm = this;
+					if (!guard || typeof guard.open !== 'function') {
+						vm.redirectToLoginForStoreup();
+						return;
+					}
+					guard.open({
+						layerHost: window.parent && window.parent !== window ? window.parent : window,
+						title: '收藏前请先登录个人服务',
+						description: '当前详情内容仍可继续浏览；登录后会自动回到这里，再继续完成收藏。',
+						highlights: [
+							'路线详情、公告内容和资源信息都可以先免登录查看。',
+							'登录后可继续使用收藏、个人中心、留言提交等个性化功能。'
+						],
+						confirmLabel: '去登录后收藏',
+						cancelLabel: '先继续浏览详情',
+						onConfirm: function() {
+							vm.redirectToLoginForStoreup();
+						}
+					});
+				},
 				storeUp() {
 					if (!this.authReady) {
-						layer.msg('登录后可使用收藏功能', { time: 1200, icon: 0 });
+						this.promptLoginForStoreup();
 						return;
 					}
 					layui.http.request('storeup/list', 'get', {

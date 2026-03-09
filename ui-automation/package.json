@@ -9,7 +9,8 @@
     "ui:check:headed": "playwright test --headed",
     "ui:fix": "node scripts/auto-fix-known-issues.mjs",
     "ui:guard": "node scripts/ui-guard.mjs",
-    "ui:validate": "node scripts/run-user-validation.mjs"
+    "ui:validate": "node scripts/run-user-validation.mjs",
+    "ui:audit:layout": "node scripts/run-layout-audit.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.2",

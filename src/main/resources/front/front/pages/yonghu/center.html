@@ -4,7 +4,7 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>个人中心</title>
 		<link rel="stylesheet" href="../../layui/css/layui.css">
 		<!-- 样式 -->
@@ -21,274 +21,133 @@
 		<link rel="stylesheet" href="../../css/accessibility-high-contrast.css">
 </head>
 	<style>
-		html::after {
-			position: fixed;
-			top: 0;
-			right: 0;
-			left: 0;
-			bottom: 0;
-			content: '';
-			display: block;
-			background-attachment: fixed;
-			background-size: cover;
-			background-position: center;
-			z-index: -1;
-		}
 		#swiper {
-			overflow: hidden;
-		}
-		#swiper .layui-carousel-ind li {
-			width: 28px;
-			height: 14px;
-			border-width: 0;
-			border-style: solid;
-			border-color: rgba(0,0,0,.3);
-			border-radius: 7px;
-			background-color: rgba(191, 191, 191, 1);
-			box-shadow: 0 0 0px rgba(255,0,0,.8);
-		}
-		#swiper .layui-carousel-ind li.layui-this {
-			width: 60px;
-			height: 14px;
-			border-width: 0;
-			border-style: solid;
-			border-color: rgba(0,0,0,.3);
-			border-radius: 7px;
-			background-color: rgba(77, 79, 54, 1);
-			box-shadow: 0 0 0px rgba(255,0,0,.8);
-		}
-
-		.index-title {
-			text-align: center;
-			box-sizing: border-box;
-			width: 980px;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			flex-direction: column;
-		}
-		.index-title span {
-			padding: 0 10px;
-			line-height: 1.4;
-		}
-		.center-container .layui-nav-tree {
-			width: 100%;
-		}
-		.center-container .layui-nav {
-			position: inherit;
-		}
-		.center-container .layui-nav-tree .layui-nav-item {
-			height: 44px;
-			line-height: 44px;
-			font-size: 14px;
-			color: rgba(255, 255, 255, 1);
-			border-width: 0;
-			border-style: solid;
-			border-color: rgba(255,0,0,.3);
-			border-radius: 0;
-			background-color: rgba(77, 79, 54, 1);
-			box-shadow: 0 0 6px rgba(255,0,0,0);
-			text-align: center;
-		}
-		.center-container .layui-nav-tree .layui-nav-bar {
-			height: 44px !important;
-			opacity: 0 !important;
-		}
-		.center-container .layui-nav-tree .layui-nav-item.layui-this {
-			font-size: 14px;
-			color: #fff;
-			border-width: 0;
-			border-style: solid;
-			border-color: rgba(255,0,0,.3);
-			border-radius: 0;
-			background-color: rgba(183, 186, 107, 1);
-			box-shadow: 0 0 6px rgba(183, 186, 1070);
-		}
-		.center-container .layui-nav-tree .layui-nav-item:hover {
-			font-size: 14px;
-			color: #fff;
-			border-width: 0;
-			border-style: solid;
-			border-color: rgba(255,0,0,.3);
-			border-radius: 0;
-			background-color: rgba(183, 186, 107, 1);
-			box-shadow: 0 0 6px rgba(255,0,0,0);
-		}
-		.center-container .layui-nav-tree .layui-nav-item a {
-			line-height: inherit;
-			height: auto;
-			background-color: inherit;
-			color: inherit;
-			text-decoration: none;
-		}
-		.right-container {
-			position: relative;
-		}
-
-		.right-container .layui-form-item {
-			display: flex;
-			align-items: center;
-		}
-		.right-container .layui-input-block {
-			margin: 0;
-			flex: 1;
-		}
-		.right-container .input .layui-input {
-			padding: 0 12px;
-			height: 40px;
-			font-size: 14px;
-			color: #333;
-			border-radius: 4px;
-			border-width: 1px;
-			border-style: solid;
-			border-color: #DCDFE6;
-			background-color: #fff;
-			box-shadow: 0 0 6px rgba(183, 186, 107,.8);
-			text-align: left;
-		}
-		.right-container .select .layui-input {
-			padding: 0 12px;
-			height: 40px;
-			font-size: 14px;
-			color: #333;
-			border-radius: 4px;
-			border-width: 1px;
-			border-style: solid;
-			border-color: #DCDFE6;
-			background-color: #fff;
-			box-shadow: 0 0 6px rgba(183, 186, 107,.8);
-			text-align: left;
-		}
-		.right-container .date .layui-input {
-			padding: 0 12px;
-			height: 40px;
-			font-size: 14px;
-			color: #333;
-			border-radius: 4px;
-			border-width: 1px;
-			border-style: solid;
-			border-color: #DCDFE6;
-			background-color: #fff;
-			box-shadow: 0 0 6px rgba(183, 186, 107,.8);
-			text-align: left;
+			display: none;
 		}
 	</style>
-	<body class="transit-ui transit-page page-user-center">
+	<body class="transit-ui transit-page page-user-center page-account-area">
 
 		<div id="app">
-			<!-- 轮播图 -->
-			<!-- <div class="layui-carousel" id="swiper">
-				<div carousel-item id="swiper-item">
-					<div v-for="(item,index) in swiperList" v-bind:key="index">
-						<img class="swiper-item" :src="item.img">
-					</div>
-				</div>
-			</div> -->
-			<div class="layui-carousel" id="swiper" :style='{"boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"0 auto","borderColor":"rgba(0,0,0,.3)","borderRadius":"0","borderWidth":"0","width":"100%","borderStyle":"solid"}'>
-			  <div carousel-item>
+			<div class="layui-carousel" id="swiper" aria-hidden="true">
+			  <div carousel-item id="swiper-item">
 				<div v-for="(item,index) in swiperList" :key="index">
 					<img style="width: 100%;height: 100%;object-fit:cover;" :src="item.img" />
 				</div>
 			  </div>
 			</div>
-			<!-- 轮播图 -->
 
-			<!-- 标题 -->
-			<!-- <h2 style="margin-top: 20px;" class="index-title">USER / CENTER</h2>
-			<div class="line-container">
-				<p class="line" style="background: #EEEEEE;"> 个人中心 </p>
-			</div> -->
-			<div class="index-title" :style='{"padding":"10px","boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"10px auto","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(77, 79, 54, 1)","color":"rgba(255, 255, 255, 1)","borderRadius":"4px","borderWidth":"0","fontSize":"20px","borderStyle":"solid","height":"auto"}'>
-			  <span>USER / CENTER</span><span>个人中心</span>
-			</div>
-			<!-- 标题 -->
+			<section class="account-page-header">
+				<div class="account-page-header-main">
+					<span class="account-page-eyebrow">USER / CENTER</span>
+					<h1>个人中心</h1>
+					<p>统一管理个人资料、头像与登录态相关操作，界面风格与全站无障碍卡片体系保持一致。</p>
+				</div>
+				<div class="account-page-header-note">
+					<span>当前模块</span>
+					<strong>个人资料维护</strong>
+				</div>
+			</section>
 
-			<div class="center-container">
-				<!-- 个人中心菜单 config.js-->
-				<div class="left-container" :style='{"padding":"0","boxShadow":"-1px 1px 6px rgba(183, 186, 107,.8)","margin":"0","borderColor":"rgba(255,0,0,.3)","backgroundColor":"#fff","borderRadius":"0","borderWidth":"0 0 1px 0","width":"160px","borderStyle":"solid"}'>
-					<ul class="layui-nav layui-nav-tree">
-						<li v-for="(item,index) in centerMenu" v-bind:key="index" class="layui-nav-item" :class="index==0?'layui-this':''">
+			<section class="center-container account-shell">
+				<aside class="left-container account-sidebar">
+					<div class="account-sidebar-intro">
+						<p class="account-sidebar-kicker">PERSONAL HUB</p>
+						<h2>个人服务</h2>
+						<p>快速切换个人资料与收藏记录，避免出现模板式双层边框与拥挤布局。</p>
+					</div>
+					<ul class="layui-nav layui-nav-tree account-menu" role="navigation" aria-label="个人服务菜单">
+						<li v-for="(item,index) in centerMenu" v-bind:key="index" class="layui-nav-item" :class="isActiveCenterMenu(item.url) ? 'layui-this' : ''">
 							<a :href="'javascript:jump(\''+item.url+'\')'">{{item.name}}</a>
 						</li>
 					</ul>
-				</div>
-				<!-- 个人中心菜单 -->
-				<!-- 个人中心 -->
-				<div class="right-container" :style='{"padding":"20px","boxShadow":"1px 1px 6px rgba(183, 186, 107,.8)","margin":"0","borderColor":"rgba(255,0,0,.3)","backgroundColor":"#fff","borderRadius":"0","borderWidth":"0","borderStyle":"solid"}'>
-					<form class="layui-form" lay-filter="myForm">
-						<!-- 主键 -->
-						<input type="hidden" name="id" id="id" />
-                        <div class="layui-form-item"  :style='{"padding":"10px","boxShadow":"0 0 6px rgba(183, 186, 107,.8)","margin":"0 0 10px 0","borderColor":"rgba(183, 186, 107, 0.8)","backgroundColor":"#fff","borderRadius":"4px","borderWidth":"0 0 1px 0","borderStyle":"solid"}'>
-							<label  :style='{"width":"94px","padding":"0 12px 0 0","fontSize":"14px","color":"#333","textAlign":"right"}' class="layui-form-label">账号</label>
-							<div class="layui-input-block input">
-								<input type="text" readonly="readonly" name="zhanghao" id="zhanghao" placeholder="账号" autocomplete="off" class="layui-input">
-							</div>
-						</div>
-                        <div class="layui-form-item"  :style='{"padding":"10px","boxShadow":"0 0 6px rgba(183, 186, 107,.8)","margin":"0 0 10px 0","borderColor":"rgba(183, 186, 107, 0.8)","backgroundColor":"#fff","borderRadius":"4px","borderWidth":"0 0 1px 0","borderStyle":"solid"}'>
-							<label  :style='{"width":"94px","padding":"0 12px 0 0","fontSize":"14px","color":"#333","textAlign":"right"}' class="layui-form-label">密码</label>
-							<div class="layui-input-block input">
-								<input type="password" name="mima" id="mima" placeholder="密码" autocomplete="off" class="layui-input">
-							</div>
-						</div>
-                        <div class="layui-form-item"  :style='{"padding":"10px","boxShadow":"0 0 6px rgba(183, 186, 107,.8)","margin":"0 0 10px 0","borderColor":"rgba(183, 186, 107, 0.8)","backgroundColor":"#fff","borderRadius":"4px","borderWidth":"0 0 1px 0","borderStyle":"solid"}'>
-							<label  :style='{"width":"94px","padding":"0 12px 0 0","fontSize":"14px","color":"#333","textAlign":"right"}' class="layui-form-label">姓名</label>
-							<div class="layui-input-block input">
-								<input type="text"  name="xingming" id="xingming" placeholder="姓名" autocomplete="off" class="layui-input">
-							</div>
-						</div>
-                        <div class="layui-form-item"  :style='{"padding":"10px","boxShadow":"0 0 6px rgba(183, 186, 107,.8)","margin":"0 0 10px 0","borderColor":"rgba(183, 186, 107, 0.8)","backgroundColor":"#fff","borderRadius":"4px","borderWidth":"0 0 1px 0","borderStyle":"solid"}'>
-							<label  :style='{"width":"94px","padding":"0 12px 0 0","fontSize":"14px","color":"#333","textAlign":"right"}' class="layui-form-label">年龄</label>
-							<div class="layui-input-block input">
-								<input type="text"  name="nianling" id="nianling" placeholder="年龄" autocomplete="off" class="layui-input">
-							</div>
-						</div>
-                        <div class="layui-form-item"  :style='{"padding":"10px","boxShadow":"0 0 6px rgba(183, 186, 107,.8)","margin":"0 0 10px 0","borderColor":"rgba(183, 186, 107, 0.8)","backgroundColor":"#fff","borderRadius":"4px","borderWidth":"0 0 1px 0","borderStyle":"solid"}'>
-							<label  :style='{"width":"94px","padding":"0 12px 0 0","fontSize":"14px","color":"#333","textAlign":"right"}' class="layui-form-label">性别</label>
-							<div class="layui-input-block select">
-								<select name="xingbie" id="xingbie" >
-									<option value="">请选择</option>
-									<option v-for="(item,index) in xingbie" v-bind:key="index" :value="item">{{item}}</option>
-								</select>
-							</div>
-						</div>
-                        <div class="layui-form-item"  :style='{"padding":"10px","boxShadow":"0 0 6px rgba(183, 186, 107,.8)","margin":"0 0 10px 0","borderColor":"rgba(183, 186, 107, 0.8)","backgroundColor":"#fff","borderRadius":"4px","borderWidth":"0 0 1px 0","borderStyle":"solid"}'>
-							<label  :style='{"width":"94px","padding":"0 12px 0 0","fontSize":"14px","color":"#333","textAlign":"right"}' class="layui-form-label">手机</label>
-							<div class="layui-input-block input">
-								<input type="text"  name="shouji" id="shouji" placeholder="手机" autocomplete="off" class="layui-input">
-							</div>
-						</div>
-                        <div class="layui-form-item"  :style='{"padding":"10px","boxShadow":"0 0 6px rgba(183, 186, 107,.8)","margin":"0 0 10px 0","borderColor":"rgba(183, 186, 107, 0.8)","backgroundColor":"#fff","borderRadius":"4px","borderWidth":"0 0 1px 0","borderStyle":"solid"}'>
-							<label  :style='{"width":"94px","padding":"0 12px 0 0","fontSize":"14px","color":"#333","textAlign":"right"}' style="opacity: 0;" class="layui-form-label">头像</label>
-							<div class="layui-input-block">
-								<img id="zhaopianImg" style="width: 100px;height: 100px;border-radius: 50%;border: 2px solid #EEEEEE;" :style='{"boxShadow":"0 0 6px rgba(183, 186, 107,.8)","borderColor":"#DCDFE6","backgroundColor":"#fff","borderRadius":"10px","borderWidth":"1px","width":"80px","borderStyle":"solid","height":"80px"}' src="../../img/avator.png">
-								<input type="hidden" id="zhaopian" name="zhaopian" />
-							</div>
-						</div>
-						<div class="layui-form-item"  :style='{"padding":"10px","boxShadow":"0 0 6px rgba(183, 186, 107,.8)","margin":"0 0 10px 0","borderColor":"rgba(183, 186, 107, 0.8)","backgroundColor":"#fff","borderRadius":"4px","borderWidth":"0 0 1px 0","borderStyle":"solid"}'>
-							<label  :style='{"width":"94px","padding":"0 12px 0 0","fontSize":"14px","color":"#333","textAlign":"right"}' style="opacity: 0;" class="layui-form-label">图片</label>
-							<div class="layui-input-block">
-								<button :style='{"padding":"0 10px","boxShadow":"1px 1px 6px rgba(183, 186, 107,.8)","margin":"0 10px 0 0","borderColor":"#ccc","backgroundColor":"rgba(183, 186, 107, 1)","color":"#fff","borderRadius":"8px","borderWidth":"0","width":"auto","fontSize":"14px","borderStyle":"solid","height":"44px"}' type="button" class="layui-btn btn-theme" id="zhaopianUpload">
-									<i v-if="true" :style='{"color":"#fff","show":true,"fontSize":"14px"}' class="layui-icon">&#xe67c;</i>上传图片
-								</button>
-							</div>
-						</div>
+				</aside>
 
-						<div class="layui-form-item">
-							<div class="layui-input-block" style="display: flex;flex-wrap:wrap;">
-								<button :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(183, 186, 107,.8)","margin":"10px auto 0","borderColor":"#ccc","backgroundColor":"rgba(183, 186, 107, 1)","color":"#fff","borderRadius":"8px","borderWidth":"0","width":"60%","fontSize":"14px","borderStyle":"solid","height":"44px"}' class="layui-btn btn-submit btn-theme" lay-submit lay-filter="*">更新信息</button>
-                <button :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(183, 186, 107,.8)","margin":"10px auto","borderColor":"#ccc","backgroundColor":"#fff","color":"rgba(183, 186, 107, 0.8)","borderRadius":"8px","borderWidth":"0","width":"60%","fontSize":"14px","borderStyle":"solid","height":"44px"}' @click="logout" class="layui-btn btn-submit">退出登录</button>
+				<div class="right-container account-panel">
+					<div class="account-panel-head account-panel-head--profile">
+						<div>
+							<p class="account-panel-kicker">PROFILE SETTINGS</p>
+							<h2>个人资料</h2>
+							<p>修改账号、密码、姓名、年龄、性别、手机与头像，保存后立即同步到当前账号。</p>
+						</div>
+						<div class="account-panel-chip-group">
+							<span class="account-panel-chip">统一账号信息</span>
+							<span class="account-panel-chip">即时保存</span>
+						</div>
+					</div>
+
+					<form class="layui-form account-form" lay-filter="myForm">
+						<input type="hidden" name="id" id="id" />
+						<div class="account-form-grid">
+							<div class="layui-form-item account-form-item">
+								<label class="layui-form-label account-form-label" for="zhanghao">账号</label>
+								<div class="layui-input-block input">
+									<input type="text" readonly="readonly" name="zhanghao" id="zhanghao" placeholder="账号" autocomplete="off" class="layui-input">
+								</div>
+							</div>
+							<div class="layui-form-item account-form-item">
+								<label class="layui-form-label account-form-label" for="mima">密码</label>
+								<div class="layui-input-block input">
+									<input type="password" name="mima" id="mima" placeholder="密码" autocomplete="off" class="layui-input">
+								</div>
+							</div>
+							<div class="layui-form-item account-form-item">
+								<label class="layui-form-label account-form-label" for="xingming">姓名</label>
+								<div class="layui-input-block input">
+									<input type="text" name="xingming" id="xingming" placeholder="姓名" autocomplete="off" class="layui-input">
+								</div>
+							</div>
+							<div class="layui-form-item account-form-item">
+								<label class="layui-form-label account-form-label" for="nianling">年龄</label>
+								<div class="layui-input-block input">
+									<input type="text" name="nianling" id="nianling" placeholder="年龄" inputmode="numeric" autocomplete="off" class="layui-input">
+								</div>
+							</div>
+							<div class="layui-form-item account-form-item">
+								<label class="layui-form-label account-form-label" for="xingbie">性别</label>
+								<div class="layui-input-block select">
+									<select name="xingbie" id="xingbie">
+										<option value="">请选择</option>
+										<option v-for="(item,index) in xingbie" v-bind:key="index" :value="item">{{item}}</option>
+									</select>
+								</div>
+							</div>
+							<div class="layui-form-item account-form-item">
+								<label class="layui-form-label account-form-label" for="shouji">手机</label>
+								<div class="layui-input-block input">
+									<input type="text" name="shouji" id="shouji" placeholder="手机" inputmode="tel" autocomplete="off" class="layui-input">
+								</div>
+							</div>
+							<div class="layui-form-item account-form-item account-form-item--avatar">
+								<label class="layui-form-label account-form-label">头像预览</label>
+								<div class="layui-input-block">
+									<div class="account-avatar-row">
+										<img id="zhaopianImg" class="account-avatar-preview" src="../../img/avator.png" alt="当前头像预览" width="96" height="96" decoding="async">
+										<div class="account-avatar-copy">
+											<strong>个人头像</strong>
+											<span>上传新头像后会同步替换当前资料展示图片。</span>
+										</div>
+									</div>
+									<input type="hidden" id="zhaopian" name="zhaopian" />
+								</div>
+							</div>
+							<div class="layui-form-item account-form-item account-form-item--upload">
+								<label class="layui-form-label account-form-label">上传新头像</label>
+								<div class="layui-input-block">
+									<button type="button" class="layui-btn btn-theme account-upload-btn" id="zhaopianUpload">
+										<i class="layui-icon">&#xe67c;</i>上传图片
+									</button>
+								</div>
+							</div>
+							<div class="layui-form-item account-form-item account-form-item--actions">
+								<div class="layui-input-block account-actions">
+									<button class="layui-btn btn-submit btn-theme account-primary-btn" lay-submit lay-filter="*">保存信息</button>
+									<button type="button" @click="logout" class="layui-btn btn-submit account-secondary-btn">退出登录</button>
+								</div>
 							</div>
 						</div>
-						<!-- <div class="layui-form-item">
-							<div class="layui-input-block">
-								<button :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(183, 186, 107,.8)","margin":"10px auto","borderColor":"#ccc","backgroundColor":"#fff","color":"rgba(183, 186, 107, 0.8)","borderRadius":"8px","borderWidth":"0","width":"60%","fontSize":"14px","borderStyle":"solid","height":"44px"}' @click="logout" class="layui-btn btn-submit">退出登录</button>
-							</div>
-						</div> -->
 					</form>
 				</div>
-				<!-- 个人中心 -->
-			</div>
-
+			</section>
 		</div>
 
 		<!-- layui -->
@@ -320,6 +179,10 @@
 					jump(url) {
 						jump(url)
 					},
+					isActiveCenterMenu(url) {
+						var normalized = (url || '').replace('../', '/');
+						return window.location.pathname.indexOf(normalized) !== -1;
+					},
 					logout(){
 						localStorage.removeItem('Token');
 						localStorage.removeItem('role');
@@ -344,58 +207,6 @@
 				var upload = layui.upload;
 				var laydate = layui.laydate;
 				vue.baseurl = http.baseurl;
-
-      // 获取轮播图 数据
-      http.request('config/list', 'get', {
-        page: 1,
-        limit: 5
-      }, function(res) {
-        if (res.data.list.length > 0) {
-          let swiperList = [];
-          res.data.list.forEach(element => {
-            if (element.value != null) {
-              swiperList.push({
-                img: http.baseurl+element.value
-              });
-            }
-          });
-                  vue.swiperList = swiperList;
-                  vue.$nextTick(() => {
-                    carousel.render({
-                        elem: '#test1',
-                                width: '100%',
-                        height: '550px',
-                        arrow: 'hover',
-                        anim: 'default',
-                        autoplay: 'true',
-                        interval: '3000',
-                        indicator: 'inside'
-                    });
-                  })
-          // vue.$nextTick(()=>{
-          //   window.xznSlide();
-          // });
-        }
-      });
-				// 充值
-				jquery('#btn-recharge').click(function(e) {
-					layer.open({
-						type: 2,
-						title: '用户充值',
-						area: ['900px', '600px'],
-						content: '../shop-recharge/recharge.html'
-					});
-				});
-				// 会员购买
-				jquery('#btn-buyvip').click(function(e) {
-					layer.open({
-						type: 2,
-						title: '会员购买',
-						area: ['900px', '600px'],
-						content: '../shop-recharge/buyvip.html'
-					});
-				});
-
 				// 获取轮播图 数据
 				http.request('config/list', 'get', {
 					page: 1,

@@ -92,17 +92,22 @@
 			<!-- 标题 -->
 
 			<div class="message-container" style="padding: 20px 0;">
-				<form class="layui-form message-form" :style='{"padding":"20px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"0 0 20px 0","borderColor":"rgba(255,0,0,.3)","backgroundColor":"#fff","borderRadius":"4px","borderWidth":"0","borderStyle":"solid"}'>
+				<form class="layui-form message-form" :class="{'message-form--guest': isGuest}" :style='{"padding":"20px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"0 0 20px 0","borderColor":"rgba(255,0,0,.3)","backgroundColor":"#fff","borderRadius":"4px","borderWidth":"0","borderStyle":"solid"}'>
+					<div v-if="isGuest" class="message-login-guard">
+						<h3>浏览留言无需登录</h3>
+						<p>可先查看历史反馈；提交留言、上传图片与进入反馈处理看板时，再登录个人服务即可。</p>
+						<button type="button" class="layui-btn message-login-btn" @click="goLoginForMessage('提交留言')">登录后提交留言</button>
+					</div>
 					<div class="layui-form-item layui-form-text" style="display: flex;align-items: center;margin:0">
 						<label class="layui-form-label" style="width: auto;" :style='{"padding":"0","minWidth":"54px","fontSize":"14px","color":"#333","textAlign":"center"}'>留言</label>
 						<div class="layui-input-block" style="margin:0;flex:1;">
-							<textarea aria-label="反馈内容" :style='{"padding":"10px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"#333","borderRadius":"4px","borderWidth":"0","fontSize":"14px","borderStyle":"solid","height":"120px"}' name="content" required lay-verify="required" placeholder="请输入内容" class="layui-textarea"></textarea>
+							<textarea aria-label="反馈内容" :style='{"padding":"10px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"#333","borderRadius":"4px","borderWidth":"0","fontSize":"14px","borderStyle":"solid","height":"120px"}' name="content" required lay-verify="required" placeholder="请输入内容" class="layui-textarea" :disabled="isGuest"></textarea>
 						</div>
 					</div>
 					<div class="layui-form-item" style="display:flex;align-items:center;margin-top:10px">
                                                 <label class="layui-form-label" style="width: auto;" :style='{"padding":"0","minWidth":"54px","fontSize":"14px","color":"#333","textAlign":"center"}'>类型</label>
                                                 <div class="layui-input-block" style="margin:0;flex:1;">
-                                                        <select name="feedbackType" id="feedbackType" class="layui-input" aria-label="反馈类型">
+                                                        <select name="feedbackType" id="feedbackType" class="layui-input" aria-label="反馈类型" :disabled="isGuest">
                                                                 <option value="ROUTE_INACCURATE">路线不准确</option>
                                                                 <option value="FACILITY_ABNORMAL">设施异常</option>
                                                                 <option value="ENTRANCE_MISSING">入口信息缺失</option>
@@ -114,7 +119,7 @@
                                         <div class="layui-form-item" style="display:flex;align-items:center;margin-top:10px">
                                                 <label class="layui-form-label" style="width: auto;" :style='{"padding":"0","minWidth":"54px","fontSize":"14px","color":"#333","textAlign":"center"}'>级别</label>
                                                 <div class="layui-input-block" style="margin:0;flex:1;">
-                                                        <select name="severityLevel" id="severityLevel" class="layui-input" aria-label="严重级别">
+                                                        <select name="severityLevel" id="severityLevel" class="layui-input" aria-label="严重级别" :disabled="isGuest">
                                                                 <option value="LOW">低</option>
                                                                 <option value="MEDIUM" selected>中</option>
                                                                 <option value="HIGH">高</option>
@@ -124,13 +129,13 @@
                                         <div class="layui-form-item" style="display:flex;align-items:center;margin-top:10px">
                                                 <label class="layui-form-label" style="width: auto;" :style='{"padding":"0","minWidth":"54px","fontSize":"14px","color":"#333","textAlign":"center"}'>路线</label>
                                                 <div class="layui-input-block" style="margin:0;flex:1;">
-                                                        <input type="text" name="routeName" aria-label="关联路线" placeholder="例如：1路 / 31路" autocomplete="off" class="layui-input">
+                                                        <input type="text" name="routeName" aria-label="关联路线" placeholder="例如：1路 / 31路" autocomplete="off" class="layui-input" :disabled="isGuest">
                                                 </div>
                                         </div>
                                         <div class="layui-form-item" style="display:flex;align-items:center;margin-top:10px">
                                                 <label class="layui-form-label" style="width: auto;" :style='{"padding":"0","minWidth":"54px","fontSize":"14px","color":"#333","textAlign":"center"}'>站点</label>
                                                 <div class="layui-input-block" style="margin:0;flex:1;">
-                                                        <input type="text" name="stationName" aria-label="关联站点" placeholder="例如：海珠广场 / 中山医" autocomplete="off" class="layui-input">
+                                                        <input type="text" name="stationName" aria-label="关联站点" placeholder="例如：海珠广场 / 中山医" autocomplete="off" class="layui-input" :disabled="isGuest">
                                                 </div>
                                         </div>
                                         <div class="layui-form-item layui-form-text message-upload-row" style="display: flex;align-items: center;margin-top:10px">
@@ -140,18 +145,22 @@
                                                         <img id="cpictureImg" style="width: 100px;height: 100px;border-radius: 50%;border: 2px solid #EEEEEE;" :src="baseurl+cpicture">
                                                         <input type="hidden" :value="cpicture" id="cpicture" name="cpicture" />
                                                 </div>
-                                                <div class="layui-input-block">
+                                                <div v-if="!isGuest" class="layui-input-block">
                                                         <button type="button" class="layui-btn btn-theme" id="cpictureUpload">
                                                                 <i class="layui-icon">&#xe67c;</i>上传图片
                                                         </button>
+                                                </div>
+                                                <div v-else class="layui-input-block">
+                                                        <button type="button" class="layui-btn layui-btn-primary message-login-inline-btn" @click="goLoginForMessage('上传图片')">登录后上传图片</button>
                                                 </div>
                                            </div>
                                         </div>
 					<div class="layui-form-item message-actions-row">
 						<div class="layui-input-block message-actions">
-							<button :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"10px 5px 0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(183, 186, 107, 1)","color":"#fff","borderRadius":"4px","borderWidth":"0","width":"auto","lineHeight":"34px","fontSize":"14px","borderStyle":"solid"}' id="messageSubmitBtn" class="layui-btn btn-submit" lay-submit lay-filter="*">立即提交</button>
-                                <button :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"10px 5px 0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"#2e3a1f","borderRadius":"4px","borderWidth":"1px","width":"auto","lineHeight":"34px","fontSize":"14px","borderStyle":"solid"}' id="messageReviewBoardBtn" type="button" @click="jump('../messages/review.html')">反馈处理看板</button>
-							<button :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"10px 5px 0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"red","borderRadius":"4px","borderWidth":"0","width":"auto","lineHeight":"34px","fontSize":"14px","borderStyle":"solid"}' id="messageResetBtn" type="reset" class="layui-btn layui-btn-primary">重置</button>
+							<button :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"10px 5px 0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(183, 186, 107, 1)","color":"#fff","borderRadius":"4px","borderWidth":"0","width":"auto","lineHeight":"34px","fontSize":"14px","borderStyle":"solid"}' id="messageSubmitBtn" class="layui-btn btn-submit" lay-submit lay-filter="*" v-if="!isGuest">立即提交</button>
+                                <button :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"10px 5px 0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"#2e3a1f","borderRadius":"4px","borderWidth":"1px","width":"auto","lineHeight":"34px","fontSize":"14px","borderStyle":"solid"}' id="messageReviewBoardBtn" type="button" @click="goReviewBoard">反馈处理看板</button>
+							<button :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"10px 5px 0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"red","borderRadius":"4px","borderWidth":"0","width":"auto","lineHeight":"34px","fontSize":"14px","borderStyle":"solid"}' id="messageResetBtn" type="reset" class="layui-btn layui-btn-primary" v-if="!isGuest">重置</button>
+							<button v-if="isGuest" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(77, 79, 54,.3)","margin":"10px 5px 0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(183, 186, 107, 1)","color":"#fff","borderRadius":"4px","borderWidth":"0","width":"auto","lineHeight":"34px","fontSize":"14px","borderStyle":"solid"}' id="messageLoginBtn" type="button" class="layui-btn btn-submit" @click="goLoginForMessage('提交留言')">登录后提交留言</button>
 						</div>
 					</div>
 				</form>
@@ -198,6 +207,7 @@
 		<script src="../../modules/config.js"></script>
 		<!-- 工具方法 -->
 		<script src="../../js/utils.js"></script>
+		<script src="../../js/login-guard-prompt.js"></script>
 			<script src="../../js/page-state.js"></script>
 
 		<script>
@@ -210,6 +220,7 @@
 					}],
                                         cpicture: '',
                                         baseurl:'',
+                                        isGuest: !(localStorage.getItem('Token') && localStorage.getItem('userid')) ,
 					dataList: []
 				},
 				filters: {
@@ -251,6 +262,47 @@
 					},
 					formatStationName(value) {
 						return value || '未关联站点';
+					},
+					refreshGuestState() {
+						this.isGuest = !(localStorage.getItem('Token') && localStorage.getItem('userid'));
+					},
+					redirectToLoginForMessage() {
+						localStorage.setItem('iframeUrl', './pages/messages/list.html');
+						window.parent.location.href = '../login/login.html';
+					},
+					goLoginForMessage(actionLabel) {
+						var guard = window.TransitLoginGuard;
+						var label = actionLabel || '提交留言';
+						if (!this.isGuest) {
+							this.redirectToLoginForMessage();
+							return;
+						}
+						if (!guard || typeof guard.open !== 'function') {
+							this.redirectToLoginForMessage();
+							return;
+						}
+						var vm = this;
+						guard.open({
+							layerHost: window.parent && window.parent !== window ? window.parent : window,
+							title: label + '前请先登录',
+							description: '历史留言和处理状态可先浏览；提交内容、上传图片与进入反馈处理看板时，再登录个人服务即可。',
+							highlights: [
+								'当前页面可继续浏览，关闭提示后不会离开留言列表。',
+								'登录后会回到留言页，继续完成提交、上传或处理查看。'
+							],
+							confirmLabel: '去登录后继续',
+							cancelLabel: '先继续浏览留言',
+							onConfirm: function() {
+								vm.redirectToLoginForMessage();
+							}
+						});
+					},
+					goReviewBoard() {
+						if (this.isGuest) {
+							this.goLoginForMessage('进入反馈处理看板');
+							return;
+						}
+						jump('../messages/review.html');
 					}
 				}
 			})
@@ -414,6 +466,10 @@
                                          //允许上传时校验的文件类型
                                         accept: 'images',
                                         before: function() {
+                                                if (vue.isGuest) {
+                                                        vue.goLoginForMessage('上传图片');
+                                                        return false;
+                                                }
                                                 //loading层
                                                 var index = layer.load(1, {
                                                         shade: [0.1, '#fff'] //0.1透明度的白色背景
@@ -450,6 +506,10 @@
 
 				// 提交数据
 				form.on('submit(*)', function(data) {
+					if (vue.isGuest) {
+						vue.goLoginForMessage();
+						return false;
+					}
 					data = data.field;
 					data.userid = localStorage.getItem('userid')
 					data.username = localStorage.getItem('adminName')

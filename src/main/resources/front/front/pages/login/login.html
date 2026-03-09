@@ -2,59 +2,11 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>登录</title>
     <link rel="stylesheet" type="text/css" href="../../layui/css/layui.css">
     <link rel="stylesheet" type="text/css" href="../../xznstatic/css/public.css"/>
-    <link rel="stylesheet" type="text/css" href="../../xznstatic/css/login.css"/>
 	    <style type="text/css">
-    	.login {
-    		display: flex;
-    		justify-content: center;
-    		align-items: center;
-    	    width: 100%;
-    	    height: 100%;
-    		background-attachment: fixed;
-    		background-size: cover;
-    		background-position: center;
-									background-image: url(http://codegen.caihongy.cn/20211217/1ebf4a25c4a84b7689f866738f054aa6.png);
-						    	}
-    	.login form {
-    		box-sizing: border-box;
-    		min-height: 400px;
-    		display: flex;
-    		flex-direction: column;
-    		justify-content: center !important;
-			position: inherit;
-    	}
-    	.login .logo, .login .title {
-    		box-sizing: border-box;
-    	}
-    	.login .logo img {
-    		display: block;
-    	}
-    	.login .title {
-    		text-align: center;
-    	}
-    	.login .form-item {
-    		display: flex;
-    		align-items: center;
-    		flex-wrap: wrap;
-    		box-sizing: border-box;
-    	}
-    	.login .form-item input, .login .form-label {
-    		box-sizing: border-box;
-    	}
-    	.login .btn-submit {
-    		display: block;
-    		box-sizing: border-box;
-            height: 0 !important;
-    	}
-    	.login form p.txt {
-    		width: 100%;
-    		margin: 0;
-    		box-sizing: border-box;
-    	}
 	.l-redio .layui-form-radio {
 		margin: 0;
 	}
@@ -120,12 +72,22 @@
 		<link rel="stylesheet" href="../../css/accessibility-high-contrast.css">
 </head>
 <body class="transit-ui transit-page page-login">
+    <script>
+        window.browseAsGuest = function() {
+            ['Token', 'role', 'sessionTable', 'adminName', 'userid', 'vip', 'userTable'].forEach(function(key) {
+                localStorage.removeItem(key);
+            });
+            localStorage.setItem('iframeUrl', './pages/home/home.html');
+            window.location.href = '../../index.html';
+            return false;
+        };
+    </script>
 	    <a href="#loginForm" class="skip-link">跳转到登录表单</a>
     <div id="app" class="login login-shell">
         <section class="login-intro" aria-label="登录页说明">
             <div class="login-eyebrow">Accessible Transit Entry</div>
             <h1 class="login-heading">无障碍公交出行系统</h1>
-            <p class="login-summary">面向轮椅/行动不便与低视力试点用户，登录后可查看个人中心、收藏记录与个性化演示流程。</p>
+            <p class="login-summary">公共路线、公告、资源与无障碍设置可先免登录浏览；个人中心、收藏与留言提交等个性化功能登录后启用。</p>
             <ul class="login-feature-list">
                 <li>首轮试点：广州老城区公共服务走廊</li>
                 <li>支持高对比度、大字体、键盘导航与字幕提示</li>
@@ -136,23 +98,46 @@
                 <p>公共场所请勿勾选自动登录；演示时建议登录后返回首页，继续使用 Alt + D 自动巡检全站流程。</p>
             </div>
         </section>
-        <form id="loginForm" class="layui-form login-form" :style='{"padding":"0 12px","boxShadow":"0 0 0px rgba(30, 144, 255, .8)","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(255, 255, 255, 0.7)","borderRadius":"45px","borderWidth":"0","width":"700px","borderStyle":"solid","justifyContent":"center","height":"400px"}'>
-            
-            <div class="msg-warn hide title" v-if="true" :style='{"padding":"15px 0","boxShadow":"0 0 6px rgba(0,0,0,0)","margin":"-125px auto 50px","borderColor":"rgba(0,0,0,1)","backgroundColor":"rgba(255, 255, 255, 0.7)","color":"rgba(77, 79, 54, 1)","isshow":true,"borderRadius":"30px 30px 0 0","borderWidth":"0","width":"80%","lineHeight":"50px","fontSize":"24px","borderStyle":"solid"}'>公共场所不建议自动登录，以防账号丢失</div>
-            <div :style='{"padding":"0","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0 0 12px 60px","borderColor":"rgba(0,0,0,1)","backgroundColor":"rgba(255, 255, 255, 0)","borderRadius":"0","borderWidth":"0","width":"35%","borderStyle":"solid","height":"64px"}' class="form-item">
-                <label v-if="false" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(0,0,0,0)","backgroundColor":"transparent","color":"#333","borderRadius":"0","textAlign":"right","borderWidth":"0","width":"84px","fontSize":"16px","borderStyle":"solid"}' class="form-label">账号</label>
-				<input :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(0,0,0,.5)","borderColor":"#ccc","backgroundColor":"rgba(255, 255, 255, 1)","color":"#333","borderRadius":"5px","textAlign":"left","borderWidth":"0","width":"100%","fontSize":"14px","borderStyle":"solid","height":"44px"}' type="text" name="username" required lay-verify="required" placeholder="请输入账号" autocomplete="off" class="layui-input">
-            </div>
-            <div :style='{"padding":"0","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0 0 12px 60px","borderColor":"rgba(0,0,0,1)","backgroundColor":"rgba(255, 255, 255, 0)","borderRadius":"0","borderWidth":"0","width":"35%","borderStyle":"solid","height":"64px"}' class="form-item">
-                <label v-if="false" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(0,0,0,0)","backgroundColor":"transparent","color":"#333","borderRadius":"0","textAlign":"right","borderWidth":"0","width":"84px","fontSize":"16px","borderStyle":"solid"}' class="form-label">密码</label>
-				<input :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(0,0,0,.5)","borderColor":"#ccc","backgroundColor":"rgba(255, 255, 255, 1)","color":"#333","borderRadius":"5px","textAlign":"left","borderWidth":"0","width":"100%","fontSize":"14px","borderStyle":"solid","height":"44px"}' type="password" name="password" required lay-verify="required" placeholder="请输入密码" autocomplete="off" class="layui-input">
+        <form id="loginForm" class="layui-form login-form">
+            <div class="login-card-head">
+                <div class="login-card-kicker">Secure Sign In</div>
+                <h2 class="login-card-title">登录个人服务</h2>
+                <p class="login-card-subtitle">如需收藏、留言提交或进入个人中心，请登录；若只是查看公共信息，可先进入首页浏览。</p>
             </div>
 
-            <div v-if="roles.length>1" :style='{"padding":"0","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0 auto","borderColor":"rgba(0,0,0,1)","backgroundColor":"rgba(255, 255, 255, 0)","borderRadius":"0","borderWidth":"0","width":"80%","borderStyle":"solid","height":"44px"}' class="form-item l-redio">
-				<input v-for="(item,index) in roles" v-bind:key="index" type="radio" name="role" id="role" :value="item.tableName" :title="item.roleName">
+            <div class="msg-warn hide title" v-if="true">公共场所不建议自动登录，以防账号丢失</div>
+
+            <div class="login-account-card" aria-label="演示账号信息">
+                <span class="login-account-chip">演示账号</span>
+                <strong>demo_user / demo123</strong>
+                <span>推荐用于课堂演示与功能巡检</span>
             </div>
-			<button :style='{"padding":"100px 0","boxShadow":"0px 0px 0px 30px rgba(255,255,255,1)","margin":"-160px 0 50px 62%","borderColor":"#ccc","backgroundColor":"rgba(183, 186, 107, 1)","color":"#fff","borderRadius":"50%","borderWidth":"0","width":"200px","fontSize":"40px","lineHeight":"0","borderStyle":"solid","height":"44px"}' class="layui-btn layui-btn-fluid layui-btn-danger btn-submit" lay-submit lay-filter="login">登录</button>
-            <p :style='{"color":"rgba(40, 40, 40, 1)","textAlign":"center","fontSize":"12px"}' class="txt"><a style="color: inherit;font-size: inherit;" v-if="item.hasFrontRegister=='是'" v-for="(item,index) in menu" v-bind:key="index" :href="'javascript:registerClick(\''+item.tableName+'\')'">注册{{item.roleName.replace('注册','')}}</a></p>
+
+            <div class="login-access-card" aria-label="免登录浏览说明">
+                <div class="login-access-title">公共功能无需登录</div>
+                <p>首页总览、路线规划、实时地图、公告、资源与无障碍设置可直接浏览；收藏、留言提交、个人中心等功能会在需要时再提示登录。</p>
+            </div>
+
+            <div class="form-item login-field">
+                <label class="login-field-label" for="login-username">账号</label>
+                <input id="login-username" type="text" name="username" required lay-verify="required" placeholder="请输入账号…" autocomplete="username" spellcheck="false" class="layui-input">
+            </div>
+            <div class="form-item login-field">
+                <label class="login-field-label" for="login-password">密码</label>
+                <input id="login-password" type="password" name="password" required lay-verify="required" placeholder="请输入密码…" autocomplete="current-password" class="layui-input">
+            </div>
+
+            <div v-if="roles.length>1" class="form-item l-redio login-role-block">
+                <div class="login-field-label">登录身份</div>
+                <div class="login-role-options">
+                    <input v-for="(item,index) in roles" v-bind:key="index" type="radio" name="role" id="role" :value="item.tableName" :title="item.roleName">
+                </div>
+            </div>
+            <button class="layui-btn layui-btn-fluid layui-btn-danger btn-submit" lay-submit lay-filter="login">登录并进入系统</button>
+            <div class="login-action-row">
+                <button type="button" class="layui-btn login-guest-btn" onclick="browseAsGuest()">先浏览公共功能</button>
+            </div>
+            <p class="txt"><a style="color: inherit;font-size: inherit;" v-if="item.hasFrontRegister=='是'" v-for="(item,index) in menu" v-bind:key="index" :href="'javascript:registerClick(\''+item.tableName+'\')'">注册{{item.roleName.replace('注册','')}}</a></p>
         </form>
     </div>
 
@@ -312,10 +297,6 @@
 
         });
 
-        /**
-         * 跳转登录
-         * @param {Object} tablename
-         */
         function registerClick(tablename) {
             window.location.href = '../' + tablename + '/register.html?tablename=' + tablename;
         }

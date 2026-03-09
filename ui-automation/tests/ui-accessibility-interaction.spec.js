@@ -74,6 +74,30 @@ test.describe('Accessibility Interaction Baseline', () => {
     await expect(page.locator('#a11y-visual-caption.show')).toBeVisible();
   });
 
+  test('Assist deck should allow closing and reopening lower-left visual hints', async ({ page }) => {
+    await page.goto('index.html', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(700);
+
+    await page.locator('#assistShortcutHelp').click();
+    await expect(page.locator('#a11y-visual-caption.show')).toBeVisible();
+
+    await page.locator('#assistVisualHint').click();
+    await page.waitForTimeout(300);
+    await expect(page.locator('#a11y-visual-caption.show')).toHaveCount(0);
+    await expect.poll(async () => page.evaluate(() => localStorage.getItem('accessibility_visual_caption'))).toBe('false');
+
+    await page.locator('#assistShortcutHelp').click();
+    await page.waitForTimeout(300);
+    await expect(page.locator('#a11y-visual-caption.show')).toHaveCount(0);
+
+    await page.locator('#assistVisualHint').click();
+    await page.waitForTimeout(300);
+    await expect.poll(async () => page.evaluate(() => localStorage.getItem('accessibility_visual_caption'))).toBe('true');
+
+    await page.locator('#assistShortcutHelp').click();
+    await expect(page.locator('#a11y-visual-caption.show')).toBeVisible();
+  });
+
   test('Settings presets should apply high contrast, large font and reduced motion', async ({ page }) => {
     await page.goto('index.html', { waitUntil: 'domcontentloaded' });
     await page.keyboard.press('Alt+A');

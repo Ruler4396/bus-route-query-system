@@ -3,7 +3,7 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>收藏</title>
 		<link rel="stylesheet" href="../../layui/css/layui.css">
 		<!-- 样式 -->
@@ -21,92 +21,88 @@
 </head>
 	<style>
 		#swiper {
-			overflow: hidden;
-		}
-		#swiper .layui-carousel-ind li {
-			width: 28px;
-			height: 14px;
-			border-width: 0;
-			border-style: solid;
-			border-color: rgba(0,0,0,.3);
-			border-radius: 7px;
-			background-color: rgba(191, 191, 191, 1);
-			box-shadow: 0 0 0px rgba(255,0,0,.8);
-		}
-		#swiper .layui-carousel-ind li.layui-this {
-			width: 60px;
-			height: 14px;
-			border-width: 0;
-			border-style: solid;
-			border-color: rgba(0,0,0,.3);
-			border-radius: 7px;
-			background-color: rgba(77, 79, 54, 1);
-			box-shadow: 0 0 0px rgba(255,0,0,.8);
-		}
-		
-		.index-title {
-		    text-align: center;
-		    box-sizing: border-box;
-		    width: 980px;
-		    display: flex;
-		    justify-content: center;
-		    align-items: center;
-		    flex-direction: column;
-		}
-		
-		.layui-laypage .layui-laypage-count {
-		  padding: 0 10px;
-		}
-		.layui-laypage .layui-laypage-skip {
-		  padding-left: 10px;
+			display: none;
 		}
 	</style>
-	<body class="transit-ui transit-page">
+	<body class="transit-ui transit-page page-storeup-list page-account-area">
 
 		<div id="app">
-			<!-- 轮播图 -->
-			<div class="layui-carousel" id="swiper" :style='{"boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"0 auto","borderColor":"rgba(0,0,0,.3)","borderRadius":"0","borderWidth":"0","width":"100%","borderStyle":"solid"}'>
+			<div class="layui-carousel" id="swiper" aria-hidden="true">
 			  <div carousel-item id="swiper-item">
 				<div v-for="(item,index) in swiperList" :key="index">
 					<img style="width: 100%;height: 100%;object-fit:cover;" :src="item.img" />
 				</div>
 			  </div>
 			</div>
-			<!-- 轮播图 -->
-			
-			<!-- 标题 -->
-			<div class="index-title" :style='{"padding":"10px","boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"10px auto","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(77, 79, 54, 1)","color":"rgba(255, 255, 255, 1)","borderRadius":"4px","borderWidth":"0","fontSize":"20px","borderStyle":"solid","height":"auto"}'>
-			  <span>USER / STOREUP</span><span>我的收藏</span>
-			</div>
-			<!-- 标题 -->
 
-			<!-- 图文列表 -->
-			<div class="data-container layui-row">
-				<fieldset class="search-container">
-					<form class="layui-form">
-						<div class="layui-inline" style="margin-bottom: 10px;">
-							<label class="layui-form-label">名称</label>
-							<div class="layui-input-inline">
-								<input type="text" name="name" id="name" placeholder="名称" autocomplete="off" class="layui-input">
+			<section class="account-page-header">
+				<div class="account-page-header-main">
+					<span class="account-page-eyebrow">USER / STOREUP</span>
+					<h1>我的收藏</h1>
+					<p>把个人中心里的收藏记录整理成统一列表，搜索与浏览逻辑保持和全站卡片式设计一致。</p>
+				</div>
+				<div class="account-page-header-note">
+					<span>当前模块</span>
+					<strong>收藏内容管理</strong>
+				</div>
+			</section>
+
+			<section class="account-shell account-shell--collection">
+				<aside class="left-container account-sidebar">
+					<div class="account-sidebar-intro">
+						<p class="account-sidebar-kicker">PERSONAL HUB</p>
+						<h2>个人服务</h2>
+						<p>在同一套个人服务界面里查看资料维护与已收藏内容，避免页面风格割裂。</p>
+					</div>
+					<ul class="layui-nav layui-nav-tree account-menu" role="navigation" aria-label="个人服务菜单">
+						<li v-for="(item,index) in centerMenu" v-bind:key="index" class="layui-nav-item" :class="isActiveCenterMenu(item.url) ? 'layui-this' : ''">
+							<a :href="'javascript:jump(\''+item.url+'\')'">{{item.name}}</a>
+						</li>
+					</ul>
+				</aside>
+
+				<div class="right-container account-panel account-panel--collection">
+					<div class="account-panel-head">
+						<div>
+							<p class="account-panel-kicker">COLLECTION LIBRARY</p>
+							<h2>收藏夹</h2>
+							<p>可按名称筛选已收藏内容，统一查看并继续跳转到对应详情页。</p>
+						</div>
+						<div class="account-panel-chip-group">
+							<span class="account-panel-chip">当前展示 {{dataList.length}} 条</span>
+						</div>
+					</div>
+
+					<div class="account-toolbar">
+						<form class="layui-form account-search-form">
+							<div class="account-search-field">
+								<label class="account-form-label" for="name">按名称筛选</label>
+								<input type="text" name="name" id="name" placeholder="输入收藏名称关键词…" autocomplete="off" class="layui-input">
 							</div>
-						</div>
-						<div class="layui-inline" style="margin-left: 30px;margin-bottom: 10px;">
-							<button id="btn-search" type="button" class="layui-btn">
-								<i class="layui-icon layui-icon-search"></i> 搜索
+							<button id="btn-search" type="button" class="layui-btn account-primary-btn">
+								<i class="layui-icon layui-icon-search"></i> 搜索收藏
 							</button>
+						</form>
+					</div>
+
+					<div class="data-container account-collection-container">
+						<div v-if="dataList.length" class="data-list account-collection-grid">
+							<a v-for="(item,index) in dataList" v-bind:key="index" class="data-item account-collection-card" :href="'../'+item.tablename+'/detail.html?id='+item.refid">
+								<img class="cover account-collection-cover" :src="resolveStoreupCover(item)" :alt="item.name ? item.name + '封面' : '收藏封面'" width="360" height="220" loading="lazy" decoding="async">
+								<div class="account-collection-body">
+									<h3 class="title">{{item.name}}</h3>
+									<p class="account-collection-meta">{{item.tablename === 'gongjiaoluxian' ? '公交路线收藏' : '已收藏内容'}}</p>
+								</div>
+							</a>
 						</div>
-					</form>
-				</fieldset>
-				<div class="data-list layui-col-md8 layui-col-md-offset2">
-					<div @click="jump('../'+item.tablename+'/detail.html?id='+item.refid)" v-for="(item,index) in dataList" v-bind:key="index"
-					 class="data-item layui-col-md3">
-						<img class="cover" :src="baseurl+item.picture.split(',')[0]">
-						<h3 class="title">{{item.name}}</h3>
+						<div v-else class="account-empty-state">
+							<h3>还没有收藏内容</h3>
+							<p>可以先去路线规划、公告或资源页面添加收藏，之后会在这里统一查看。</p>
+						</div>
+						<div class="pager" id="pager" :style="{textAlign:2==1?'left':2==2?'center':'right'}"></div>
 					</div>
 				</div>
-				<div class="pager" id="pager" :style="{textAlign:2==1?'left':2==2?'center':'right'}"></div>
-			</div>
-			<!-- 图文列表 -->
+			</section>
 		</div>
 
 
@@ -129,7 +125,8 @@
 						img: '../../img/banner.jpg'
 					}],
 					dataList: [],
-					baseurl:''
+					baseurl:'',
+					centerMenu: centerMenu
 				},
 				filters: {
 					newsDesc: function(val) {
@@ -146,6 +143,14 @@
 				methods: {
 					jump(url) {
 						jump(url)
+					},
+					isActiveCenterMenu(url) {
+						var normalized = (url || '').replace('../', '/');
+						return window.location.pathname.indexOf(normalized) !== -1;
+					},
+					resolveStoreupCover(item) {
+						var picture = item && item.picture ? String(item.picture).split(',').filter(Boolean)[0] : '';
+						return picture ? this.baseurl + picture : '../../img/a11y-covers/route-1.svg';
 					}
 				}
 			})

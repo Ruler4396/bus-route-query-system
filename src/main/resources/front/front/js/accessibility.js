@@ -29,53 +29,211 @@
         return './' + clean;
     }
 
+    function resolveBackendUrl(relativePath) {
+        var clean = String(relativePath || '').replace(/^\.\//, '').replace(/^\//, '');
+        var path = window.location.pathname || '';
+        var frontIndex = path.indexOf('/front/');
+        if (frontIndex >= 0) {
+            return path.substring(0, frontIndex + 1) + clean;
+        }
+        var lastSlash = path.lastIndexOf('/');
+        if (lastSlash >= 0) {
+            return path.substring(0, lastSlash + 1) + clean;
+        }
+        return '/' + clean;
+    }
+
     // 语音播报服务
     var SpeechService = {
         synth: window.speechSynthesis,
         isEnabled: false,
         currentVoice: null,
+        isSpeaking: false,
+        currentUtterance: null,
+        activationHooksBound: false,
+        speechUnlocked: false,
+        lastUserGestureAt: 0,
+        pendingQueue: [],
+        maxPendingQueue: 4,
+        lastError: '',
+        lastMode: 'idle',
+        lastSpeakAt: 0,
+        lastSpokenText: '',
+
+        getSpeechHostService: function() {
+            try {
+                if (window.top && window.top !== window && window.top.location.origin === window.location.origin && window.top.__A11Y_SPEECH_SERVICE) {
+                    return window.top.__A11Y_SPEECH_SERVICE;
+                }
+            } catch (e) {}
+            return this;
+        },
+
+        isMobileLike: function() {
+            return /Android|webOS|iPhone|iPad|iPod|Mobile|HarmonyOS/i.test(navigator.userAgent || '');
+        },
+
+        refreshVoices: function() {
+            if (!this.synth || typeof this.synth.getVoices !== 'function') {
+                return [];
+            }
+            var voices = this.synth.getVoices() || [];
+            this.currentVoice = null;
+            for (var i = 0; i < voices.length; i++) {
+                if (voices[i].lang && voices[i].lang.indexOf('zh') === 0) {
+                    this.currentVoice = voices[i];
+                    break;
+                }
+            }
+            if (!this.currentVoice && voices.length) {
+                this.currentVoice = voices[0];
+            }
+            return voices;
+        },
+
+        noteUserGesture: function() {
+            this.lastUserGestureAt = Date.now();
+            if (this.isMobileLike()) {
+                this.speechUnlocked = true;
+            }
+            this.lastMode = 'gesture';
+            this.resumeIfNeeded();
+        },
+
+        resumeIfNeeded: function() {
+            if (!this.synth) return;
+            try {
+                if (this.synth.paused) {
+                    this.synth.resume();
+                }
+            } catch (err) {
+                console.warn('语音恢复失败:', err);
+            }
+            this.refreshVoices();
+        },
+
+        enqueuePending: function(text, options) {
+            if (!text) return;
+            this.pendingQueue.push({ text: text, options: options || {} });
+            if (this.pendingQueue.length > this.maxPendingQueue) {
+                this.pendingQueue = this.pendingQueue.slice(this.pendingQueue.length - this.maxPendingQueue);
+            }
+            this.lastMode = 'queued';
+        },
+
+        flushPendingQueue: function() {
+            if (!this.synth || !this.isEnabled || !this.pendingQueue.length) {
+                return Promise.resolve(false);
+            }
+            if (this.isMobileLike() && !this.speechUnlocked) {
+                return Promise.resolve(false);
+            }
+            var latest = this.pendingQueue[this.pendingQueue.length - 1];
+            this.pendingQueue = [];
+            if (!latest) {
+                return Promise.resolve(false);
+            }
+            this.lastMode = 'flushing';
+            return this.speak(latest.text, Object.assign({}, latest.options, {
+                deferIfLocked: false,
+                interrupt: latest.options && latest.options.interrupt !== false
+            }));
+        },
+
+        shouldUseAudioFallback: function() {
+            if (!this.isEnabled) return false;
+            if (!this.synth) return true;
+            var voices = [];
+            try {
+                voices = this.refreshVoices();
+            } catch (e) {}
+            return !voices || !voices.length;
+        },
+
+        prepareFromUserGesture: function() {
+            var host = this.getSpeechHostService();
+            if (host !== this) {
+                return host.prepareFromUserGesture();
+            }
+            this.noteUserGesture();
+            AudioFallbackService.prepareFromUserGesture();
+            return this.flushPendingQueue().then(function(done) {
+                if (done) {
+                    return true;
+                }
+                return AudioFallbackService.flushPending();
+            });
+        },
+
+        registerActivationHooks: function() {
+            if (this.activationHooksBound) {
+                return;
+            }
+            this.activationHooksBound = true;
+            var self = this;
+            var handler = function() {
+                var host = self.getSpeechHostService();
+                if (host && host !== self) {
+                    host.prepareFromUserGesture();
+                    return;
+                }
+                self.prepareFromUserGesture();
+            };
+            ['touchstart', 'touchend', 'pointerup', 'click', 'keydown'].forEach(function(eventName) {
+                document.addEventListener(eventName, handler, { capture: true, passive: true });
+            });
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'visible') {
+                    var host = self.getSpeechHostService();
+                    self.resumeIfNeeded();
+                    if (host && host !== self) {
+                        host.resumeIfNeeded();
+                    }
+                }
+            });
+            window.addEventListener('pageshow', function() {
+                var host = self.getSpeechHostService();
+                self.resumeIfNeeded();
+                if (host && host !== self) {
+                    host.resumeIfNeeded();
+                }
+            });
+        },
 
         /**
          * 初始化语音服务
          */
         init: function() {
             if (!this.synth) {
+                this.lastError = '当前浏览器不支持 speechSynthesis';
+                this.lastMode = 'unsupported';
                 console.warn('当前浏览器不支持语音合成');
                 return false;
             }
 
-            // 加载保存的设置
             this.isEnabled = localStorage.getItem('accessibility_speech') === 'true';
 
-            // 获取中文语音
             var self = this;
             var loadVoices = function() {
-                var voices = self.synth.getVoices();
-                for (var i = 0; i < voices.length; i++) {
-                    if (voices[i].lang.indexOf('zh') === 0) {
-                        self.currentVoice = voices[i];
-                        break;
-                    }
-                }
+                self.refreshVoices();
             };
 
-            if (self.synth.onvoiceschanged !== undefined) {
+            if (typeof self.synth.addEventListener === 'function') {
+                self.synth.addEventListener('voiceschanged', loadVoices);
+            } else if (self.synth.onvoiceschanged !== undefined) {
                 self.synth.onvoiceschanged = loadVoices;
             }
             loadVoices();
+            this.registerActivationHooks();
 
             return true;
         },
 
-        /**
-         * 语音播报
-         * @param {string} text - 要播报的文本
-         * @param {Object} options - 配置选项
-         */
-        isSpeaking: false,
-        currentUtterance: null,
-
         waitUntilIdle: function(timeoutMs) {
+            var host = this.getSpeechHostService();
+            if (host !== this) {
+                return host.waitUntilIdle(timeoutMs);
+            }
             var self = this;
             var timeout = typeof timeoutMs === 'number' ? timeoutMs : 12000;
             return new Promise(function(resolve) {
@@ -98,7 +256,37 @@
         speak: function(text, options) {
             options = options || {};
 
-            if (!this.synth || !this.isEnabled || !text) {
+            var host = this.getSpeechHostService();
+            if (host !== this) {
+                return host.speak(text, options);
+            }
+
+            if (!this.isEnabled || !text) {
+                return Promise.resolve(false);
+            }
+
+            this.lastError = '';
+            this.lastSpokenText = String(text || '').slice(0, 120);
+            this.lastSpeakAt = Date.now();
+
+            if (!this.synth) {
+                this.lastMode = 'fallback-audio';
+                return AudioFallbackService.speak(text, options);
+            }
+
+            this.resumeIfNeeded();
+            if (this.shouldUseAudioFallback()) {
+                this.lastMode = 'fallback-audio';
+                this.lastError = this.lastError || '当前浏览器没有可用原生语音，已切换音频兜底';
+                return AudioFallbackService.speak(text, options);
+            }
+
+            var deferIfLocked = options.deferIfLocked !== false;
+            if (this.isMobileLike() && !this.speechUnlocked) {
+                if (deferIfLocked) {
+                    this.enqueuePending(text, options);
+                }
+                this.lastError = '等待首次手势后再播报';
                 return Promise.resolve(false);
             }
 
@@ -128,12 +316,15 @@
                     utterance.onstart = function() {
                         self.isSpeaking = true;
                         self.currentUtterance = utterance;
+                        self.lastMode = 'native';
+                        self.lastError = '';
                     };
                     utterance.onend = function() {
                         if (self.currentUtterance === utterance) {
                             self.currentUtterance = null;
                             self.isSpeaking = false;
                         }
+                        self.lastMode = 'completed';
                         resolve(true);
                     };
                     utterance.onerror = function(err) {
@@ -141,7 +332,10 @@
                             self.currentUtterance = null;
                             self.isSpeaking = false;
                         }
+                        self.lastMode = 'error';
+                        self.lastError = (err && (err.error || err.message)) ? String(err.error || err.message) : '语音播报触发失败';
                         console.warn('语音播报触发失败:', err);
+                        AudioFallbackService.speak(text, Object.assign({}, options, { interrupt: true }));
                         resolve(false);
                     };
 
@@ -151,6 +345,9 @@
                         console.warn('语音播报触发失败:', err);
                         self.currentUtterance = null;
                         self.isSpeaking = false;
+                        self.lastMode = 'error';
+                        self.lastError = err && err.message ? err.message : '语音播报触发失败';
+                        AudioFallbackService.speak(text, Object.assign({}, options, { interrupt: true }));
                         resolve(false);
                     }
                 });
@@ -169,18 +366,62 @@
          * 停止播报
          */
         stop: function() {
-            if (this.synth) {
-                this.synth.cancel();
+            var host = this.getSpeechHostService();
+            if (host !== this) {
+                return host.stop();
             }
+            if (this.synth) {
+                this.pendingQueue = [];
+                this.synth.cancel();
+                this.lastMode = 'stopped';
+            }
+            AudioFallbackService.stop();
         },
 
         /**
          * 切换语音播报开关
          */
         toggle: function() {
+            var host = this.getSpeechHostService();
+            if (host !== this) {
+                return host.toggle();
+            }
             this.isEnabled = !this.isEnabled;
             localStorage.setItem('accessibility_speech', this.isEnabled);
+            if (!this.isEnabled) {
+                this.pendingQueue = [];
+            }
             return this.isEnabled;
+        },
+
+        getDiagnostics: function() {
+            var host = this.getSpeechHostService();
+            if (host !== this) {
+                return host.getDiagnostics();
+            }
+            var voices = [];
+            try {
+                voices = this.refreshVoices();
+            } catch (e) {}
+            return {
+                supported: !!this.synth,
+                enabled: !!this.isEnabled,
+                mobileLike: this.isMobileLike(),
+                unlocked: !!this.speechUnlocked,
+                inIframe: window.top !== window,
+                hostDelegated: !!(window.top && window.top !== window && window.top.__A11Y_SPEECH_SERVICE),
+                speaking: !!(this.synth && this.synth.speaking),
+                pendingCount: this.pendingQueue.length,
+                voiceCount: voices.length,
+                currentVoice: this.currentVoice ? ((this.currentVoice.name || '未知') + ' / ' + (this.currentVoice.lang || '')) : '未选中语音',
+                fallbackAvailable: AudioFallbackService.isAvailable(),
+                fallbackUnlocked: AudioFallbackService.unlocked,
+                fallbackPending: AudioFallbackService.pendingText ? 1 : 0,
+                lastMode: this.lastMode || AudioFallbackService.lastMode || 'idle',
+                lastError: this.lastError || AudioFallbackService.lastError || '',
+                lastSpeakAt: this.lastSpeakAt || AudioFallbackService.lastSpeakAt || 0,
+                lastSpokenText: this.lastSpokenText || AudioFallbackService.lastText || ''
+            };
         },
 
         /**
@@ -242,6 +483,8 @@
             this.speak(text);
         }
     };
+
+    window.__A11Y_SPEECH_SERVICE = SpeechService;
 
     // 触觉反馈服务
     var HapticService = {
@@ -711,6 +954,7 @@
     var AriaService = {
         captionTimer: null,
         captionDockEnabled: localStorage.getItem('accessibility_caption_center') === 'true',
+        visualCaptionEnabled: localStorage.getItem('accessibility_visual_caption') !== 'false',
         captionHistory: [],
         captionHistoryLimit: 8,
 
@@ -734,6 +978,23 @@
             }
         },
 
+        hideVisualCaption: function() {
+            var hostService = this.getCaptionHostService();
+            if (hostService !== this) {
+                this.cleanupLocalCaptionArtifacts();
+                hostService.hideVisualCaption();
+                return;
+            }
+            if (this.captionTimer) {
+                clearTimeout(this.captionTimer);
+                this.captionTimer = null;
+            }
+            var caption = document.getElementById('a11y-visual-caption');
+            if (caption) {
+                caption.classList.remove('show');
+            }
+        },
+
         /**
          * 为听障用户显示可见字幕提示
          * @param {string} message
@@ -747,6 +1008,10 @@
                 return;
             }
             this.appendCaptionHistory(message);
+            if (!this.visualCaptionEnabled) {
+                this.hideVisualCaption();
+                return;
+            }
 
             var caption = document.getElementById('a11y-visual-caption');
             if (!caption) {
@@ -896,6 +1161,24 @@
             if (!this.captionHistory.length) {
                 list.innerHTML = '<div class="caption-center-empty">当前还没有可显示的字幕提示。</div>';
             }
+        },
+
+        setVisualCaptionEnabled: function(enabled) {
+            this.visualCaptionEnabled = enabled !== false;
+            localStorage.setItem('accessibility_visual_caption', this.visualCaptionEnabled ? 'true' : 'false');
+            var hostService = this.getCaptionHostService();
+            if (hostService !== this) {
+                this.cleanupLocalCaptionArtifacts();
+                return hostService.setVisualCaptionEnabled(enabled);
+            }
+            if (!this.visualCaptionEnabled) {
+                this.hideVisualCaption();
+            }
+            return this.visualCaptionEnabled;
+        },
+
+        toggleVisualCaption: function() {
+            return this.setVisualCaptionEnabled(!this.visualCaptionEnabled);
         },
 
         setCaptionCenterEnabled: function(enabled) {
@@ -1331,6 +1614,211 @@
         }
     };
 
+
+    // 提示音测试服务（用于快速分辨设备音量问题与语音合成问题）
+    var AudioTestService = {
+        audioContext: null,
+
+        getContext: function() {
+            if (this.audioContext) {
+                return this.audioContext;
+            }
+            var Ctx = window.AudioContext || window.webkitAudioContext;
+            if (!Ctx) {
+                return null;
+            }
+            try {
+                this.audioContext = new Ctx();
+            } catch (e) {
+                console.warn('提示音上下文初始化失败:', e);
+                this.audioContext = null;
+            }
+            return this.audioContext;
+        },
+
+        playTone: function() {
+            var ctx = this.getContext();
+            if (!ctx) {
+                return Promise.resolve(false);
+            }
+            var run = function() {
+                return new Promise(function(resolve) {
+                    try {
+                        var oscillator = ctx.createOscillator();
+                        var gain = ctx.createGain();
+                        oscillator.type = 'sine';
+                        oscillator.frequency.value = 880;
+                        gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.02);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.28);
+                        oscillator.connect(gain);
+                        gain.connect(ctx.destination);
+                        oscillator.start();
+                        oscillator.stop(ctx.currentTime + 0.3);
+                        oscillator.onended = function() { resolve(true); };
+                    } catch (err) {
+                        console.warn('提示音播放失败:', err);
+                        resolve(false);
+                    }
+                });
+            };
+            if (ctx.state === 'suspended' && typeof ctx.resume === 'function') {
+                return ctx.resume().then(run).catch(function() { return false; });
+            }
+            return run();
+        }
+    };
+
+
+    var AudioFallbackService = {
+        unlocked: false,
+        pendingText: '',
+        pendingOptions: null,
+        currentSource: null,
+        currentGain: null,
+        lastMode: 'idle',
+        lastError: '',
+        lastText: '',
+        lastSpeakAt: 0,
+        maxTextLength: 180,
+
+        isAvailable: function() {
+            return !!AudioTestService.getContext();
+        },
+
+        sanitizeText: function(text) {
+            return String(text || '').replace(/\s+/g, ' ').trim().slice(0, this.maxTextLength);
+        },
+
+        buildUrl: function(text) {
+            return resolveBackendUrl('accessibility/tts/audio?text=' + encodeURIComponent(text));
+        },
+
+        prepareFromUserGesture: function() {
+            var self = this;
+            this.unlocked = true;
+            this.lastMode = 'gesture';
+            var ctx = AudioTestService.getContext();
+            if (!ctx) {
+                this.lastError = '当前浏览器不支持 AudioContext';
+                return Promise.resolve(false);
+            }
+            if (ctx.state === 'suspended' && typeof ctx.resume === 'function') {
+                return ctx.resume().then(function() {
+                    self.lastError = '';
+                    return true;
+                }).catch(function(err) {
+                    self.lastError = err && err.message ? err.message : '音频上下文恢复失败';
+                    return false;
+                });
+            }
+            this.lastError = '';
+            return Promise.resolve(true);
+        },
+
+        stop: function() {
+            try {
+                if (this.currentSource) {
+                    this.currentSource.stop(0);
+                }
+            } catch (e) {}
+            this.currentSource = null;
+            this.currentGain = null;
+            this.pendingText = '';
+            this.pendingOptions = null;
+            this.lastMode = 'stopped';
+        },
+
+        flushPending: function() {
+            if (!this.pendingText) {
+                return Promise.resolve(false);
+            }
+            var text = this.pendingText;
+            var options = this.pendingOptions || {};
+            this.pendingText = '';
+            this.pendingOptions = null;
+            return this.speak(text, Object.assign({}, options, { deferIfLocked: false }));
+        },
+
+        speak: function(text, options) {
+            options = options || {};
+            var self = this;
+            var cleanText = this.sanitizeText(text);
+            if (!cleanText) {
+                return Promise.resolve(false);
+            }
+            this.lastText = cleanText;
+            this.lastSpeakAt = Date.now();
+            if (!this.isAvailable()) {
+                this.lastMode = 'unavailable';
+                this.lastError = '当前浏览器不支持音频兜底';
+                return Promise.resolve(false);
+            }
+            var deferIfLocked = options.deferIfLocked !== false;
+            if (!this.unlocked && deferIfLocked) {
+                this.pendingText = cleanText;
+                this.pendingOptions = options;
+                this.lastMode = 'queued';
+                this.lastError = '等待首次手势后再播放音频兜底';
+                return Promise.resolve(false);
+            }
+            return this.prepareFromUserGesture().then(function(ok) {
+                if (!ok) {
+                    return false;
+                }
+                self.lastMode = 'fetching';
+                return fetch(self.buildUrl(cleanText), { credentials: 'same-origin' })
+                    .then(function(response) {
+                        if (!response.ok) {
+                            throw new Error('tts-http-' + response.status);
+                        }
+                        return response.arrayBuffer();
+                    })
+                    .then(function(buffer) {
+                        var ctx = AudioTestService.getContext();
+                        if (!ctx) {
+                            throw new Error('audio-context-missing');
+                        }
+                        return ctx.decodeAudioData(buffer.slice(0));
+                    })
+                    .then(function(decoded) {
+                        var ctx = AudioTestService.getContext();
+                        if (!ctx) {
+                            throw new Error('audio-context-missing');
+                        }
+                        if (options.interrupt !== false) {
+                            self.stop();
+                        }
+                        var source = ctx.createBufferSource();
+                        var gain = ctx.createGain();
+                        source.buffer = decoded;
+                        source.connect(gain);
+                        gain.connect(ctx.destination);
+                        gain.gain.value = 1;
+                        source.onended = function() {
+                            if (self.currentSource === source) {
+                                self.currentSource = null;
+                                self.currentGain = null;
+                            }
+                            self.lastMode = 'completed';
+                        };
+                        self.currentSource = source;
+                        self.currentGain = gain;
+                        self.lastMode = 'playing-fallback';
+                        self.lastError = '';
+                        source.start(0);
+                        return true;
+                    })
+                    .catch(function(err) {
+                        self.lastMode = 'error';
+                        self.lastError = err && err.message ? err.message : '音频兜底播放失败';
+                        console.warn('音频兜底播放失败:', err);
+                        return false;
+                    });
+            });
+        }
+    };
+
     // 无障碍工具主对象
     var AccessibilityUtils = {
         // 初始化所有服务
@@ -1341,12 +1829,17 @@
             KeyboardService.init();
             AriaService.ensureCaptionCenter();
             AriaService.setCaptionCenterEnabled(localStorage.getItem('accessibility_caption_center') === 'true');
+            AriaService.setVisualCaptionEnabled(localStorage.getItem('accessibility_visual_caption') !== 'false');
             UiSelfHealService.init();
 
             console.log('无障碍工具库已初始化');
         },
 
         // 语音播报
+        prepareSpeech: function() {
+            return SpeechService.prepareFromUserGesture();
+        },
+
         speak: function(text, options) {
             return SpeechService.speak(text, options);
         },
@@ -1377,8 +1870,16 @@
             return SpeechService.toggle();
         },
 
+        getSpeechDiagnostics: function() {
+            return SpeechService.getDiagnostics();
+        },
+
         isSpeechEnabled: function() {
             return SpeechService.isEnabled;
+        },
+
+        playAudioTestTone: function() {
+            return AudioTestService.playTone();
         },
 
         // 触觉反馈
@@ -1457,6 +1958,14 @@
             return AriaService.captionDockEnabled;
         },
 
+        toggleVisualCaption: function() {
+            return AriaService.toggleVisualCaption();
+        },
+
+        isVisualCaptionEnabled: function() {
+            return AriaService.visualCaptionEnabled;
+        },
+
         // 键盘导航
         toggleKeyboardNav: function() {
             return KeyboardService.toggle();
@@ -1504,6 +2013,7 @@
                 highContrast: ThemeService.isHighContrast,
                 reducedMotion: ThemeService.isReducedMotion,
                 captionCenter: AriaService.captionDockEnabled,
+                visualCaption: AriaService.visualCaptionEnabled,
                 fontSize: ThemeService.currentFontSize,
                 keyboardNav: KeyboardService.isEnabled
             };
@@ -1538,6 +2048,9 @@
             }
             if (settings.captionCenter !== undefined) {
                 AriaService.setCaptionCenterEnabled(settings.captionCenter);
+            }
+            if (settings.visualCaption !== undefined) {
+                AriaService.setVisualCaptionEnabled(settings.visualCaption);
             }
             if (settings.keyboardNav !== undefined) {
                 KeyboardService.isEnabled = settings.keyboardNav;

@@ -1,5 +1,103 @@
 # PJT-0001 · PROJECT_CHANGELOG
 
+## 2026-03-09 · CHG-20260309-038 · 手机端按钮 / 弹窗适配收口
+- 已复现并修复两个手机端高频异常：① 游客登录提示弹窗在窄屏下按钮因 `flex-basis` 被拉到异常高；② 登录后的“在线提问”仍使用固定 `600px × 600px` 弹窗，在 `390px` 宽手机视口中会横向溢出。
+- `front/css/transit-business-ui.css` 现为游客登录提示与在线提问弹窗补充手机端安全区、最大高度、滚动容器与紧凑按钮样式；同时把壳层快捷控制按钮在 `<=560px` 视口下改为更适合手指点击的双列触控网格。
+- `front/js/pages/shell-page.js` 新增响应式弹窗尺寸计算，在线提问会按当前视口宽高自适应，手机端不再超出屏幕。
+- 新增回归 `ui-automation/tests/ui-mobile-shell-layout.spec.js`，覆盖：手机端快捷控制按钮触控尺寸、游客登录提示弹窗按钮高度、登录后在线提问弹窗是否完整落在视口内。
+- 本轮验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、`bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh` 通过；`cd ui-automation && UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npx playwright test tests/ui-mobile-shell-layout.spec.js --workers=1` = `3 passed`；`npm run ui:audit:layout` = `14 scenarios / hasIssue: false / screenshotsKept: false`。
+- 说明：本轮仅验证 `8134` 开发实例，未触碰 `8133` 生产实例。
+- 对应提交：`TBD`
+
+## 2026-03-09 · CHG-20260309-037 · 刷新后自动退出自动演示
+- `front/js/demo-mode.js` 将 `?demo=1` / `?demo=auto` 视为一次性启动信号：首次进入壳层后会立刻清理地址栏中的 `demo` 参数，避免用户刷新页面时再次自动重启演示。
+- 演示启动时会把进入前的无障碍设置与登录态快照写入 `sessionStorage`；若用户在演示过程中刷新页面，新页面会自动退出演示并恢复原有设置/登录态，不再残留“演示专用大字号 / 已清空登录态”等中间状态。
+- 新增 `ui-automation/tests/ui-demo-refresh-exit.spec.js`，验证“自动演示启动 -> 清理 URL -> 再次进入同地址后退出演示并恢复设置/登录态”回归。
+- 本轮验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、`bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh` 通过；`cd ui-automation && UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npx playwright test tests/ui-demo-refresh-exit.spec.js --workers=1` = `1 passed`。
+- 说明：本轮仅验证 `8134` 开发实例，未触碰 `8133` 生产实例。
+- 对应提交：`TBD`
+
+## 2026-03-08 · CHG-20260308-033 · 无障碍快捷控制补充左下提示开关
+- 首页“无障碍快捷控制”新增 `左下提示` 按钮，可一键关闭或重新开启左下角即时无障碍提示卡片，避免演示或连续操作时被反复弹出的即时提示干扰。
+- `accessibility.js` 新增 `accessibility_visual_caption` 持久化设置：关闭后会立即收起当前左下提示卡片，但不会影响屏幕阅读器播报、语音播报与右下字幕历史面板。
+- `shell-page.js` 的状态文本补充“左下提示开启/关闭”反馈，便于在壳层快速确认当前模式；`ui-accessibility-interaction.spec.js` 新增左下提示开关回归，覆盖“关闭后不再弹出、重新开启后恢复显示”。
+- 本轮验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、`bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh` 通过；`cd ui-automation && UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npx playwright test tests/ui-accessibility-interaction.spec.js -g "Caption center should provide visible text alternatives for key prompts" --workers=1` = `1 passed`；`cd ui-automation && UI_BASE_URL=http://127.0.0.1:8134/springbootmf383/front/ npx playwright test tests/ui-accessibility-interaction.spec.js -g "Assist deck should allow closing and reopening lower-left visual hints" --workers=1` = `1 passed`。
+- 对应提交：`TBD`
+
+## 2026-03-08 · CHG-20260308-032 · 个性化入口轻提示登录拦截
+- 新增共享提示脚本 `front/js/login-guard-prompt.js` 与统一弹层样式：游客点击个性化入口时，先看到“当前操作需要登录后继续”的轻提示卡片，再自行选择“去登录”或“先继续浏览公共功能”，不再一律直接硬跳登录页。
+- `shell-page.js` 中的“个人中心”“在线提问”已接入轻提示登录拦截；确认登录后仍会保留 `iframeUrl`，便于登录后回到个人中心或当前浏览页。
+- `messages/list.html` 改为留言场景的按需登录拦截：游客点击“登录后提交留言”、上传图片、进入反馈处理看板或实际提交表单时，先弹轻提示卡片，确认后再跳登录页；继续浏览则停留在留言列表页。
+- `gongjiaoluxian/detail.html`、`wangzhangonggao/detail.html`、`youqinglianjie/detail.html` 的收藏按钮统一对游客可见，并在尝试收藏时显示轻提示卡片；确认登录后会记录当前详情页地址，登录完成可回到原详情继续收藏。
+- `ui-guest-access.spec.js` 重构为 3 条独立回归：个人中心轻提示、留言提交轻提示、公告详情收藏轻提示；通过拆分降低跨页往返造成的偶发超时。
+- 本轮验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、`bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh` 通过；`npx playwright test tests/ui-login-layout.spec.js tests/ui-user-center.spec.js tests/ui-storeup-layout.spec.js tests/ui-guest-access.spec.js tests/ui-resource-detail.spec.js tests/ui-caption-announcement.spec.js --workers=1` = `14 passed`；`npm run ui:audit:layout` = `14 scenarios / hasIssue: false / screenshotsKept: false`。
+- 对应提交：`TBD`
+
+## 2026-03-09 · CHG-20260309-036 · 手机端语音后端 mp3 兜底落地（开发环境）
+- 新增后端接口 `GET /accessibility/tts/audio?text=...`：当浏览器原生 `speechSynthesis` 不可用或无可用 voice 时，前端会改为请求服务端生成的 mp3 并播放，不再只依赖手机浏览器原生语音能力。
+- `AccessibilityTtsController.java` 使用项目内独立虚拟环境 `runtime/tts-venv` 中的 `edge-tts` 生成中文音频，缓存到 `runtime/tts-cache/`；文本长度限制 `180` 字，生成超时 `45s`，最大重试 `1` 次，避免无限重试或异常消耗。
+- `front/js/accessibility.js` 新增 `AudioFallbackService`：支持音频兜底的用户手势预热、待播报保留、服务端 mp3 拉取与 `AudioContext` 播放；语音诊断中同步显示“音频兜底可用/已解锁/待播报”等状态。
+- `ui-automation/tests/ui-mobile-speech-fallback.spec.js` 新增“原生语音不可用时请求后端 TTS 音频”回归；本轮验证 `npx playwright test tests/ui-mobile-speech.spec.js tests/ui-speech-diagnostics.spec.js tests/ui-mobile-speech-fallback.spec.js --workers=1` = `3 passed`，并已通过 `http://127.0.0.1:8134/springbootmf383/accessibility/tts/audio?...` 直接返回 `audio/mpeg` 验证接口可用。
+- 说明：当前仅在 `8134` 开发环境安装并验证 `runtime/tts-venv`，未上线 `8133`；若后续需要上线，需再补生产环境运行依赖与发布票据。
+- 对应提交：`TBD`
+
+## 2026-03-09 · CHG-20260309-035 · 手机语音预热加强 + 诊断面板 / 提示音测试补齐
+- `front/js/accessibility.js` 继续收紧移动端语音策略：把待播报刷队列改为“用户手势内同步刷最新一条”，新增 `prepareSpeech()` 预热入口、最近错误/最近播报/可用语音数等诊断字段，便于定位“为什么手机仍然没有声音”。
+- 新增 `AudioTestService` 提示音测试：无障碍设置页可直接点击“测试提示音”，快速区分“手机媒体音量/静音问题”和“浏览器原生语音不出声问题”。
+- `pages/accessibility/settings.html` 与 `pages/accessibility-settings-page.js` 新增语音诊断面板，展示原生语音支持、手势解锁、是否 iframe 委托壳层、可用语音数、最近报错与最近播报文本；开启语音时会先预热并播一条短提示，降低首次点击后仍无声的概率。
+- `shell-page.js` 的快捷控制区语音按钮也接入 `prepareSpeech()`，确保用户直接在壳层点击“语音”时同样进入手势链路。
+- 新增 `ui-automation/tests/ui-speech-diagnostics.spec.js`；本轮验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、`bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh` 通过；`npx playwright test tests/ui-mobile-speech.spec.js tests/ui-speech-diagnostics.spec.js --workers=1` = `2 passed`；仅验证 `8134` 开发实例，未触碰 `8133`。
+- 对应提交：`TBD`
+
+## 2026-03-09 · CHG-20260309-034 · 手机端语音播报解锁与壳层委托修复
+- `front/js/accessibility.js` 为语音播报服务补充移动端首手势解锁、待播报队列与页面恢复后的 `resume` 逻辑，降低 Android / iPhone 上“已开启语音播报但没有声音”的概率。
+- 当页面运行在 iframe 内时，语音播报现在会统一委托给壳层窗口的 `speechSynthesis` 执行，避免子页面各自播报导致的移动端静音、被浏览器拦截或状态不同步问题。
+- `front/js/pages/accessibility-settings-page.js` 优化语音设置交互：开启时明确提示“手机端首次使用请点击测试语音确认声音正常”，关闭时主动停止当前播报；测试语音文案补充静音模式与媒体音量提醒。
+- 新增 `ui-automation/tests/ui-mobile-speech.spec.js`，校验“iframe 发起语音请求 -> 壳层排队 -> 首次手势后刷队列”的关键链路，避免后续回归把移动端语音修复改坏。
+- 本轮验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、`bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh` 通过；`npx playwright test tests/ui-mobile-speech.spec.js --workers=1` = `1 passed`；未触碰 `8133` 生产实例，改动仅停留在 `8134` 开发环境。
+- 对应提交：`TBD`
+
+## 2026-03-08 · CHG-20260308-031 · 登录页留白收口 + 游客浏览 / 按需登录闭环
+- `transit-business-ui.css` 继续收口登录页顶部留白：`body.page-login` 顶部外边距提升到 `max(28px, env(safe-area-inset-top))`，并保留 `#app` 的较大顶部 padding，解决桌面端登录卡片贴上边框的问题。
+- `pages/login/login.html` 新增明确的“先浏览公共功能”入口，并把 `browseAsGuest()` 提前到 `<body>` 开头注册，避免页面刚加载完成时用户立即点击造成脚本尚未初始化、游客按钮偶发无响应。
+- `shell-page.js` 与 `pages/messages/list.html` 共同完成“公共浏览前置、个性化按需登录”闭环：首页默认允许游客进入；个人中心、在线提问、留言提交 / 图片上传 / 反馈处理看板等动作在真正需要时再跳到登录页，同时保留 `iframeUrl` 以便登录后回到目标页面。
+- 新增游客访问回归 `ui-guest-access.spec.js`，并在 `ui-login-layout.spec.js` 中继续校验登录页顶部留白、游客入口按钮与免登录说明卡是否存在。
+- 本轮验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、`bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh` 通过；`npx playwright test tests/ui-login-layout.spec.js tests/ui-user-center.spec.js tests/ui-storeup-layout.spec.js tests/ui-guest-access.spec.js --workers=1` = `8 passed`；`npm run ui:audit:layout` = `14 scenarios / hasIssue: false / screenshotsKept: false`，截图已按脚本默认自动删除，仅保留 `reports/layout-audit/summary.json`。
+- 对应提交：`TBD`
+
+## 2026-03-08 · CHG-20260308-030 · 个人中心 / 收藏重构 + 全站截图审计补强
+- `pages/yonghu/center.html` 与 `pages/storeup/list.html` 按现有无障碍业务页设计语言重构为统一的 `page-account-area` 个人服务界面：保留深色页头、浅色内容卡、侧栏胶囊菜单与更克制的阴影/边框层级，去掉原模板式双层框与突兀包边。
+- `transit-business-ui.css` 新增账号页共享样式系统：个人中心表单改为更稳的两列栅格，头像区、操作按钮、收藏搜索条与空状态统一成同一套卡片语言；窄窗口下自动单列化，减少贴边与挤压。
+- 登录页继续只做收敛式修正：扩大桌面与移动端外边距，缓解左右卡片贴边；同时移除登录页、个人中心、收藏页的 `maximum-scale=1` 限制，避免阻断用户缩放。
+- 收藏卡片改为真实 `<a>` 链接并加入封面兜底图；`run-layout-audit.mjs` 升级为默认 `14` 个场景的全站截图/DOM 联合审计，新增“贴边(edgeTight)”检测，并在审计结束后默认自动删除 PNG，仅保留 `summary.json`；调试时可通过 `UI_LAYOUT_AUDIT_KEEP_SCREENSHOTS=1` 保留截图。
+- 新增 `ui-storeup-layout.spec.js`；登录页、个人中心布局回归同步升级为边距/遮挡断言。
+- 本轮验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、`bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh` 通过；`npx playwright test tests/ui-login-layout.spec.js tests/ui-user-center.spec.js tests/ui-storeup-layout.spec.js --workers=1` = `7 passed`；`npm run ui:audit:layout` = `14 scenarios / hasIssue: false`；临时截图 spot check 后已删除 PNG。
+- 对应提交：`TBD`
+
+## 2026-03-08 · CHG-20260308-029 · 登录页收敛改版 + 自动布局审查落地
+- 重新收敛登录页视觉：取消上一版过重的外框/装饰感，改为“深色信息面板 + 浅色登录卡片”的保守双栏布局，统一圆角、边框与阴影强度，避免边框存在感过强。
+- 移除壳层右下角悬浮 `assist-entry-btn` 的固定覆盖入口；无障碍设置仍可从顶部导航进入，避免在个人中心等 iframe 页面遮挡内容。
+- 新增 `ui-automation/scripts/run-layout-audit.mjs` 与 `npm run ui:audit:layout`：自动采集 `1280 / 820 / 390 / 796 / 520` 等关键场景截图，检查水平溢出、关键容器越界、固定浮层遮挡主内容等问题。
+- `ui-user-center.spec.js` 补充壳层固定元素遮挡检测；登录页与个人中心定向回归继续覆盖窄窗口场景。
+- 本轮验证：`npx playwright test tests/ui-login-layout.spec.js tests/ui-user-center.spec.js --workers=1` = `5 passed`；`npm run ui:audit:layout` = `hasIssue: false`。
+- 对应提交：`TBD`
+
+## 2026-03-08 · CHG-20260308-028 · 登录页重设计 + 超窗根因修复
+- 登录页去除旧模板 `xznstatic/css/login.css` 的固定定位样式，解决其对 `#loginForm` 注入 `top/right/position: fixed` 导致窄窗口下表单横向偏移、内容被裁切的根因问题。
+- `pages/login/login.html` 改为新的信息层级：保留左侧试点说明区，右侧登录卡片新增可见字段标签、登录说明、演示账号卡片与更清晰的主按钮文案，移除旧版突兀的圆形登录按钮与大圆角模板感。
+- `transit-business-ui.css` 重写登录页视觉与响应式规则：整体改为更稳重的深色导览面板 + 浅色登录卡片，并补强 `820px / 390px` 等窄窗口下的宽度、换行与按钮约束。
+- 个人中心共享样式继续补强：标题文本允许换行，左右栏在窄窗口下强制单列化，减少壳层 iframe 场景下再次出现标题/表单挤出窗口的风险。
+- 新增自动化回归：`ui-automation/tests/ui-login-layout.spec.js` 与 `ui-automation/tests/ui-user-center.spec.js`；本轮验证 `npx playwright test tests/ui-login-layout.spec.js tests/ui-user-center.spec.js --workers=1` = `5 passed`。
+- 低冲击验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh` 通过，并仅重启 `8134` 开发实例完成验证。
+- 对应提交：`TBD`
+
+## 2026-03-08 · CHG-20260308-027 · 个人中心内容超窗修复（窄窗口自适应）
+- `pages/yonghu/center.html` 补充页面级自适应样式：`#app`、`.index-title`、`.center-container` 改为 `width: 100% + max-width: 980px`，避免标题栏与内容区在窄窗口下超出可视范围。
+- 调整个人中心左右区块收缩规则：左侧菜单固定 `160px`，右侧表单设置 `min-width: 0`，防止输入区域被硬挤出窗口。
+- 新增 `<900px` 响应式降级：菜单与表单改为纵向堆叠，表单标签切换为单列显示，避免账号/密码等输入项在小窗口下被截断。
+- 低冲击验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh` 通过；重启 `8134` 开发实例后，以 `790/600/480` 宽度回归，`scrollWidth == innerWidth`，未再出现水平溢出。
+- 对应提交：`TBD`
+
 ## 2026-03-07 · CHG-20260307-026 · 留言列表去双层框 + 留言/审核标签统一中文化
 - 留言与改进建议页去掉正常有数据时的“留言数据已同步 / 数据较少 / 当前记录”等状态说明；正常情况下只保留表单与反馈卡片本身，空数据/错误时才显示状态面板。
 - 留言列表取消“外层列表容器 + 内层单条卡片”的双层框结构：外层列表框改为透明容器，单条留言卡片独立成卡，消除中间空白与视觉割裂感。
