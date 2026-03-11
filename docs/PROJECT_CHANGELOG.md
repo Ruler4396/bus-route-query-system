@@ -1,5 +1,103 @@
 # PJT-0001 · PROJECT_CHANGELOG
 
+## 2026-03-11 · CHG-20260311-059 · 后台入口精简重组（高频工作台 + 低频下拉）与遗留暴露收口
+- 按“后台只保留高频功能、低频功能下沉到下拉菜单，并清理遗留入口文案与无效模块暴露”的要求，对后台壳层做了结构级收口：
+  - 工作台主入口改为仅保留高频模块：`公交路线`、`出行公告`、`资源链接`、`留言建议`、`用户管理`；
+  - 顶栏新增“更多功能”下拉菜单，收纳低频入口：`个人信息`、`修改密码`、`在线提问`、`路线评论审核`、`公告评论审核`、`展示配置`；
+  - 顶栏和工作台说明文案改为短句直述，移除冗长说明性文案；
+  - 增加历史路由拦截：`#/pay` 这类遗留入口会自动回到工作台，避免继续暴露无效模块。
+- 源码同步：
+  - `src/main/resources/admin/admin/public/js/transit-admin-sidebar-dom.js`：重构模块清单、角色可见范围、工作台分组、下拉菜单与遗留路由拦截逻辑；
+  - `src/main/resources/admin/admin/public/css/transit-admin-theme.css`：补充顶栏下拉菜单样式与移动端适配；
+  - `src/main/resources/admin/admin/src/views/index.vue`：移除 `index-aside` 引用，彻底不再占用左侧布局位；
+  - `src/main/resources/admin/admin/src/router/router-static.js`：移除 `/pay` 路由，并统一文案为“出行公告 / 资源链接 / 路线评论审核 / 展示配置”；
+  - `src/main/resources/admin/admin/src/utils/menu.js`：按新后台结构重写菜单权限映射，补齐评论审核菜单项并清理旧文案。
+- 运行资源同步：
+  - `admin/public` 与 `admin/dist` 的 `transit-admin-theme.css`、`transit-admin-sidebar-dom.js` 已保持同版本内容；
+  - `public/index.html` 与 `dist/index.html` 资源版本更新为：`v=20260311-301`。
+- 低冲击验证：
+  - `node --check src/main/resources/admin/admin/public/js/transit-admin-sidebar-dom.js`
+  - `node --check src/main/resources/admin/admin/dist/js/transit-admin-sidebar-dom.js`
+  - `node --check src/main/resources/admin/admin/src/utils/menu.js`
+  - `node --check src/main/resources/admin/admin/src/router/router-static.js`
+  - `bash scripts/remote-dev-check.sh`（`mvn -q -DskipTests compile` 通过）
+- 说明：本轮仅做代码与静态资源重组，未执行服务重启。
+- 对应提交：`TBD`
+
+
+## 2026-03-10 · CHG-20260310-058 · 登录输入框与工作台稳定性收口修复
+- 根据最新反馈，继续修复后台重做后的两个可用性问题：
+  - 登录输入框图标与 placeholder 贴得过近，视觉上像“输入框坏了”；
+  - 个别情况下登录后会落回旧的“欢迎使用 公交线路查询系统”首页，导致工作台不可用。
+- 本轮实现：
+  - `transit-admin-theme.css` 将登录输入框改为更常规的后台样式：图标绝对定位到输入框内部，文本与 placeholder 左侧留白提高到 `44px`，placeholder 颜色收敛，去掉异常挤压感；
+  - 登录页说明文案收短，不再使用过强的“AI 味”说明，改为更直接的后台表达；
+  - `transit-admin-sidebar-dom.js` 将首页工作台扫描兜底增强为“启动多次重扫 + pageshow/resize/hashchange 继续触发”，并把调度上限提高，降低偶发掉回旧欢迎页的概率；
+  - 追加隐藏旧首页 `main-text` 的保护规则，避免在工作台尚未注入时把旧大标题暴露出来。
+- 资源版本已升级到：`transit-admin-theme.css?v=20260310-204`、`transit-admin-sidebar-dom.js?v=20260310-204`。
+- 远端 8134 备份与部署：
+  - 备份目录：`runtime/manual-backups/admin-ui-stabilityfix-20260310-143916/`；
+  - 当前开发实例 PID=`12745`，端口 `8134` 已监听，`8133` 生产实例未触碰。
+- 最终验收：
+  - Playwright 对外网地址连续执行 `3` 次真实登录，`3/3` 均稳定进入 `#/index/` 工作台；
+  - 每次验收都满足：`hasWorkbench=true`、`hasOldWelcome=false`、`launcherCount=11`；
+  - 最终确认截图：`runtime/remote-dev/admin-login-final-20260310.png`、`runtime/remote-dev/admin-home-final-20260310.png`、`runtime/remote-dev/admin-module-final-20260310.png`。
+- 对应提交：`TBD`
+
+## 2026-03-10 · CHG-20260310-057 · 修复后台登录页空白、按钮溢出与顶栏文字错位
+- 根据现场截图反馈，修复了后台二次重做后的三个显示问题：
+  - 登录页 `.container.loginIn` 被限制为固定宽度，导致右侧出现大面积空白；
+  - 登录按钮受旧模板残留 `margin-left` / 高度规则影响，按钮向右溢出且文字显示异常；
+  - 登录后顶栏继承旧模板行高，导致品牌标题与路由标题溢出到底部，形成“发虚重复字”的错位感。
+- 本轮实现：
+  - `transit-admin-theme.css` 调整登录页外层为全宽铺满视口，登录表单恢复块级布局，登录按钮强制回到卡片内部；
+  - 主内容区继续保留无侧栏工作台结构，但统一把 `.el-main` 顶部留白提高，避免内容压到 sticky 顶栏；
+  - 顶栏压缩为更稳定的单行/双行密度，重置 `.navbar` / `.admin-shell-topbar` 的 `line-height`、间距与溢出规则，消除顶部重复文字；
+  - 面包屑行高同步收敛，避免字位看起来发飘。
+- 资源版本已升级到：`transit-admin-theme.css?v=20260310-203`、`transit-admin-sidebar-dom.js?v=20260310-203`。
+- 远端 8134 备份与部署：
+  - 备份目录：`runtime/manual-backups/admin-ui-layoutfix-20260310-140936/`、`runtime/manual-backups/admin-ui-topfix-20260310-141722/`；
+  - 当前开发实例 PID=`11420`，端口 `8134` 已监听，`8133` 生产实例未触碰。
+- 验收结果：
+  - Playwright 复核登录页：根容器宽度=`1832`，与视口等宽，登录按钮右边界=`1440`，未再超出表单；
+  - Playwright 复核工作台：`topbarBottom=100 <= navbarBottom=112`，工作台首屏 `heroTop=142`，已不再被顶栏遮挡；
+  - Playwright 复核模块页：`公交路线` 顶栏未再溢出，横幅 `bannerTop=200`，标题显示正常；
+  - 修复确认截图：`runtime/remote-dev/admin-login-fixed-20260310.png`、`runtime/remote-dev/admin-home-fixed-20260310.png`、`runtime/remote-dev/admin-module-fixed-20260310.png`。
+- 对应提交：`TBD`
+
+## 2026-03-10 · CHG-20260310-056 · 后台改为无侧栏工作台入口，8134 全量重做生效
+- 按“不要左侧侧边栏、改成主页按钮入口、整体样式与前端统一、仅沿用接口与业务逻辑”的要求，重新定义后台壳层：
+  - 左侧 `aside` 彻底隐藏，不再作为后台导航入口；
+  - 登录后首页 `#/index/` 改为“工作台按钮页”，集中提供 `个人中心 / 修改密码 / 公交路线 / 网站公告 / 友情链接 / 留言建议 / 在线提问 / 公交路线评论 / 网站公告评论 / 轮播图管理 / 用户管理` 共 `11` 个后台入口；
+  - 所有内页统一注入顶部模块横幅，并保留“返回工作台”按钮；
+  - 顶栏重做为前台同语系的品牌条、环境标签、用户标签与快捷操作区。
+- 资源层重写：
+  - `src/main/resources/admin/admin/public/js/transit-admin-sidebar-dom.js` 与 `dist/js/transit-admin-sidebar-dom.js` 全量改为新的运行时壳层脚本，负责登录页增强、工作台构建、模块页横幅注入、顶栏重建与视图状态切换；
+  - `src/main/resources/admin/admin/public/css/transit-admin-theme.css` 与 `dist/css/transit-admin-theme.css` 全量改为新的“公交运营工作台”主题，采用与前台一致的深绿/米白/铜色系、直线分隔与低圆角平面语言，并在最终版补充 `Noto Sans SC` 正文字体回退，避免无本地中文字体环境出现方块字；
+  - `src/main/resources/admin/admin/public/index.html` 与 `dist/index.html` 资源版本统一升级到 `v=20260310-201`。
+- 文档同步：`docs/PROJECT_RUNBOOK.md` 已更新为当前“无侧栏工作台”后台形态，并补充最新截图路径。
+- 远端 8134 备份与部署：
+  - 备份目录：`runtime/manual-backups/admin-ui-20260310-135128/`；
+  - 执行链路：`bash scripts/remote-dev-check.sh` → `bash scripts/remote-dev-build.sh` → `bash scripts/remote-dev-stop.sh` → `bash scripts/remote-dev-start.sh` → `bash scripts/remote-dev-status.sh`；
+  - 当前开发实例 PID=`7964`，端口 `8134` 已监听，`8133` 生产实例未触碰。
+- 验收结果：
+  - `curl http://8.134.206.52:8134/springbootmf383/admin/dist/index.html` 已确认命中 `transit-admin-theme.css?v=20260310-201` 与 `transit-admin-sidebar-dom.js?v=20260310-201`；
+  - Playwright 登录 `abo / abo` 后确认：工作台已渲染、入口按钮数=`11`、左侧侧边栏 `display=none`；
+  - 抽查模块：`公交路线`、`留言建议`、`用户管理` 均可从工作台按钮进入，其中 `公交路线` 页面已显示新的顶部横幅与“返回工作台”；
+  - 验收截图：`runtime/remote-dev/admin-workbench-home-20260310.png`、`runtime/remote-dev/admin-workbench-module-20260310.png`。
+- 对应提交：`TBD`
+
+
+## 2026-03-10 · CHG-20260310-055 · 修正旧 dist 运行时登录兜底，8134 后台 UI 已实际生效
+- 修正 `transit-admin-sidebar-dom.js` 对旧 `admin/dist` 的运行时兼容策略：不再搬移原登录表单节点，改为“插入介绍区 + 保留原表单事件 + 登录 API 兜底”，避免旧版 Vue 事件在登录页失效。
+- `transit-admin-theme.css` 同步补充旧登录布局的非侵入式重排规则与 `admin-login-inline-message` 提示样式，保证未重编译前端 bundle 的情况下，登录页仍可正常登录且保持新视觉语言。
+- 远端 `8.134.206.52` 已完成：资源同步 → `bash scripts/remote-dev-check.sh` → `bash scripts/remote-dev-build.sh` → `bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh`。当前开发实例 PID=`6168`，端口 `8134` 已监听。
+- 页面级验收：
+  - 外网 `http://8.134.206.52:8134/springbootmf383/admin/dist/index.html` 已命中 `transit-admin-theme.css?v=20260309-120` 与 `transit-admin-sidebar-dom.js?v=20260309-120`；
+  - Playwright 验证登录后命中 `#/index/`，并确认侧栏 `asideWidth=272`、一级激活项 `border-left=3px`、一级/二级导航 `border-radius=0`；
+  - 验收截图：`runtime/remote-dev/admin-ui-flat-20260310.png`。
+- 说明：本轮仅操作 `8134` 开发实例，`8133` 生产实例保持不动。
+- 对应提交：`TBD`
 
 ## 2026-03-09 · CHG-20260309-054 · 后台壳层改为扁平中台风格（侧栏去圆角卡片化）
 - 按“登录后的侧边栏不要圆角卡片式设计”的要求，重新定义后台壳层语言：顶部改为深色运营条带，左侧改为扁平导轨式导航，一级/二级菜单全部取消圆角卡片感，改成直线分隔、左侧激活导轨和更清晰的层级排布。

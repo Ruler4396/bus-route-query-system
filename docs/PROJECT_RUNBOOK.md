@@ -1,7 +1,7 @@
 # PJT-0001 · bus-route-query-system · PROJECT_RUNBOOK
 
-最后更新：2026-03-09  
-变更票据：`CHG-20260309-051`
+最后更新：2026-03-11  
+变更票据：`CHG-20260311-059`
 
 ## 1. 项目定位
 面向视障人士与行动不便人士的无障碍公交出行系统。当前以“演示稳定、远端可调试、线上可回滚”为首要目标。
@@ -13,7 +13,7 @@
 - 远端开发实例：`8134`
 - 运行形态：Java 17 / Spring Boot / MySQL 8（生产） / H2 Demo（远端开发）
 - 当前原则：默认不重启 `8133`，开发验证先走 `8134`
-- 后台静态资源当前版本：`transit-admin-theme.css?v=20260309-053`、`transit-admin-sidebar-dom.js?v=20260309-053`。
+- 后台静态资源当前版本：`transit-admin-theme.css?v=20260311-301`、`transit-admin-sidebar-dom.js?v=20260311-301`。
 
 ## 3. 标准开发流（远端执行）
 1. SSH 登录远端服务器。
@@ -35,6 +35,10 @@
 - 后台 UI 源码壳层：`src/main/resources/admin/admin/src/views/login.vue`、`src/main/resources/admin/admin/src/components/index/`、`src/main/resources/admin/admin/src/components/common/BreadCrumbs.vue`
 - 后台主题资源：`src/main/resources/admin/admin/public/css/transit-admin-theme.css`、`src/main/resources/admin/admin/public/js/transit-admin-sidebar-dom.js`
 - 后台 dist 镜像资源：`src/main/resources/admin/admin/dist/css/transit-admin-theme.css`、`src/main/resources/admin/admin/dist/js/transit-admin-sidebar-dom.js`
+- 后台壳层现状：已取消左侧侧边栏；`#/index/` 工作台仅保留高频主入口（路线 / 公告 / 资源 / 留言 / 用户），低频功能（账户设置 / 评论审核 / 在线提问 / 展示配置）收纳到顶栏“更多功能”下拉菜单。
+- 后台 2026-03-10 无侧栏工作台截图：`runtime/remote-dev/admin-workbench-home-20260310.png`、`runtime/remote-dev/admin-workbench-module-20260310.png`。
+- 后台 2026-03-10 布局修复确认截图：`runtime/remote-dev/admin-login-fixed-20260310.png`、`runtime/remote-dev/admin-home-fixed-20260310.png`、`runtime/remote-dev/admin-module-fixed-20260310.png`。
+- 后台 2026-03-10 最终可用性确认截图：`runtime/remote-dev/admin-login-final-20260310.png`、`runtime/remote-dev/admin-home-final-20260310.png`、`runtime/remote-dev/admin-module-final-20260310.png`。
 - 开发 PID：`runtime/remote-dev/server.pid`
 - 页面级状态回归：`ui-automation/tests/ui-data-states.spec.js`
 - 键盘与视觉提示回归：`ui-automation/tests/ui-accessibility-interaction.spec.js`
@@ -67,9 +71,9 @@
 - 手机端壳层快捷控制按钮是否仍有足够触控高度；游客登录提示、在线提问等弹窗是否完整落在视口内且按钮没有被拉伸。
 - 首页与公告页是否仍出现“10 分钟自动演示”可见入口；管理员入口是否始终走独立 `console` URL。
 - 前台地址栏是否随导航更新为 `?route=...`，并可通过直接访问 `index.html?route=...` 命中对应页面。
-- 后台登录页是否仍出现旧模板的外层厚边框/悬浮大按钮；侧栏与面包屑是否已对齐前台设计语言。
-- 后台左侧二级导航展开后是否具备清晰层级（展开面板、子项缩进、激活态不出现异常蓝底文字块）。
-- 后台左侧一级菜单在 `hover / active / opened` 时是否具备明显反馈（位移、边框、导引条、亮度变化可见）。
+- 后台登录页是否仍出现旧模板的外层厚边框/悬浮大按钮；顶栏与面包屑是否已对齐前台设计语言。
+- 后台工作台是否仅显示高频入口，且“更多功能”下拉菜单可打开低频模块（账户设置 / 互动审核 / 展示配置）。
+- 直接访问历史路由（如 `#/pay`）是否会被拦截并回到工作台，避免无效模块暴露。
 - 后台登录页是否不再出现“用户/管理员”角色单选；管理员登录后流程是否直达后台首页。
 - 首页推荐区、快捷控制栏、友情链接区域是否出现遮挡。
 - 页面底部内容是否完整可见，是否再次出现双滚动条。
