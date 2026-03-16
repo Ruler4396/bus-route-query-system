@@ -76,7 +76,7 @@
 					var SHELL_ROUTE_MAP = {
 						home: './pages/home/home.html?v=20260316-618',
 						routes: './pages/gongjiaoluxian/list.html?v=20260316-630',
-						map: './pages/gongjiaoluxian/map.html?v=20260316-646',
+						map: './pages/gongjiaoluxian/map.html?v=20260316-647',
 						announcements: './pages/wangzhangonggao/list.html?v=20260316-618',
 						messages: './pages/messages/list.html?v=20260316-618',
 						resources: './pages/youqinglianjie/list.html?v=20260316-618',

@@ -8,9 +8,9 @@
     <link rel="stylesheet" href="../../xznstatic/css/common.css"/>
     <link rel="stylesheet" href="../../xznstatic/css/style.css"/>
     <link rel="stylesheet" href="../../css/accessibility-sr-only.css">
-    <link rel="stylesheet" href="../../css/accessibility-high-contrast.css?v=20260316-646">
-    <link rel="stylesheet" href="../../css/transit-business-ui.css?v=20260316-646">
-    <link rel="stylesheet" href="../../css/transit-route-list.css?v=20260316-646">
+    <link rel="stylesheet" href="../../css/accessibility-high-contrast.css?v=20260316-647">
+    <link rel="stylesheet" href="../../css/transit-business-ui.css?v=20260316-647">
+    <link rel="stylesheet" href="../../css/transit-route-list.css?v=20260316-647">
     <script type="text/javascript" src="../../xznstatic/js/jquery-1.11.3.min.js"></script>
 
     <!-- Leaflet CSS -->
@@ -2311,7 +2311,8 @@ function findRouteStationByName(name, stations) {
                 isOutline: true,
                 outlineColor: options.outlineColor || '#ffffff',
                 borderWeight: options.borderWeight == null ? 3 : options.borderWeight,
-                strokeStyle: options.strokeStyle || 'solid'
+                strokeStyle: options.strokeStyle || 'solid',
+                zIndex: options.zIndex == null ? 50 : options.zIndex
             });
         }
 
@@ -2574,9 +2575,10 @@ function findRouteStationByName(name, stations) {
                                         overlays.push(createSyntheticPolyline(fullRoute.path, {
                                             strokeColor: '#B0BEC5',
                                             strokeWeight: 6,
-                                            strokeOpacity: 0.72,
+                                            strokeOpacity: 0.56,
                                             outlineColor: '#ECEFF1',
-                                            borderWeight: 2
+                                            borderWeight: 2,
+                                            zIndex: 20
                                         }));
                                         if (segment && segment.path && segment.path.length >= 2) {
                                             overlays.push(createSyntheticPolyline(segment.path, {
@@ -2584,7 +2586,8 @@ function findRouteStationByName(name, stations) {
                                                 strokeWeight: 8,
                                                 strokeOpacity: 0.96,
                                                 outlineColor: '#ffffff',
-                                                borderWeight: 3
+                                                borderWeight: 3,
+                                                zIndex: 80
                                             }));
                                         } else {
                                             overlays.push(createSyntheticPolyline(fullRoute.path, {
@@ -2592,7 +2595,8 @@ function findRouteStationByName(name, stations) {
                                                 strokeWeight: 8,
                                                 strokeOpacity: 0.96,
                                                 outlineColor: '#ffffff',
-                                                borderWeight: 3
+                                                borderWeight: 3,
+                                                zIndex: 80
                                             }));
                                         }
                                     });
@@ -2602,7 +2606,8 @@ function findRouteStationByName(name, stations) {
                                     strokeWeight: 8,
                                     strokeOpacity: 0.96,
                                     outlineColor: '#ffffff',
-                                    borderWeight: 3
+                                    borderWeight: 3,
+                                    zIndex: 80
                                 }));
                                 return;
                             }
@@ -2622,7 +2627,8 @@ function findRouteStationByName(name, stations) {
                                     strokeWeight: 8,
                                     strokeOpacity: 0.96,
                                     outlineColor: '#ffffff',
-                                    borderWeight: 3
+                                    borderWeight: 3,
+                                    zIndex: 80
                                 }));
                             });
                         });

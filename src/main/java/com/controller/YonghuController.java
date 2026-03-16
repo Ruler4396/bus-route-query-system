@@ -76,6 +76,16 @@ public class YonghuController {
     @RequestMapping("/register")
     public R register(@RequestBody YonghuEntity yonghu){
     	//ValidatorUtils.validateEntity(yonghu);
+    	if(yonghu == null || StringUtils.isBlank(yonghu.getZhanghao()) || StringUtils.isBlank(yonghu.getMima())) {
+    		return R.error("账号和密码不能为空");
+    	}
+    	yonghu.setZhanghao(yonghu.getZhanghao().trim());
+    	if(StringUtils.isBlank(yonghu.getXingming())) {
+    		yonghu.setXingming(yonghu.getZhanghao());
+    	}
+    	if(yonghu.getAddtime() == null) {
+    		yonghu.setAddtime(new Date());
+    	}
     	YonghuEntity user = yonghuService.selectOne(new EntityWrapper<YonghuEntity>().eq("zhanghao", yonghu.getZhanghao()));
 		if(user!=null) {
 			return R.error("注册用户已存在");
