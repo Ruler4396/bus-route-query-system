@@ -133,6 +133,7 @@
 - 后台运行时版本文件：`src/main/resources/admin/admin/admin-runtime.version`
 - 后台资源同步/校验：`bash scripts/sync-admin-runtime-assets.sh --sync|--check`
 - 后台壳层现状：已取消左侧侧边栏；`#/index/` 工作台仅保留高频主入口（路线 / 公告 / 资源 / 留言 / 用户），低频功能（账户设置 / 评论审核 / 在线提问 / 展示配置）收纳到顶栏“更多功能”下拉菜单。
+- 当前后台留言修复（2026-03-16）：若管理员看到“留言处理暂无数据”，优先按**角色归一化**排查——本项目管理员前端角色为 `管理员`，历史 `users.role=admin` 需要在认证层统一映射；当前 `AuthorizationInterceptor` 与 `UserController#/login` 已完成兼容，验证命令：`curl -H "Token: <admin-token>" "http://127.0.0.1:8133/springbootmf383/messages/page?page=1&limit=10&sort=id"`。
 - 后台 2026-03-10 无侧栏工作台截图：`runtime/remote-dev/admin-workbench-home-20260310.png`、`runtime/remote-dev/admin-workbench-module-20260310.png`。
 - 后台 2026-03-10 布局修复确认截图：`runtime/remote-dev/admin-login-fixed-20260310.png`、`runtime/remote-dev/admin-home-fixed-20260310.png`、`runtime/remote-dev/admin-module-fixed-20260310.png`。
 - 后台 2026-03-10 最终可用性确认截图：`runtime/remote-dev/admin-login-final-20260310.png`、`runtime/remote-dev/admin-home-final-20260310.png`、`runtime/remote-dev/admin-module-final-20260310.png`。

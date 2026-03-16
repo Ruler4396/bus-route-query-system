@@ -32,6 +32,13 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
 
     @Autowired
     private TokenService tokenService;
+
+    private String normalizeRole(String role) {
+        if (StringUtils.equalsIgnoreCase(role, "admin")) {
+            return "管理员";
+        }
+        return role;
+    }
     
 	@Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -71,8 +78,9 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
         }
         
         if(tokenEntity != null) {
+            String normalizedRole = normalizeRole(tokenEntity.getRole());
         	request.getSession().setAttribute("userId", tokenEntity.getUserid());
-        	request.getSession().setAttribute("role", tokenEntity.getRole());
+        	request.getSession().setAttribute("role", normalizedRole);
         	request.getSession().setAttribute("tableName", tokenEntity.getTablename());
         	request.getSession().setAttribute("username", tokenEntity.getUsername());
         	return true;

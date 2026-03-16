@@ -45,6 +45,13 @@ public class UserController{
 	@Autowired
 	private TokenService tokenService;
 
+	private String normalizeRole(String role) {
+		if ("admin".equalsIgnoreCase(role)) {
+			return "管理员";
+		}
+		return role;
+	}
+
 	/**
 	 * 登录
 	 */
@@ -55,7 +62,7 @@ public class UserController{
 		if(user==null || !user.getPassword().equals(password)) {
 			return R.error("账号或密码不正确");
 		}
-		String token = tokenService.generateToken(user.getId(),username, "users", user.getRole());
+		String token = tokenService.generateToken(user.getId(),username, "users", normalizeRole(user.getRole()));
 		return R.ok().put("token", token);
 	}
 	

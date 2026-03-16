@@ -1,6 +1,15 @@
 # PJT-0001 · PROJECT_CHANGELOG
 
 
+## 2026-03-16 · CHG-20260316-651 · 修复后台“留言处理暂无数据”
+- 已定位根因：后台管理员登录页固定按“管理员”角色进入，但 `users` 表中管理员账号 `abo` 的数据库角色值仍是 `admin`；旧逻辑会把 Token 中的 `admin` 直接写入 session，导致 `MessagesController#/page` 把管理员误判成普通用户，再按 `userid=1` 过滤，最终后台“留言建议/留言处理”列表显示为空。
+- 本轮热修在 `AuthorizationInterceptor` 中加入角色归一化：当 Token 角色为 `admin` 时统一映射为 `管理员` 后再写入 session；同时 `UserController#/login` 生成新 Token 时也会把 `admin` 归一化为 `管理员`，避免后续再次出现同类问题。
+- 低冲击验证已通过：
+  - `bash scripts/remote-dev-check.sh`
+  - `bash scripts/single-demo-deploy.sh`
+  - `curl -H "Token: <admin-token>" "http://127.0.0.1:8133/springbootmf383/messages/page?page=1&limit=10&sort=id"`
+- 验证结果：当前后台留言分页接口已返回 `total=4`，且对**旧 token**与**新登录 token**都已恢复可见，无需人工清库。
+
 ## 2026-03-16 · CHG-20260316-650 · 修复“首页总览”导航无法返回首页
 - 已定位根因：壳层 `shell-page.js` 在根据 URL 反推路由时，对 `./pages/home/home.html` 缺少专门识别，导致从路线页点击“首页总览”时，错误沿用当前 `route=routes`，结果看起来像“点了首页但仍停留在线路页”。
 - 本轮已为首页补齐 `resolveRouteByUrl` 识别规则，并移除该分支对当前地址栏路由的错误兜底；现在从任意页面点击“首页总览”都会正确切回首页 iframe。
