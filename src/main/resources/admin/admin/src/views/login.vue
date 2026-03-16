@@ -5,21 +5,20 @@
         <p class="admin-login-intro__eyebrow">TRANSIT OPERATIONS CONSOLE</p>
         <h1 class="admin-login-intro__title">公交线路查询系统后台</h1>
         <p class="admin-login-intro__desc">
-          面向线路维护、公告发布、留言处理与友情链接管理的统一后台。
-          本次界面改版采用更平直、更像运营中台的布局语言，减少圆角卡片感与模板味。
+          管理员登录后可进入路线、公告、留言等后台模块。
         </p>
         <div class="admin-login-intro__grid">
           <div class="admin-login-intro__item">
             <span class="admin-login-intro__label">适用入口</span>
-            <strong>开发实例 / 管理后台</strong>
+            <strong>后台管理</strong>
           </div>
           <div class="admin-login-intro__item">
             <span class="admin-login-intro__label">主要工作</span>
-            <strong>线路、公告、互动内容维护</strong>
+            <strong>路线 / 公告 / 留言</strong>
           </div>
           <div class="admin-login-intro__item">
             <span class="admin-login-intro__label">交互原则</span>
-            <strong>清晰层级、状态明确、无圆角卡片堆叠</strong>
+            <strong>仅管理员可登录</strong>
           </div>
         </div>
       </section>
@@ -31,7 +30,7 @@
             <h3 class="title">进入后台工作台</h3>
           </div>
 
-          <div class="admin-login-tip">仅管理员可登录后台，无需额外选择角色。</div>
+          <div class="admin-login-tip">仅管理员可登录。</div>
 
           <el-form-item class="style1">
             <span class="svg-container"><svg-icon icon-class="user" /></span>
@@ -61,7 +60,7 @@
 
           <el-form-item class="setting">
             <div class="admin-login-footnote">
-              建议使用分配账号登录；若账号不可用，请联系系统维护人员处理。
+              如账号异常，请联系维护人员。
             </div>
           </el-form-item>
         </el-form>

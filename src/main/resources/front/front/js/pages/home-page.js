@@ -68,6 +68,21 @@
 				onAction: function() { vue.jump('../youqinglianjie/list.html'); }
 			});
 
+			function shouldHideAutoDemoNotice(item) {
+				var rawTitle = item && item.biaoti ? String(item.biaoti) : '';
+				var normalized = rawTitle.replace(/\s+/g, '');
+				if (!normalized) return false;
+				return /10分钟演示|10分鐘演示|自动演示|演示模式已就绪|Alt\+D/i.test(normalized);
+			}
+
+			function filterRecommendList(list, options) {
+				if (!Array.isArray(list)) return [];
+				if (options && typeof options.listFilter === 'function') {
+					return list.filter(options.listFilter);
+				}
+				return list;
+			}
+
 			function applyHomeRecommendState(panel, list, options) {
 				var count = list.length;
 				if (!count) {
@@ -95,7 +110,8 @@
 					page: 1,
 					limit: 4
 				}, function(res) {
-					vue[targetKey] = (res.data && res.data.list) ? res.data.list : [];
+					var rawList = (res.data && res.data.list) ? res.data.list : [];
+					vue[targetKey] = filterRecommendList(rawList, options);
 					applyHomeRecommendState(panel, vue[targetKey], options);
 				}, {
 					silentError: true,
@@ -124,6 +140,9 @@
 				errorTitle: '首页公告推荐加载失败',
 				errorDescription: '当前无法加载公告推荐，可进入公告页继续查看。',
 				actionLabel: '打开公告页',
+				listFilter: function(item) {
+					return !shouldHideAutoDemoNotice(item);
+				}
 			});
 			requestRecommend('youqinglianjie/autoSort', 'youqinglianjieRecommend', linkRecommendState, {
 				emptyTitle: '首页暂无资源推荐',

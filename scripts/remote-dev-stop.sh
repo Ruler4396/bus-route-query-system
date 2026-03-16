@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+bash "$ROOT_DIR/scripts/legacy-dev-warning.sh" "$(basename "$0")" >&2 || true
 RUNTIME_DIR="$ROOT_DIR/runtime/remote-dev"
 PID_FILE="$RUNTIME_DIR/server.pid"
 stop_one() {

@@ -360,15 +360,28 @@ width: 100%;
 		}
 	});
 
+	function shouldHideAutoDemoNotice(item) {
+		var rawTitle = item && item.biaoti ? String(item.biaoti) : '';
+		var normalized = rawTitle.replace(/\s+/g, '');
+		if (!normalized) return false;
+		return /10分钟演示|10分鐘演示|自动演示|演示模式已就绪|Alt\+D/i.test(normalized);
+	}
+
+	function filterNoticeList(list) {
+		if (!jquery.isArray(list)) return [];
+		return list.filter(function(item) { return !shouldHideAutoDemoNotice(item); });
+	}
+
 	function applyListState(res, hasKeyword) {
-		var list = (res && res.data && jquery.isArray(res.data.list)) ? res.data.list : [];
-		var total = (res && res.data && typeof res.data.total === 'number') ? res.data.total : list.length;
+		var rawList = (res && res.data && jquery.isArray(res.data.list)) ? res.data.list : [];
+		var list = filterNoticeList(rawList);
+		var total = list.length;
 		vue.dataList = list;
 		if (!list.length) {
 			jquery('#pager').html('');
 			listStatePanel.setEmpty({
 				title: hasKeyword ? '未找到匹配内容' : '当前暂无可展示内容',
-				description: hasKeyword ? '可减少筛选条件，或回到首页继续浏览试点演示内容。' : '当前页没有更多可展示内容，可稍后刷新或切换到首页查看其他模块。',
+				description: hasKeyword ? '可减少筛选条件，或回到首页继续浏览其他公开内容。' : '当前页没有更多可展示内容，可稍后刷新或切换到首页查看其他模块。',
 				count: total,
 				actionLabel: hasKeyword ? '清空筛选并重试' : '重新加载',
 				actionMode: hasKeyword ? 'reset-search' : 'reload',

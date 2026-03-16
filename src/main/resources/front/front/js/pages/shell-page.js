@@ -1,7 +1,15 @@
-				var DEFAULT_IFRAME_URL = './pages/home/home.html';
+				var DEFAULT_IFRAME_URL = './pages/home/home.html?v=20260316-618';
 				var frameResizeTimer = null;
 				var frameResizeObserver = null;
+				var frameResizeBurstTimers = [];
 				var lastAppliedFrameHeight = 0;
+
+				function appendRouteVersion(url) {
+					var value = (url || '').trim();
+					if (!value) return value;
+					if (value.indexOf('v=20260316-618') >= 0) return value;
+					return value + (value.indexOf('?') >= 0 ? '&' : '?') + 'v=20260316-618';
+				}
 
 				function normalizeIframeUrl(rawUrl) {
 					var fallbackUrl = DEFAULT_IFRAME_URL;
@@ -51,34 +59,173 @@
 					}
 				}
 
+				function clearFrameResizeBurstTimers() {
+					while (frameResizeBurstTimers.length) {
+						clearTimeout(frameResizeBurstTimers.pop());
+					}
+				}
+
 				function queueFrameResizeBurst() {
-					[0, 180, 520, 1100, 2000].forEach(function(delay) {
-						setTimeout(changeFrameHeight, delay);
+					clearFrameResizeBurstTimers();
+					[0, 120, 420].forEach(function(delay) {
+						frameResizeBurstTimers.push(setTimeout(changeFrameHeight, delay));
 					});
 				}
 
-				function applyIframeUrl(url, persist) {
-					var iframe = document.getElementById('iframe');
-					if (!iframe) return;
-					var safeUrl = normalizeIframeUrl(url);
-					if (persist !== false) {
-						localStorage.setItem('iframeUrl', safeUrl);
+					var SHELL_ROUTE_KEY = 'route';
+					var SHELL_ROUTE_MAP = {
+						home: './pages/home/home.html?v=20260316-618',
+						routes: './pages/gongjiaoluxian/list.html?v=20260316-630',
+						map: './pages/gongjiaoluxian/map.html?v=20260316-646',
+						announcements: './pages/wangzhangonggao/list.html?v=20260316-618',
+						messages: './pages/messages/list.html?v=20260316-618',
+						resources: './pages/youqinglianjie/list.html?v=20260316-618',
+						accessibility: './pages/accessibility/settings.html?v=20260316-618',
+						center: './pages/yonghu/center.html'
+					};
+					var URL_TO_ROUTE_MAP = {};
+					Object.keys(SHELL_ROUTE_MAP).forEach(function(routeKey) {
+						URL_TO_ROUTE_MAP[normalizeIframeUrl(SHELL_ROUTE_MAP[routeKey])] = routeKey;
+					});
+
+					function sanitizeRouteKey(rawRoute) {
+						var route = String(rawRoute || '').trim().toLowerCase();
+						if (!route) return '';
+						if (!/^[a-z0-9_-]+$/.test(route)) return '';
+						return route;
 					}
-					if (vue) {
-						vue.activeNavUrl = safeUrl;
+
+					function getCenterUrlByRole() {
+						var userTable = localStorage.getItem('userTable') || 'yonghu';
+						return normalizeIframeUrl(appendRouteVersion('./pages/' + userTable + '/center.html'));
 					}
-					scrollShellToTop();
-					var currentSrc = iframe.getAttribute('src') || '';
-					if (currentSrc === safeUrl) {
-						scheduleFrameResize(30);
-						queueFrameResizeBurst();
-						return;
+
+					function resolveRouteByUrl(url) {
+						var safeUrl = normalizeIframeUrl(url);
+						if (/^\.\/pages\/[a-zA-Z0-9_-]+\/center\.html(?:[?#].*)?$/.test(safeUrl)) {
+							return 'center';
+						}
+						if (/^\.\/pages\/gongjiaoluxian\/(list|detail)\.html(?:[?#].*)?$/.test(safeUrl)) {
+							return 'routes';
+						}
+						if (/^\.\/pages\/gongjiaoluxian\/map\.html(?:[?#].*)?$/.test(safeUrl)) {
+							return 'map';
+						}
+						if (/^\.\/pages\/accessibility\/settings\.html(?:[?#].*)?$/.test(safeUrl)) {
+							return 'accessibility';
+						}
+						if (/^\.\/pages\/wangzhangonggao\/(list|detail)\.html(?:[?#].*)?$/.test(safeUrl)) {
+							return 'announcements';
+						}
+						if (/^\.\/pages\/youqinglianjie\/(list|detail)\.html(?:[?#].*)?$/.test(safeUrl)) {
+							return 'resources';
+						}
+						if (/^\.\/pages\/messages\/(list|review)\.html(?:[?#].*)?$/.test(safeUrl)) {
+							return 'messages';
+						}
+						if (/^\.\/pages\/storeup\/list\.html(?:[?#].*)?$/.test(safeUrl)) {
+							return 'center';
+						}
+						return URL_TO_ROUTE_MAP[safeUrl] || sanitizeRouteKey(parseRouteFromLocation()) || 'home';
 					}
-					disconnectFrameSizeObservers();
-					iframe.src = safeUrl;
-					scheduleFrameResize(120);
-					queueFrameResizeBurst();
+
+					function resolveUrlByRoute(routeKey) {
+						var key = sanitizeRouteKey(routeKey);
+						if (!key) return '';
+						if (key === 'center') {
+							return getCenterUrlByRole();
+						}
+						if (!SHELL_ROUTE_MAP[key]) return '';
+						return normalizeIframeUrl(appendRouteVersion(SHELL_ROUTE_MAP[key]));
+					}
+
+					function parseRouteFromLocation() {
+						try {
+							var currentUrl = new URL(window.location.href);
+							var queryRoute = sanitizeRouteKey(currentUrl.searchParams.get(SHELL_ROUTE_KEY));
+							if (queryRoute) {
+								return queryRoute;
+							}
+							if (currentUrl.hash && currentUrl.hash.indexOf('#/') === 0) {
+								return sanitizeRouteKey(currentUrl.hash.substring(2));
+							}
+						} catch (e) {}
+						return '';
+					}
+
+					function buildRouteHrefByRoute(routeKey, options) {
+					var key = sanitizeRouteKey(routeKey) || 'home';
+					var href = './index.html?' + SHELL_ROUTE_KEY + '=' + encodeURIComponent(key);
+					if (options && options.refreshToken) {
+						href += '&rt=' + encodeURIComponent(options.refreshToken);
+					}
+					return href;
 				}
+
+					function buildRouteHrefByUrl(url) {
+						return buildRouteHrefByRoute(resolveRouteByUrl(url));
+					}
+
+					function syncRouteToAddressBar(routeKey, options) {
+						if (!window.history || typeof window.history.pushState !== 'function') return;
+						var targetRoute = sanitizeRouteKey(routeKey) || 'home';
+						var replace = options && options.replace === true;
+						try {
+							var urlObj = new URL(window.location.href);
+							var currentRoute = sanitizeRouteKey(urlObj.searchParams.get(SHELL_ROUTE_KEY));
+							if (urlObj.hash && urlObj.hash.indexOf('#/') === 0) {
+								urlObj.hash = '';
+							}
+							if (currentRoute === targetRoute) {
+								return;
+							}
+							urlObj.searchParams.set(SHELL_ROUTE_KEY, targetRoute);
+							window.history[replace ? 'replaceState' : 'pushState']({}, '', urlObj.pathname + '?' + urlObj.searchParams.toString());
+						} catch (e) {
+							console.warn('更新地址栏路由失败:', e);
+						}
+					}
+
+					function getInitialIframeUrl() {
+						var routeFromLocation = parseRouteFromLocation();
+						if (routeFromLocation) {
+							var routeUrl = resolveUrlByRoute(routeFromLocation);
+							if (routeUrl) {
+								return routeUrl;
+							}
+						}
+						return normalizeIframeUrl(localStorage.getItem('iframeUrl'));
+					}
+
+					function applyIframeUrl(url, persist, options) {
+						var iframe = document.getElementById('iframe');
+						if (!iframe) return;
+						var safeUrl = normalizeIframeUrl(url);
+						var applyOptions = options || {};
+						if (persist !== false) {
+							localStorage.setItem('iframeUrl', safeUrl);
+						}
+						if (vue) {
+							vue.activeNavUrl = safeUrl;
+						}
+						if (!applyOptions.skipRouteSync) {
+							syncRouteToAddressBar(resolveRouteByUrl(safeUrl), {
+								replace: !!applyOptions.replaceRoute
+							});
+						}
+						scrollShellToTop();
+						var currentSrc = iframe.getAttribute('src') || '';
+						if (currentSrc === safeUrl) {
+							scheduleFrameResize(30);
+							queueFrameResizeBurst();
+							return;
+						}
+						disconnectFrameSizeObservers();
+						iframe.src = safeUrl;
+						scheduleFrameResize(120);
+						queueFrameResizeBurst();
+					}
+
 
 			var vue = new Vue({
 				el: '#header',
@@ -107,25 +254,39 @@
 						jump(url)
 					},
 						initNavStructure() {
-							var saved = normalizeIframeUrl(localStorage.getItem('iframeUrl'));
 							var role = localStorage.getItem('userTable');
 							this.showAdminEntry = role === 'users';
-							this.activeNavUrl = saved || DEFAULT_IFRAME_URL;
+							this.activeNavUrl = getInitialIframeUrl() || DEFAULT_IFRAME_URL;
 							localStorage.setItem('iframeUrl', this.activeNavUrl);
 							this.primaryNav = [];
 							this.supportNav = [];
-						for (var i = 0; i < this.indexNav.length; i++) {
-							var item = this.indexNav[i];
-							if (item.name.indexOf('友情链接') !== -1 || item.name.indexOf('资源') !== -1) {
-								this.supportNav.push(item);
-							} else {
-								this.primaryNav.push(item);
+							for (var i = 0; i < this.indexNav.length; i++) {
+								var item = this.indexNav[i];
+								if (item.name.indexOf('友情链接') !== -1 || item.name.indexOf('资源') !== -1) {
+									this.supportNav.push(item);
+								} else {
+									this.primaryNav.push(item);
+								}
 							}
+						},
+						buildNavHref(url) {
+							return buildRouteHrefByUrl(url);
+						},
+						buildCenterHref() {
+							return buildRouteHrefByRoute('center');
+						},
+						openNav(url, event) {
+						if (event && typeof event.preventDefault === 'function') {
+							event.preventDefault();
 						}
-					},
-					openNav(url) {
-						this.activeNavUrl = url;
-						navPage(url);
+						var routeKey = resolveRouteByUrl(url);
+						var targetUrl = routeKey ? (resolveUrlByRoute(routeKey) || url) : url;
+						this.activeNavUrl = targetUrl;
+						if (routeKey === 'routes') {
+							window.location.href = buildRouteHrefByRoute('routes', { refreshToken: Date.now() });
+							return;
+						}
+						navPage(targetUrl);
 					},
 					centerPageShell() {
 						centerPage();
@@ -310,7 +471,7 @@
 					updateAssistStatus();
 				});
 				bind('assistShortcutHelp', function() {
-					AccessibilityUtils.announce('快捷键帮助：Alt加1到7切换导航，Alt加S聚焦搜索，Alt加L聚焦主内容，Alt加C切换字幕提示，Alt加R切换减少动态，Alt加A打开设置，Alt加D打开演示。');
+					AccessibilityUtils.announce('快捷键帮助：Alt加1到7切换导航，Alt加S聚焦搜索，Alt加L聚焦主内容，Alt加C切换字幕提示，Alt加R切换减少动态，Alt加A打开设置。');
 					updateAssistStatus();
 				});
 						var iframe = document.getElementById('iframe');
@@ -338,9 +499,16 @@
 				}
 
 				// 导航栏跳转
-					function navPage(url) {
-						applyIframeUrl(url, true);
+					function navPage(url, options) {
+						var routeKey = resolveRouteByUrl(url);
+						var targetUrl = routeKey ? (resolveUrlByRoute(routeKey) || url) : url;
+						if (routeKey === 'routes' && !(options && options.skipHardReload)) {
+							window.location.href = buildRouteHrefByRoute('routes', { refreshToken: Date.now() });
+							return;
+						}
+						applyIframeUrl(targetUrl, true, options || {});
 					}
+					window.navPage = navPage;
 
 			// 跳转到个人中心也
 				function centerPage() {
@@ -362,9 +530,30 @@
 						}
 					}
 
-						var iframeUrl = normalizeIframeUrl(localStorage.getItem('iframeUrl'));
-						applyIframeUrl(iframeUrl, true);
-						function scheduleFrameResize(delay) {
+					function handleHistoryRouteChange() {
+						var routeKey = parseRouteFromLocation();
+						if (!routeKey) {
+							return;
+						}
+						var targetUrl = resolveUrlByRoute(routeKey);
+						if (!targetUrl) {
+							return;
+						}
+						if (vue && vue.activeNavUrl === targetUrl) {
+							return;
+						}
+						applyIframeUrl(targetUrl, true, {
+							skipRouteSync: true
+						});
+					}
+
+					var iframeUrl = getInitialIframeUrl();
+					applyIframeUrl(iframeUrl, true, {
+						replaceRoute: true
+					});
+					window.addEventListener('popstate', handleHistoryRouteChange);
+					window.addEventListener('hashchange', handleHistoryRouteChange);
+					function scheduleFrameResize(delay) {
 							clearTimeout(frameResizeTimer);
 							frameResizeTimer = setTimeout(changeFrameHeight, delay || 30);
 						}

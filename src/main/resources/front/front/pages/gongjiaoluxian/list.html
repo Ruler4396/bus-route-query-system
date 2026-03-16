@@ -2,7 +2,7 @@
 <html>
 <head lang="en">
 <meta charset="utf-8">
-<title>公交路线</title>
+<title>公交路线规划</title>
 <meta name="keywords" content="" />
 <meta name="description" content="" />
 <meta name="renderer" content="webkit">
@@ -12,452 +12,258 @@
 <link rel="stylesheet" href="../../xznstatic/css/common.css"/>
 <link rel="stylesheet" href="../../xznstatic/css/style.css"/>
 <link rel="stylesheet" href="../../css/accessibility-sr-only.css">
-<link rel="stylesheet" href="../../css/accessibility-high-contrast.css">
-<link rel="stylesheet" href="../../css/transit-business-ui.css">
+<link rel="stylesheet" href="../../css/accessibility-high-contrast.css?v=20260316-630">
+<link rel="stylesheet" href="../../css/transit-business-ui.css?v=20260316-630">
+<link rel="stylesheet" href="../../css/transit-route-list.css?v=20260316-630">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script type="text/javascript" src="../../xznstatic/js/jquery-1.11.3.min.js"></script>
 <script type="text/javascript" src="../../xznstatic/js/jquery.SuperSlide.2.1.1.js"></script>
 </head>
-<style>
-	html::after {
-		position: fixed;
-		top: 0;
-		right: 0;
-		left: 0;
-		bottom: 0;
-		content: '';
-		display: block;
-		background-attachment: fixed;
-		background-size: cover;
-		background-position: center;
-	}
-	#test1 {
-		overflow: hidden;
-	}
-	#test1 .layui-carousel-ind li {
-		width: 28px;
-		height: 14px;
-		border-width: 0;
-		border-style: solid;
-		border-color: rgba(0,0,0,.3);
-		border-radius: 7px;
-		background-color: rgba(191, 191, 191, 1);
-		box-shadow: 0 0 0px rgba(255,0,0,.8);
-	}
-	#test1 .layui-carousel-ind li.layui-this {
-		width: 60px;
-		height: 14px;
-		border-width: 0;
-		border-style: solid;
-		border-color: rgba(0,0,0,.3);
-		border-radius: 7px;
-		background-color: rgba(77, 79, 54, 1);
-		box-shadow: 0 0 0px rgba(255,0,0,.8);
-	}
-
-	// 列表
-	.recommend {
-		padding: 10px 0;
-		display: flex;
-		justify-content: center;
-		background-repeat: no-repeat;
-		background-position: center center;
-		background-size: cover;
-	}
-	.recommend .box {
-	    width: 1002px;
-		margin: 0 auto;
-	}
-	.recommend .box .title {
-		padding: 10px 5px;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		box-sizing: border-box;
-	}
-	.recommend .box .title span {
-		padding: 0 10px;
-		font-size: 16px;
-		line-height: 1.4;
-	}
-
-	.recommend .box .filter {
-		padding: 0 10px;
-		display: flex;
-		align-items: center;
-		box-sizing: border-box;
-		width: 100%;
-		flex-wrap: wrap;
-	}
-	.recommend .box .filter .item-list {
-		display: flex;
-		align-items: center;
-	}
-	.recommend .box .filter .item-list .lable {
-		font-size: 14px;
-		color: #333;
-		box-sizing: border-box;
-	}
-	.recommend .box .filter .item-list input {
-		padding: 0 10px;
-		box-sizing: border-box;
-		outline: none;
-	}
-	.recommend .box .filter button {
-		display: flex;
-		padding: 0 10px;
-		box-sizing: border-box;
-		align-items: center;
-		justify-content: center;
-		outline: none;
-	}
-	.recommend .box .filter button i {
-		margin-right: 4px;
-	}
-
-	.recommend .box .list {
-		display: flex;
-		flex-wrap: wrap;
-	}
-
-	.recommend .box .list .list-item {
-		flex: 0 0 33%;
-		padding: 0 5px;
-		box-sizing: border-box;
-	}
-	.recommend .box .list .list-item .list-item-body {
-		cursor: pointer;
-		border: 1px solid rgba(0, 0, 0, 3);
-		padding: 5px;
-		box-sizing: border-box;
-	}
-	.recommend .box .list .list-item-body img {
-		width: 100%;
-		height: 100px;
-		display: block;
-		margin: 0 auto;
-	}
-
-	.recommend .box .list .list-item-body .info {
-		display: flex;
-		flex-wrap: wrap;
-	}
-	.recommend .box .list .list-item-body .info .price {
-		padding-top: 5px;
-		color: red;
-		font-size: 14px;
-		text-align: center;
-		box-sizing: border-box;
-	}
-
-	.recommend .box .list .list-item-body .info .name {
-		padding-top: 5px;
-		color: red;
-		font-size: 14px;
-		text-align: center;
-		box-sizing: border-box;
-	}
-
-	.recommend .box .list .list-item3 {
-		flex: 0 0 33.33%;
-	}
-
-	.recommend .box .list .list-item5 {
-		flex: 0 0 20%;
-	}
-
-	.recommend .box .news {
-		display: flex;
-		flex-wrap: wrap;
-		padding: 0;
-width: 100%;
-	}
-
-	.recommend .box .news .list-item {
-		flex: 0 0 25%;
-		padding: 0 10px;
-		box-sizing: border-box;
-	}
-	.recommend .box .news .list-item .list-item-body {
-		cursor: pointer;
-		border: 1px solid rgba(0, 0, 0, 3);
-		padding: 10px;
-		box-sizing: border-box;
-		display: flex;
-	}
-
-	.recommend .box .news .list-item .list-item-body img {
-		width: 120px;
-		height: 100%;
-		display: block;
-		margin: 0 auto;
-	}
-
-	.recommend .box .news .list-item .list-item-body .item-info {
-		flex: 1;
-		display: flex;
-		justify-content: space-between;
-		flex-direction: column;
-		padding-left: 10px;
-		box-sizing: border-box;
-	}
-
-	.recommend .box .news .list-item .list-item-body .item-info .name {
-		padding-top: 5px;
-		color: red;
-		font-size: 14px;
-		box-sizing: border-box;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		display: -webkit-box;
-		-webkit-line-clamp: 1;
-		-webkit-box-orient: vertical;
-	}
-
-	.recommend .box .news .list-item .list-item-body .item-info .time {
-		padding-top: 5px;
-		color: red;
-		font-size: 14px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		display: -webkit-box;
-		-webkit-line-clamp: 1;
-		-webkit-box-orient: vertical;
-		box-sizing: border-box;
-	}
-
-	.recommend .box .news .list-item1 {
-		flex: 0 0 100%;
-	}
-
-	.recommend .box .news .list-item3 {
-		flex: 0 0 33.33%;
-	}
-
-	.index-pv1 .animation-box:hover {
-		transform: perspective(1000px) translate3d(0px, 0px, 0px) scale(1.03) rotate(15deg) skew(0deg, 0deg);
-		transition: all 0.3s;
-	}
-	
-	.index-pv1 .animation-box img:hover {
-		transform: perspective(1000px) translate3d(0px, 0px, 0px) scale(1) rotate(0deg) skew(0deg, 0deg);
-		transition: all 0.3s;
-	}
-  
-  .layui-laypage .layui-laypage-count {
-    padding: 0 10px;
-  }
-  .layui-laypage .layui-laypage-skip {
-    padding-left: 10px;
-  }
-</style>
 <body class="transit-ui transit-page page-route-list">
   <a href="#app" class="skip-link">跳转到主要内容</a>
   <div id="app" role="main" aria-label="公交路线查询" tabindex="-1">
-	<div class="recommend index-pv1" :style='{"padding":"10px","boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"0","borderColor":"rgba(0,0,0,.3)","borderRadius":"0","borderWidth":"0","background":"#fff","borderStyle":"solid"}'>
-		<div class="box" style='width:1200px'>
-	    <div class="title" :style='{"padding":"10px","boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"10px 0 10px 0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(46, 58, 31, 1)","borderRadius":"4px","borderWidth":"0","borderStyle":"solid","justifyContent":"space-between","height":"54px"}'>
-	      <span :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(255,0,0,1)","backgroundColor":"rgba(0,0,0,0)","color":"rgba(255, 255, 255, 1)","borderRadius":"0 0 2px 0","borderWidth":"0","fontSize":"18px","borderStyle":"solid"}'>公交路线</span><span :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(0,0,0,0)","backgroundColor":"rgba(0,0,0,0)","color":"rgba(225, 225, 225, 1)","borderRadius":"0","borderWidth":"0","fontSize":"14px","borderStyle":"solid"}'>您现在的位置：公交路线</span>
-	    </div>
-		<section class="route-assist-panel" aria-label="无障碍路线检索指引">
-			<h2>无障碍路线助手</h2>
-			<p>最少只需输入起点和终点即可推荐。系统会把关键反馈同步成可见文本，便于听障用户快速确认当前状态。</p>
-			<div class="route-assist-grid">
-				<div class="assist-chip">大按钮：减少精细点击压力</div>
-				<div class="assist-chip">高对比与大字号：提升低视力可读性</div>
-				<div class="assist-chip">键盘可操作：支持 Enter / Space 打开路线</div>
-			</div>
-			<div id="routeLiveStatus" class="route-live-status" role="status" aria-live="polite">{{a11yStatusText}}</div>
-		</section>
-		<section v-if="governanceMeta" class="route-governance-panel" aria-label="数据治理与可信度说明">
-			<div class="route-governance-grid">
-				<div class="governance-card">
-					<h3>数据源登记</h3>
-					<p>当前登记 {{governanceMeta.dataSourceCount}} 类数据源，覆盖路线字段、站点表、OSM/Overpass、开放广东与试点人工样本基础。</p>
-				</div>
-				<div class="governance-card">
-					<h3>置信度规则</h3>
-					<p v-if="governanceMeta.confidenceLevels && governanceMeta.confidenceLevels.length">{{governanceMeta.confidenceLevels.join(' / ')}}</p>
-					<p v-else>当前未加载置信度规则。</p>
-				</div>
-				<div class="governance-card">
-					<h3>试点人工样本基础</h3>
-					<p>站点 {{governanceMeta.pilotStationCount}} 个 / 换乘节点 {{governanceMeta.pilotTransferCount}} 个 / 目的地入口 {{governanceMeta.pilotEntranceCount}} 个。</p>
-				</div>
-			</div>
-		</section>
-		<form class="layui-form filter" :style='{"padding":"0 10px","boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"10px 0 10px 0","borderColor":"rgba(0,0,0,.3)","backgroundColor":"rgba(0, 0, 0, 0)","borderRadius":"4px","borderWidth":"0","borderStyle":"solid","justifyContent":"flex-end","height":"64px"}'>
-			<div class="item-list">
-				<div class="lable" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(0,0,0,0)","backgroundColor":"transparent","color":"rgba(19, 19, 19, 1)","borderRadius":"0","textAlign":"right","borderWidth":"0","width":"auto","fontSize":"16px","borderStyle":"solid"}'>路线名称</div>
-				<input aria-label="路线名称" type="text" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"140px","fontSize":"14px","borderStyle":"solid","height":"40px"}' name="luxianmingcheng" id="luxianmingcheng" placeholder="路线名称" autocomplete="off" class="layui-input">
-			</div>
-			<div class="item-list">
-				<div class="lable" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(0,0,0,0)","backgroundColor":"transparent","color":"rgba(19, 19, 19, 1)","borderRadius":"0","textAlign":"right","borderWidth":"0","width":"auto","fontSize":"16px","borderStyle":"solid"}'>起点站名</div>
-				<input aria-label="起点站名" type="text" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"140px","fontSize":"14px","borderStyle":"solid","height":"40px"}' name="qidianzhanming" id="qidianzhanming" placeholder="起点站名" autocomplete="off" class="layui-input">
-			</div>
-			<div class="item-list">
-				<div class="lable" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(0,0,0,0)","backgroundColor":"transparent","color":"rgba(19, 19, 19, 1)","borderRadius":"0","textAlign":"right","borderWidth":"0","width":"auto","fontSize":"16px","borderStyle":"solid"}'>途径站点</div>
-				<input aria-label="途径站点" type="text" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"140px","fontSize":"14px","borderStyle":"solid","height":"40px"}' name="tujingzhandian" id="tujingzhandian" placeholder="途径站点" autocomplete="off" class="layui-input">
-			</div>
-				<div class="item-list">
-					<div class="lable" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(0,0,0,0)","backgroundColor":"transparent","color":"rgba(19, 19, 19, 1)","borderRadius":"0","textAlign":"right","borderWidth":"0","width":"auto","fontSize":"16px","borderStyle":"solid"}'>终点站名</div>
-					<input aria-label="终点站名" type="text" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"140px","fontSize":"14px","borderStyle":"solid","height":"40px"}' name="zhongdianzhanming" id="zhongdianzhanming" placeholder="终点站名" autocomplete="off" class="layui-input">
-				</div>
-				<div class="item-list">
-					<div class="lable" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(0,0,0,0)","backgroundColor":"transparent","color":"rgba(19, 19, 19, 1)","borderRadius":"0","textAlign":"right","borderWidth":"0","width":"auto","fontSize":"16px","borderStyle":"solid"}'>服务画像</div>
-					<select id="profileType" aria-label="服务画像" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"170px","fontSize":"14px","borderStyle":"solid","height":"40px"}' class="layui-input">
-						<option value="AUTO" selected>自动识别 / 通用</option>
-						<option value="WHEELCHAIR">轮椅 / 行动不便</option>
-						<option value="LOW_VISION">低视力</option>
-						<option value="HEARING_TEXT">听障（文本提示优先）</option>
-					</select>
-				</div>
-				<div class="item-list">
-					<div class="lable" :style='{"padding":"0 10px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(0,0,0,0)","backgroundColor":"transparent","color":"rgba(19, 19, 19, 1)","borderRadius":"0","textAlign":"right","borderWidth":"0","width":"auto","fontSize":"16px","borderStyle":"solid"}'>推荐偏好</div>
-					<select id="preferenceType" aria-label="推荐偏好" :style='{"boxShadow":"0 0 6px rgba(255,0,0,0)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","color":"#333","borderRadius":"8px","textAlign":"center","borderWidth":"3px","width":"160px","fontSize":"14px","borderStyle":"solid","height":"40px"}' class="layui-input">
-						<option value="AUTO" selected>智能推荐</option>
-						<option value="ACCESSIBLE">无障碍优先</option>
-						<option value="TIME">时间优先</option>
-						<option value="DISTANCE">距离优先</option>
-					</select>
-				</div>
-				<button :style='{"padding":"0 15px","boxShadow":"0 0 0px rgba(0,0,0,0)","margin":"0 0 0 10px","borderColor":"#409EFF","backgroundColor":"rgba(77, 79, 54, 1)","color":"#fff","borderRadius":"4px","borderWidth":"0","width":"auto","fontSize":"14px","borderStyle":"solid","height":"40px"}' id="btn-search" type="button" class="layui-btn layui-btn-normal">
-				  <i v-if="true" class="layui-icon layui-icon-search"></i>搜索
-				</button>
-				<button :style='{"padding":"0 15px","boxShadow":"0 0 0px rgba(0,0,0,0)","margin":"0 0 0 10px","borderColor":"#409EFF","backgroundColor":"rgba(183, 186, 107, 1)","color":"#fff","borderRadius":"4px","borderWidth":"0","width":"auto","fontSize":"14px","borderStyle":"solid","height":"40px"}' id="btn-plan" type="button" class="layui-btn layui-btn-normal">
-				  <i v-if="true" class="layui-icon layui-icon-release"></i>无障碍推荐
-				</button>
-				<button :style='{"padding":"0 15px","boxShadow":"0 0 0px rgba(0,0,0,0)","margin":"0 0 0 10px","borderColor":"#409EFF","backgroundColor":"rgba(183, 186, 107, 1)","color":"#fff","borderRadius":"4px","borderWidth":"0","width":"auto","fontSize":"14px","borderStyle":"solid","height":"40px"}' @click="jump('../gongjiaoluxian/map.html')" type="button" class="layui-btn btn-theme">
-				  <i v-if="true" class="layui-icon">&#xe635;</i>地图
-				</button>
-			<button :style='{"padding":"0 15px","boxShadow":"0 0 0px rgba(0,0,0,0)","margin":"0 0 0 10px","borderColor":"#409EFF","backgroundColor":"rgba(77, 79, 54, 1)","color":"#fff","borderRadius":"4px","borderWidth":"0","width":"auto","fontSize":"14px","borderStyle":"solid","height":"40px"}' v-if="isAuth('gongjiaoluxian','新增')" @click="jump('../gongjiaoluxian/add.html')" type="button" class="layui-btn btn-theme">
-			  <i v-if="true" class="layui-icon">&#xe654;</i>添加
-			</button>
-			</form>
-			<div v-if="isPlanMode" :style='{"padding":"0 10px","margin":"0 0 10px 0","color":"rgba(77, 79, 54, 1)","fontSize":"14px","fontWeight":"600"}'>
-				当前展示：无障碍推荐结果（按综合评分降序）
-			</div>
-			<div v-if="planNoticeText" class="route-plan-notice" role="status" aria-live="polite" :style='{"padding":"8px 12px","margin":"0 10px 12px 10px","borderRadius":"6px","fontSize":"13px","lineHeight":"1.5","border":"1px solid","borderColor":planNoticeType==="error"?"#d9534f":(planNoticeType==="warn"?"#f0ad4e":(planNoticeType==="success"?"#5cb85c":"#999")),"backgroundColor":planNoticeType==="error"?"#fbe9e7":(planNoticeType==="warn"?"#fff7e6":(planNoticeType==="success"?"#edf7ed":"#f7f7f7")),"color":planNoticeType==="error"?"#a94442":(planNoticeType==="warn"?"#8a6d3b":(planNoticeType==="success"?"#3c763d":"#555"))}'>
-				{{planNoticeText}}
-			</div>
-			<section v-if="planMeta" class="route-plan-summary">
-				<div class="route-plan-summary-grid">
-					<div class="summary-chip"><strong>服务画像</strong><span>{{planMeta.profileLabel || '通用'}}</span></div>
-					<div class="summary-chip"><strong>排序策略</strong><span>{{planMeta.preferenceLabel || planMeta.preferenceType || '智能推荐'}}</span></div>
-					<div class="summary-chip"><strong>决策状态</strong><span>{{planMeta.decisionStateText}}</span></div>
-					<div class="summary-chip"><strong>结果数量</strong><span>{{planMeta.count}} / 评估 {{planMeta.evaluatedCount}}</span></div>
-				</div>
-				<div v-if="planMeta.actionHints && planMeta.actionHints.length" class="summary-block">
-					<h4>建议操作</h4>
-					<ul>
-						<li v-for="(hint,index) in planMeta.actionHints" :key="'action-'+index">{{hint}}</li>
-					</ul>
-				</div>
-				<div v-if="planMeta.riskHints && planMeta.riskHints.length" class="summary-block risk">
-					<h4>全局风险提示</h4>
-					<ul>
-						<li v-for="(hint,index) in planMeta.riskHints" :key="'risk-'+index">{{hint}}</li>
-					</ul>
-				</div>
-				<div v-if="planMeta.rejectedRoutes && planMeta.rejectedRoutes.length" class="summary-block reject">
-					<h4>已过滤路线</h4>
-					<ul>
-						<li v-for="(item,index) in planMeta.rejectedRoutes" :key="'reject-'+index">{{item.routeName}}：{{item.decisionMessage}}</li>
-					</ul>
-				</div>
-			</section>
-		    <!-- 样式一 -->
-		    <div class="list" style="position: relative;">
-		      <div
-			  	v-for="(item,index) in dataList"
-				:key="index"
-				class="list-item"
-				:class="3=='3'?'list-item3':3=='5'?'list-item5':''"
-				role="button"
-				tabindex="0"
-				:aria-label="'查看路线详情：' + item.luxianmingcheng"
-				@click="openRouteDetail(item)"
-				@keydown="onRouteCardKeydown($event, item)"
-			  >
-		        <div class="list-item-body animation-box" :style='{"padding":"10px","boxShadow":"0px 0px 0px 10px rgba(183, 186, 107, 1)","margin":"0 50px 50px 70px","borderColor":"rgba(183, 186, 107, 1)","backgroundColor":"#fff","borderRadius":"50%","borderWidth":"0","borderStyle":"solid"}'>
-				<div class="info">
-					<div v-if="item.price" :style='{"padding":"5px","margin":"10px 0 0 0","backgroundColor":"rgba(0,0,0,0)","color":"rgba(183, 186, 107, 1)","borderRadius":"0","textAlign":"center","width":"100%","fontSize":"18px"}' class="price"><span :style='{"fontSize":"12px"}'>￥</span>{{Number(item.price).toFixed(2)}}</div>
-						<div v-if="item.vipprice&&item.vipprice>0" :style='{"padding":"5px","margin":"10px 0 0 0","backgroundColor":"rgba(0,0,0,0)","color":"rgba(183, 186, 107, 1)","borderRadius":"0","textAlign":"center","width":"100%","fontSize":"18px"}' class="price"><span :style='{"fontSize":"12px"}'>￥</span>{{Number(item.vipprice).toFixed(2)}} <span :style='{"fontSize":"12px"}'>会员价</span></div>
-						<div v-if="item.jf" :style='{"padding":"5px","margin":"10px 0 0 0","backgroundColor":"rgba(0,0,0,0)","color":"rgba(183, 186, 107, 1)","borderRadius":"0","textAlign":"center","width":"100%","fontSize":"18px"}' class="price"><span :style='{"fontSize":"12px"}'></span>{{Number(item.jf).toFixed(0)}}积分</div>
-						<div v-if="true" :style='{"isshow":true,"padding":"5px","margin":"5px 0 0 0","backgroundColor":"rgba(0,0,0,0)","color":"rgba(0, 0, 0, 1)","borderRadius":"0","textAlign":"center","width":"100%","fontSize":"12px"}' class="name route-card-name">{{item.luxianmingcheng}}</div>
-						<div class="route-card-meta">
-							<div>起点：{{item.qidianzhanming || '暂无'}}</div>
-							<div>终点：{{item.zhongdianzhanming || '暂无'}}</div>
-						</div>
-						<div class="route-card-meta">
-							<div>途经：{{item.tujingzhandian || '暂无'}}</div>
-							<div>点击：{{item.clicknum || 0}}</div>
-						</div>
-						<div v-if="item.isRecommended" :style='{"padding":"4px 8px","margin":"4px 0 0 0","backgroundColor":"rgba(46, 58, 31, 1)","color":"#fff","borderRadius":"12px","textAlign":"center","width":"100%","fontSize":"12px"}'>
-							推荐分 {{Number(item.totalScore || 0).toFixed(1)}} / 无障碍 {{Number(item.accessibilityScore || 0).toFixed(1)}}
-						</div>
-						<div class="route-card-tags">
-						<span class="route-tag" :class="item.wuzhangaijibie <= 1 ? 'good' : 'warn'">无障碍等级：{{item.accessibilityLevelText || getAccessibilityLevelText(item.wuzhangaijibie)}}</span>
-						<span class="route-tag" :class="getConfidenceClass(item)">置信度：{{item.confidenceLevelText || '未知'}} {{Number(item.confidenceScore || 0).toFixed(0)}}</span>
-						<span class="route-tag" :class="getDecisionClass(item)">状态：{{item.decisionStateText || '待核对'}}</span>
-						<span class="route-tag" :class="item.mangdaozhichi==1 ? 'good' : 'warn'">{{item.blindPathSupportText || ('盲道支持：' + (item.mangdaozhichi==1 ? '有' : '未知/无'))}}</span>
-						<span class="route-tag" :class="item.yuyintongbao==1 ? 'good' : 'warn'">{{item.voiceAnnounceText || ('语音提示：' + (item.yuyintongbao==1 ? '支持' : '未知/无'))}}</span>
-						<span v-if="item.guideDogSupportText || item.ditezhichi!=null" class="route-tag" :class="item.ditezhichi==1 ? 'good' : 'warn'">{{item.guideDogSupportText || ('导盲犬支持：' + (item.ditezhichi==1 ? '支持' : '未知/无'))}}</span>
-					</div>
-					<div class="route-card-meta">
-						<div>画像：{{item.resolvedProfileLabel || '通用'}}</div>
-						<div>策略：{{item.resolvedPreferenceLabel || item.resolvedPreferenceType || '智能推荐'}}</div>
-					</div>
-					<div class="route-card-meta">
-						<div>数据源：{{item.dataSourceText || '未知'}}</div>
-						<div>更新：{{item.dataUpdatedAtText || '未知'}}</div>
-					</div>
-					<div v-if="item.recommendationReason" :style='{"padding":"4px 6px","margin":"4px 0 0 0","backgroundColor":"rgba(245, 247, 238, 1)","color":"rgba(46, 58, 31, 1)","borderRadius":"6px","textAlign":"center","width":"100%","fontSize":"12px"}'>
-						{{item.recommendationReason}}
-					</div>
-					<div v-if="item.decisionMessage" class="route-card-decision">{{item.decisionMessage}}</div>
-					<div v-if="item.segments && item.segments.length" class="route-segment-list">
-						<div class="route-segment-item" v-for="(segment,segIndex) in item.segments" :key="'segment-'+item.id+'-'+segIndex">
-							<div class="segment-head">
-								<strong>{{segment.title}}</strong>
-								<span class="route-tag" :class="segment.status === 'READY' ? 'good' : (segment.status === 'CAUTION' ? 'warn' : 'danger')">{{segment.statusText}}</span>
-							</div>
-							<div class="segment-desc">{{segment.description}}</div>
-							<div class="segment-meta">
-								<span v-if="segment.stationName">站点：{{segment.stationName}}</span>
-								<span v-if="segment.estimatedDistanceMeters">估算：{{segment.estimatedDistanceMeters}} 米</span>
-								<span v-if="segment.stationSpan">覆盖：{{segment.stationSpan}} 站</span>
-								<span v-if="segment.entranceType">入口：{{segment.entranceType}}</span>
-								<span v-if="segment.entranceAccessible !== undefined">入口可达：{{segment.entranceAccessible ? '是' : '待核对/否'}}</span>
-								<span v-if="segment.curbRamp !== undefined">缘石坡道：{{segment.curbRamp ? '有' : '待核对/无'}}</span>
-							</div>
-						</div>
-					</div>
-					<ul v-if="item.riskHints && item.riskHints.length" class="route-risk-list">
-						<li v-for="(risk,index) in item.riskHints" :key="'risk-'+item.id+'-'+index">{{risk}}</li>
-					</ul>
-</div>
-		        </div>
-		      </div>
-			  <div v-if="!dataList || dataList.length===0" :style='{"padding":"30px 0","textAlign":"center","color":"rgba(90, 90, 90, 1)","fontSize":"14px"}'>
-				  {{isPlanMode ? "暂无可用推荐路线，请调整起终点或偏好后重试" : "暂无线路数据"}}
-			  </div>
-		    </div>
-		<div class="pager" id="pager" :style="{textAlign:2==1?'left':2==2?'center':'right'}"></div>
-	  </div>
-	</div>
+    <div class="recommend index-pv1 route-page-shell">
+      <div class="box route-page-box">
+        <div class="title route-page-titlebar">
+          <span>公交路线</span>
+          <span>广州</span>
+        </div>
 
+        <section class="route-inline-picker-panel route-planner-stage" id="routeInlinePickerPanel" aria-label="地点辅助地图">
+          <div class="route-stage-map-shell">
+            <div class="route-stage-toolbar">
+              <div id="routePickerStatus" class="route-stage-status">点击地图选点</div>
+            </div>
+            <div id="routePickerMap" class="route-picker-map route-picker-map-stage"></div>
+            <div class="route-stage-map-note" aria-hidden="true">
+              <span id="routePickerTitle">广州地图</span>
+              <span id="routePickerSelectionSummary">点击地图或输入地点</span>
+            </div>
+            <div id="routeMapContextMenu" class="route-map-context-menu" aria-hidden="true" hidden>
+              <button type="button" class="route-map-context-item" data-action="set-start">设为起点</button>
+              <button type="button" class="route-map-context-item" data-action="set-end">设为终点</button>
+              <button type="button" class="route-map-context-item" data-action="swap">交换起终点</button>
+            </div>
+          </div>
 
+          <form class="layui-form filter route-stage-form" aria-label="路线查询条件" @submit.prevent>
+            <div class="route-stage-input-grid">
+              <div class="item-list item-list-wide route-location-field route-stage-input">
+                <div class="route-stage-label-row">
+                  <label class="lable" for="qidianzhanming">出发地</label>
+                </div>
+                <input
+                  aria-label="我的出发地"
+                  type="text"
+                  name="qidianzhanming"
+                  id="qidianzhanming"
+                  list="routeStationSuggestionList"
+                  placeholder="输入地点或站点"
+                  autocomplete="off"
+                  class="layui-input">
+                <span id="startResolvedHint" class="route-input-hint">未选择</span>
+              </div>
+
+              <div class="item-list item-list-wide route-location-field route-stage-input">
+                <div class="route-stage-label-row">
+                  <label class="lable" for="zhongdianzhanming">目的地</label>
+                </div>
+                <input
+                  aria-label="我的目的地"
+                  type="text"
+                  name="zhongdianzhanming"
+                  id="zhongdianzhanming"
+                  list="routeStationSuggestionList"
+                  placeholder="输入地点或站点"
+                  autocomplete="off"
+                  class="layui-input">
+                <span id="endResolvedHint" class="route-input-hint">未选择</span>
+              </div>
+            </div>
+
+            <div class="route-stage-option-grid">
+              <div class="item-list route-stage-option">
+                <label class="lable" for="profileType">服务画像</label>
+                <select id="profileType" lay-filter="profileType" aria-label="服务画像" class="layui-input">
+                  <option value="AUTO" selected>自动识别 / 通用</option>
+                  <option value="WHEELCHAIR">轮椅 / 行动不便</option>
+                  <option value="LOW_VISION">低视力</option>
+                  <option value="HEARING_TEXT">听障（文本优先）</option>
+                </select>
+              </div>
+              <div class="item-list route-stage-option">
+                <label class="lable" for="preferenceType">推荐偏好</label>
+                <select id="preferenceType" aria-label="推荐偏好" class="layui-input">
+                  <option value="AUTO" selected>自动推荐</option>
+                  <option value="ACCESSIBLE">无障碍优先</option>
+                  <option value="TIME">时间优先</option>
+                  <option value="DISTANCE">距离优先</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="route-stage-actions">
+              <button type="button" id="routePickerLocateInput" class="layui-btn route-filter-btn route-filter-btn-secondary">定位当前输入</button>
+              <button type="button" id="routeAssignStart" class="layui-btn route-filter-btn route-filter-btn-secondary" disabled>设为起点</button>
+              <button type="button" id="routeAssignEnd" class="layui-btn route-filter-btn route-filter-btn-secondary" disabled>设为终点</button>
+              <button type="button" id="routeSwapPoints" class="layui-btn route-filter-btn route-filter-btn-secondary">交换起终点</button>
+                            <button id="btn-plan" type="button" class="layui-btn route-filter-btn route-filter-btn-primary">
+                <i class="layui-icon layui-icon-release"></i>生成方案
+              </button>
+              <button @click="openMapHub()" type="button" class="layui-btn route-filter-btn route-filter-btn-map">
+                <i class="layui-icon">&#xe635;</i>进入线路导航
+              </button>
+            </div>
+
+          </form>
+
+          <div id="routePickerCandidates" class="route-picker-candidates route-picker-candidates-inline"></div>
+        </section>
+
+        <datalist id="routeStationSuggestionList"></datalist>
+
+        <div v-if="planNoticeText" class="route-plan-notice" role="status" aria-live="polite">
+          {{planNoticeText}}
+        </div>
+
+        <section v-if="planMeta" class="route-plan-summary" aria-label="推荐结果概览">
+          <div class="route-plan-summary-grid">
+            <div class="summary-chip">
+              <strong>查询</strong>
+              <span>{{planMeta.queryLabel}}</span>
+            </div>
+            <div v-if="planMeta.resolvedStartLabel" class="summary-chip">
+              <strong>出发站点</strong>
+              <span>{{planMeta.resolvedStartLabel}}</span>
+            </div>
+            <div v-if="planMeta.resolvedEndLabel" class="summary-chip">
+              <strong>到达站点</strong>
+              <span>{{planMeta.resolvedEndLabel}}</span>
+            </div>
+            <div class="summary-chip">
+              <strong>候选路线</strong>
+              <span>{{planMeta.count}} 条</span>
+            </div>
+            <div v-if="planMeta.profileLabel" class="summary-chip">
+              <strong>服务画像</strong>
+              <span>{{planMeta.profileLabel}}</span>
+            </div>
+            <div v-if="planMeta.preferenceLabel" class="summary-chip">
+              <strong>推荐偏好</strong>
+              <span>{{planMeta.preferenceLabel}}</span>
+            </div>
+            <div v-if="planMeta.evaluatedCount" class="summary-chip">
+              <strong>已评估</strong>
+              <span>{{planMeta.evaluatedCount}} 条</span>
+            </div>
+            <div v-if="planMeta.rejectedCount" class="summary-chip">
+              <strong>已过滤</strong>
+              <span>{{planMeta.rejectedCount}} 条</span>
+            </div>
+          </div>
+          <div v-if="planMeta.riskHints && planMeta.riskHints.length" class="route-plan-summary-alerts">
+            <span class="route-plan-summary-alert" v-for="(hint,index) in planMeta.riskHints.slice(0,3)" :key="'risk-'+index">{{hint}}</span>
+          </div>
+        </section>
+
+        <div id="routeResultList" class="list route-solution-list" style="position: relative;" tabindex="-1" aria-label="路线结果列表">
+          <div
+            v-for="(item,index) in dataList"
+            :key="(item.id || item.luxianmingcheng || 'route') + '-' + index"
+            class="list-item list-item3 route-solution-item"
+            role="button"
+            tabindex="0"
+            :aria-label="'进入路线地图：' + getRouteJourneyText(item)"
+            @click="openMapNavigation(item, index)"
+            @keydown="onRouteCardKeydown($event, item, index)">
+            <div class="list-item-body animation-box route-solution-body">
+              <div class="route-solution-rank">
+                <span class="route-solution-rank-index">{{formatRouteRank(index)}}</span>
+                <span class="route-solution-rank-label">{{index === 0 ? '推荐' : '备选'}}</span>
+              </div>
+
+              <div class="route-solution-main">
+                <div class="route-solution-head">
+                  <div class="route-solution-head-main">
+                    <div class="route-solution-badges">
+                      <span class="route-solution-line">{{getRouteLineLabel(item)}}</span>
+                      <span v-if="hasRouteKindLabel(item)" class="route-solution-kind">{{getRouteKindLabel(item)}}</span>
+                    </div>
+                    <span class="route-solution-transfer" :class="item.transferRequired ? 'warn' : 'good'">{{getRouteTransferBadge(item)}}</span>
+                  </div>
+                </div>
+
+                <div class="route-solution-journey">{{getRouteJourneyText(item)}}</div>
+                <div class="route-solution-path">{{getRoutePathText(item)}}</div>
+
+                <div class="route-solution-meta route-solution-meta-compact">
+                  <span class="route-solution-meta-pill">{{getRouteFirstMileBadge(item)}}</span>
+                  <span class="route-solution-meta-pill">{{getRouteLastMileBadge(item)}}</span>
+                  <span class="route-solution-meta-pill">无障碍 {{item.accessibilityLevelText || getAccessibilityLevelText(item.wuzhangaijibie)}}</span>
+                  <span v-if="item.travelStationCount" class="route-solution-meta-pill">{{item.travelStationCount}} 站</span>
+                  <span v-if="shouldShowConfidence(item)" class="route-solution-meta-pill" :class="getConfidenceClass(item)">置信 {{formatConfidence(item)}}</span>
+                  <span v-if="item.isRecommended" class="route-solution-meta-pill good">总分 {{formatRouteScore(item.totalScore)}}</span>
+                  <span v-if="item.isRecommended" class="route-solution-meta-pill good">无障碍分 {{formatRouteScore(item.accessibilityScore)}}</span>
+                  <span v-if="item.isRecommended" class="route-solution-meta-pill">总耗时 {{getRouteEstimatedDuration(item)}}</span>
+                  <span v-if="item.isRecommended" class="route-solution-meta-pill">总步行 {{getRouteTotalWalkText(item)}}</span>
+                  <span v-if="item.isRecommended" class="route-solution-meta-pill">乘车 {{getRouteRideDistanceText(item)}}</span>
+                  <span v-if="item.isRecommended && getRouteEstimatedArrival(item)" class="route-solution-meta-pill">抵达 {{getRouteEstimatedArrival(item)}}</span>
+                </div>
+
+                <div v-if="item.isRecommended" class="route-solution-facts">
+                  <div class="route-solution-fact-row">
+                    <strong>推荐理由</strong>
+                    <span>{{getRecommendationReason(item)}}</span>
+                  </div>
+                  <div class="route-solution-fact-row" v-if="getRouteRiskHints(item).length">
+                    <strong>风险提示</strong>
+                    <span>{{getRouteRiskHints(item).join('；')}}</span>
+                  </div>
+                  <div class="route-solution-fact-row">
+                    <strong>透明度</strong>
+                    <span>{{getRouteDataSummary(item)}}</span>
+                  </div>
+                </div>
+
+                <div v-if="getViaStations(item).length" class="route-solution-stops">
+                  <span class="route-solution-stops-label">沿线</span>
+                  <div class="route-solution-stops-list">
+                    <span class="route-stop-pill" v-for="(stop, stopIndex) in getViaStations(item)" :key="'stop-'+index+'-'+stopIndex">{{stop}}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="route-solution-actions">
+                <button type="button" class="route-card-btn route-card-btn-primary route-solution-primary" @click.stop="openMapNavigation(item, index)">
+                  {{item.isRecommended ? '地图出发' : '查看地图'}}
+                </button>
+                <button v-if="item.id && !item.isRecommended" type="button" class="route-card-btn route-card-btn-secondary route-solution-secondary" @click.stop="openRouteDetail(item)">
+                  详情
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="!dataList || dataList.length===0" class="route-empty-tip">
+            {{isPlanMode ? '暂无合适路线，请调整出发地、目的地或推荐偏好后重试。' : '暂无路线数据。'}}
+          </div>
+        </div>
+
+        <div class="pager" id="pager"></div>
+      </div>
+    </div>
   </div>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="../../layui/layui.js"></script>
   <script src="../../js/vue.js"></script>
-	  <script src="../../js/config.js"></script>
-	  <script src="../../modules/config.js"></script>
-	  <script src="../../js/utils.js"></script>
-			<script src="../../js/page-state.js"></script>
+  <script src="../../js/config.js"></script>
+  <script src="../../modules/config.js"></script>
+  <script src="../../js/utils.js"></script>
+  <script src="../../js/page-state.js"></script>
   <script src="../../js/accessibility.js"></script>
-
-  <script src="../../js/pages/route-list-page.js"></script>
-
+  <script src="../../js/pages/route-list-core.js?v=20260316-630"></script>
+  <script src="../../js/pages/route-list-picker.js?v=20260316-630"></script>
+  <script src="../../js/pages/route-list-page.js?v=20260316-630"></script>
 </body>
 </html>

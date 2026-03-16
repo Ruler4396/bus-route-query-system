@@ -8,8 +8,6 @@ import Home from '@/views/home'
 import Login from '@/views/login'
 import NotFound from '@/views/404'
 import UpdatePassword from '@/views/update-password'
-import pay from '@/views/pay'
-import register from '@/views/register'
 import center from '@/views/center'
     import yonghu from '@/views/modules/yonghu/list'
     import chat from '@/views/modules/chat/list'
@@ -38,11 +36,6 @@ const routes = [{
       name: '修改密码',
       component: UpdatePassword,
       meta: {icon:'', title:'updatePassword'}
-    }, {
-      path: '/pay',
-      name: '支付',
-      component: pay,
-      meta: {icon:'', title:'pay'}
     }, {
       path: '/center',
       name: '个人信息',
@@ -101,12 +94,6 @@ const routes = [{
     name: 'login',
     component: Login,
     meta: {icon:'', title:'login'}
-  },
-  {
-    path: '/register',
-    name: 'register',
-    component: register,
-    meta: {icon:'', title:'register'}
   },
   {
     path: '/',

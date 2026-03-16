@@ -16,6 +16,8 @@
 
 		<link rel="stylesheet" href="../../css/transit-business-ui.css">
 
+		<link rel="stylesheet" href="../../css/transit-route-list.css?v=20260316-623">
+
 		<link rel="stylesheet" href="../../css/accessibility-sr-only.css">
 
 		<link rel="stylesheet" href="../../css/accessibility-high-contrast.css">
@@ -98,100 +100,109 @@ color: rgba(255, 255, 255, 1) !important;
 				
 			</div>
 		</div>	
-		<div class="data-detail" style="padding:0;width:100%;" :style='{"padding":"0","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(0,0,0,.3)","borderRadius":"0","borderWidth":"0","background":"#fff","borderStyle":"solid"}'>
-			<div class="layui-row" style="display: flex;width:980px;margin: 0 auto;">
-				<div class="layui-col-md5" style="width:400px">
-					<!-- <div class="layui-carousel" id="swiper">
-						<div carousel-item id="swiper-item">
-							<div v-for="(item,index) in swiperList" v-bind:key="index">
-								<img class="swiper-item" :src="item.img">
+		<div class="data-detail route-detail-section" style="padding:0;width:100%;">
+			<div class="route-detail-content-grid">
+				<section class="route-detail-summary-card">
+					<div class="route-detail-coverless-card" id="routeDetailHero">
+						<div class="route-detail-summary-head">
+							<span class="route-detail-chip">无障碍线路概览</span>
+							<div class="route-detail-route-code">{{detail.luxianbianhao || '未编号'}}</div>
+							<h2 class="route-detail-coverless-title">{{title}}</h2>
+							<p class="route-detail-coverless-copy">从 {{detail.qidianzhanming || '起点待定'}} 到 {{detail.zhongdianzhanming || '终点待定'}}。当前详情页改为文字优先展示，不再显示线路封面图，演示时可以直接聚焦路线结构、换乘节点与无障碍信息。</p>
+						</div>
+						<div class="route-detail-coverless-meta">
+							<span>票价 {{detail.jiage || '—'}} 元</span>
+							<span>站点 {{detail.tujingzhandian ? detail.tujingzhandian.split(',').filter(Boolean).length + 2 : 2}} 个</span>
+							<span>浏览 {{detail.clicknum==null?0:detail.clicknum}}</span>
+						</div>
+						<div class="route-detail-highlights">
+							<div class="route-detail-highlight">
+								<strong>起终点</strong>
+								<span>{{detail.qidianzhanming || '起点待定'}} → {{detail.zhongdianzhanming || '终点待定'}}</span>
+							</div>
+							<div class="route-detail-highlight">
+								<strong>无障碍设施</strong>
+								<span>{{detail.wuzhangaisheshi || '待补充采集'}}</span>
+							</div>
+							<div class="route-detail-highlight">
+								<strong>换乘/接驳提示</strong>
+								<span>{{detail.diantifacilities || detail.xunlianzhuankuan || '当前暂无补充说明'}}</span>
 							</div>
 						</div>
-					</div> -->
-					<div class="layui-carousel" id="swiper" :style='{"boxShadow":"0 0 0px rgba(255,0,0,.8)","margin":"0 auto","borderColor":"rgba(0,0,0,.3)","borderRadius":"4px","borderWidth":"0","width":"400px","borderStyle":"solid","height":"400px"}'>
-					  <div carousel-item>
-						<div v-if="swiperList.length" v-for="(item,index) in swiperList" :key="index">
-							<img style="width: 100%;height: 100%;object-fit:cover;" :src="baseurl+item" />
-						</div>
-					  </div>
 					</div>
 
-					
-				<div class="tool-container">
-						<div v-if='!thumbsupFlag&&!crazilyFlag' @click="thumbsupnumClick()" style="display: flex;align-items: center;">
-							<i class="layui-icon" style="font-size: 20px;color: red;margin-right: 10px;">&#xe6c6;</i>
-							赞一下({{detail.thumbsupnum==null?0:detail.thumbsupnum}})
+					<div class="tool-container route-detail-actions">
+						<div class="route-detail-action-item" v-if='!thumbsupFlag&&!crazilyFlag' @click="thumbsupnumClick()">
+							<i class="layui-icon">&#xe6c6;</i>
+							<span>赞一下（{{detail.thumbsupnum==null?0:detail.thumbsupnum}}）</span>
 						</div>
-						<div v-if='thumbsupFlag' @click="thumbsupnumClick()" style="display: flex;align-items: center;">
-							<i class="layui-icon" style="font-size: 20px;color: red;margin-right: 10px;">&#xe6c6;</i>
-							取消赞({{detail.thumbsupnum==null?0:detail.thumbsupnum}})
+						<div class="route-detail-action-item is-active" v-if='thumbsupFlag' @click="thumbsupnumClick()">
+							<i class="layui-icon">&#xe6c6;</i>
+							<span>取消赞（{{detail.thumbsupnum==null?0:detail.thumbsupnum}}）</span>
 						</div>
-						<div v-if='!thumbsupFlag&&!crazilyFlag' @click="crazilynumClick()" style="display: flex;align-items: center;">
-							<i class="layui-icon" style="font-size: 20px;color: red;margin-right: 10px;">&#xe6c5;</i>
-							踩一下({{detail.crazilynum==null?0:detail.crazilynum}})
+						<div class="route-detail-action-item" v-if='!thumbsupFlag&&!crazilyFlag' @click="crazilynumClick()">
+							<i class="layui-icon">&#xe6c5;</i>
+							<span>踩一下（{{detail.crazilynum==null?0:detail.crazilynum}}）</span>
 						</div>
-						<div v-if='crazilyFlag' @click="crazilynumClick()" style="display: flex;align-items: center;">
-							<i class="layui-icon" style="font-size: 20px;color: red;margin-right: 10px;">&#xe6c5;</i>
-							取消踩({{detail.crazilynum==null?0:detail.crazilynum}})
+						<div class="route-detail-action-item is-active" v-if='crazilyFlag' @click="crazilynumClick()">
+							<i class="layui-icon">&#xe6c5;</i>
+							<span>取消踩（{{detail.crazilynum==null?0:detail.crazilynum}}）</span>
 						</div>
 					</div>
-		
-				</div>
-				<div class="layui-col-md7" style="padding-left: 20px;flex: 1;" :style='{"padding":"10px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0 0 0 20px","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","borderRadius":"0","borderWidth":"3px","borderStyle":"solid"}'>
-					<h1 style="position: relative;" :style='{"padding":"10px 15px","boxShadow":"0 0 0px rgba(255,0,0,.3)","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"#333","borderRadius":"0","textAlign":"left","borderWidth":"0","fontSize":"16px","borderStyle":"solid"}' class="title">{{title}}</h1>
-					
+				</section>
 
-
-					
-					<div :style='{"padding":"6px 15px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(255,0,0,.3)","backgroundColor":"#fff","borderRadius":"0","borderWidth":"0","borderStyle":"solid"}' class="detail-item">
-						<span :style='{"padding":"0 12px 0 0","minWidth":"94px","fontSize":"14px","color":"#333","textAlign":"right"}'>路线编号：</span>
-						<span  style="word-break: break-all" :style='{"padding":"5px 15px","boxShadow":"0 0 0px rgba(255,0,0,.3)","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"#333","borderRadius":"4px","textAlign":"left","borderWidth":"0","width":"auto","lineHeight":"30px","fontSize":"14px","borderStyle":"solid"}' class="desc">
-							{{detail.luxianbianhao}}
-						</span>
+				<section class="route-detail-info-card">
+					<div class="route-detail-info-header">
+						<span class="route-detail-chip route-detail-chip-light">线路信息</span>
+						<h1 class="title">{{title}}</h1>
+						<p>基础字段与无障碍说明统一放在一个信息卡里，避免原先多个结构框之间出现不贴合的白色缝隙。</p>
 					</div>
-					<div :style='{"padding":"6px 15px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(255,0,0,.3)","backgroundColor":"#fff","borderRadius":"0","borderWidth":"0","borderStyle":"solid"}' class="detail-item">
-						<span :style='{"padding":"0 12px 0 0","minWidth":"94px","fontSize":"14px","color":"#333","textAlign":"right"}'>价格：</span>
-						<span  style="word-break: break-all" :style='{"padding":"5px 15px","boxShadow":"0 0 0px rgba(255,0,0,.3)","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"#333","borderRadius":"4px","textAlign":"left","borderWidth":"0","width":"auto","lineHeight":"30px","fontSize":"14px","borderStyle":"solid"}' class="desc">
-							{{detail.jiage}}
-						</span>
+					<div class="route-detail-facts-grid">
+						<div class="route-detail-fact">
+							<span class="route-detail-fact-label">路线编号</span>
+							<span class="route-detail-fact-value">{{detail.luxianbianhao || '—'}}</span>
+						</div>
+						<div class="route-detail-fact">
+							<span class="route-detail-fact-label">票价</span>
+							<span class="route-detail-fact-value">{{detail.jiage || '—'}} 元</span>
+						</div>
+						<div class="route-detail-fact">
+							<span class="route-detail-fact-label">起点站名</span>
+							<span class="route-detail-fact-value">{{detail.qidianzhanming || '—'}}</span>
+						</div>
+						<div class="route-detail-fact">
+							<span class="route-detail-fact-label">终点站名</span>
+							<span class="route-detail-fact-value">{{detail.zhongdianzhanming || '—'}}</span>
+						</div>
+						<div class="route-detail-fact">
+							<span class="route-detail-fact-label">无障碍等级</span>
+							<span class="route-detail-fact-value">{{detail.wuzhangaijibie != null ? 'L' + detail.wuzhangaijibie : '待补充'}}</span>
+						</div>
+						<div class="route-detail-fact">
+							<span class="route-detail-fact-label">点击次数</span>
+							<span class="route-detail-fact-value">{{detail.clicknum==null?0:detail.clicknum}}</span>
+						</div>
+						<div class="route-detail-fact route-detail-fact-wide">
+							<span class="route-detail-fact-label">途经站点</span>
+							<span class="route-detail-fact-value">{{detail.tujingzhandian || '—'}}</span>
+						</div>
+						<div class="route-detail-fact route-detail-fact-wide">
+							<span class="route-detail-fact-label">电梯 / 坡道接驳</span>
+							<span class="route-detail-fact-value">{{detail.diantifacilities || '当前未补充结构化接驳信息'}}</span>
+						</div>
+						<div class="route-detail-fact route-detail-fact-wide">
+							<span class="route-detail-fact-label">训练补充说明</span>
+							<span class="route-detail-fact-value">{{detail.xunlianzhuankuan || '当前暂无补充说明'}}</span>
+						</div>
 					</div>
-					<div :style='{"padding":"6px 15px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(255,0,0,.3)","backgroundColor":"#fff","borderRadius":"0","borderWidth":"0","borderStyle":"solid"}' class="detail-item">
-						<span :style='{"padding":"0 12px 0 0","minWidth":"94px","fontSize":"14px","color":"#333","textAlign":"right"}'>起点站名：</span>
-						<span  style="word-break: break-all" :style='{"padding":"5px 15px","boxShadow":"0 0 0px rgba(255,0,0,.3)","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"#333","borderRadius":"4px","textAlign":"left","borderWidth":"0","width":"auto","lineHeight":"30px","fontSize":"14px","borderStyle":"solid"}' class="desc">
-							{{detail.qidianzhanming}}
-						</span>
-					</div>
-					<div :style='{"padding":"6px 15px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(255,0,0,.3)","backgroundColor":"#fff","borderRadius":"0","borderWidth":"0","borderStyle":"solid"}' class="detail-item">
-						<span :style='{"padding":"0 12px 0 0","minWidth":"94px","fontSize":"14px","color":"#333","textAlign":"right"}'>途径站点：</span>
-						<span  style="word-break: break-all" :style='{"padding":"5px 15px","boxShadow":"0 0 0px rgba(255,0,0,.3)","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"#333","borderRadius":"4px","textAlign":"left","borderWidth":"0","width":"auto","lineHeight":"30px","fontSize":"14px","borderStyle":"solid"}' class="desc">
-							{{detail.tujingzhandian}}
-						</span>
-					</div>
-					<div :style='{"padding":"6px 15px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(255,0,0,.3)","backgroundColor":"#fff","borderRadius":"0","borderWidth":"0","borderStyle":"solid"}' class="detail-item">
-						<span :style='{"padding":"0 12px 0 0","minWidth":"94px","fontSize":"14px","color":"#333","textAlign":"right"}'>终点站名：</span>
-						<span  style="word-break: break-all" :style='{"padding":"5px 15px","boxShadow":"0 0 0px rgba(255,0,0,.3)","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"#333","borderRadius":"4px","textAlign":"left","borderWidth":"0","width":"auto","lineHeight":"30px","fontSize":"14px","borderStyle":"solid"}' class="desc">
-							{{detail.zhongdianzhanming}}
-						</span>
-					</div>
-					<div :style='{"padding":"6px 15px","boxShadow":"0 0 6px rgba(255,0,0,0)","margin":"0","borderColor":"rgba(255,0,0,.3)","backgroundColor":"#fff","borderRadius":"0","borderWidth":"0","borderStyle":"solid"}' class="detail-item">
-						<span :style='{"padding":"0 12px 0 0","minWidth":"94px","fontSize":"14px","color":"#333","textAlign":"right"}'>点击次数：</span>
-						<span  style="word-break: break-all" :style='{"padding":"5px 15px","boxShadow":"0 0 0px rgba(255,0,0,.3)","borderColor":"rgba(0,0,0,.3)","backgroundColor":"#fff","color":"#333","borderRadius":"4px","textAlign":"left","borderWidth":"0","width":"auto","lineHeight":"30px","fontSize":"14px","borderStyle":"solid"}' class="desc">
-							{{detail.clicknum}}
-						</span>
-					</div>
-					
-
-					
-					
-
-				</div>
+				</section>
 			</div>
 		</div>
 		<div class="data-detail">
 			
 			
 
-			<div class="layui-row detail-tab">
+			<div class="layui-row detail-tab route-detail-tab-wrap">
 				<div class="layui-tab layui-tab-card" :style='{"boxShadow":"0 0 6px rgba(77, 79, 54,.3)","borderColor":"rgba(77, 79, 54, 1)","backgroundColor":"#fff","borderRadius":"10px","borderStyle":"solid","borderWidth":"1px"}' style="overflow: hidden;">
 
 					<ul class="layui-tab-title" :style='{"color":"rgba(255, 255, 255, 1)","backgroundColor":"rgba(77, 79, 54, 1)","fontSize":"14px"}'>
@@ -635,30 +646,8 @@ color: rgba(255, 255, 255, 1) !important;
 				// 详情信息
 				vue.detail = res.data
 				vue.title = vue.detail.luxianmingcheng;
-				// 轮播图片
-				vue.swiperList = vue.detail.fengmian ? vue.detail.fengmian.split(",") : [];
-				// var swiperItemHtml = '';
-				// for (let item of vue.swiperList) {
-				// 	swiperItemHtml +=
-				// 		'<div>' +
-				// 		'<img class="swiper-item" style="width: 100%;height: 100%;object-fit:cover;" src="' + item + '">' +
-				// 		'</div>';
-				// }
-				// jquery('#swiper-item').html(swiperItemHtml);
-				// 轮播图
-				vue.$nextTick(() => {
-				  carousel.render({
-					elem: '#swiper',
-					width: '400px',
-					height: '400px',
-					arrow: 'hover',
-					anim: 'default',
-					autoplay: 'true',
-					interval: '3000',
-					indicator: 'inside'
-				  });
-
-				})
+				// 线路详情页已改为文字优先展示，不再渲染封面轮播图
+				vue.swiperList = [];
 				// carousel.render({
 				// 	elem: '#swiper',
 				// 	width: swiper.width,height:swiper.height,

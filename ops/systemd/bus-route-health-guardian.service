@@ -1,0 +1,9 @@
+[Unit]
+Description=Bus Route Demo Host Health Guardian
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/root/dev/bus-route-query-system
+ExecStart=/root/dev/bus-route-query-system/scripts/host-health-guardian.sh

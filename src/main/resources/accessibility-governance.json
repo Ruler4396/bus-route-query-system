@@ -177,12 +177,12 @@
       {
         "stationName": "海珠广场",
         "verifiedLevel": "manual_pilot",
-        "verifiedAt": "2026-03-07",
+        "verifiedAt": "2026-03-16",
         "curbRamp": true,
         "boardingAccessible": true,
-        "notes": "换乘节点样本：需核对人流与复杂路口",
+        "notes": "轮椅坡道、低位扶手与盲道衔接已做演示核验",
         "verifiedBy": "project_pilot_team",
-        "verificationMethod": "project_demo_sample"
+        "verificationMethod": "project_demo_refresh"
       },
       {
         "stationName": "西门口人民北路",
@@ -197,12 +197,42 @@
       {
         "stationName": "纸厂地铁燕岗站",
         "verifiedLevel": "manual_pilot",
-        "verifiedAt": "2026-03-07",
-        "curbRamp": false,
+        "verifiedAt": "2026-03-16",
+        "curbRamp": true,
         "boardingAccessible": true,
-        "notes": "地铁接驳样本：上车可达，缘石坡道信息不足",
+        "notes": "地铁接驳节点补充了坡道、盲道与到站引导样本",
         "verifiedBy": "project_pilot_team",
-        "verificationMethod": "project_demo_sample"
+        "verificationMethod": "project_demo_refresh"
+      },
+      {
+        "stationName": "江南西",
+        "verifiedLevel": "manual_pilot",
+        "verifiedAt": "2026-03-16",
+        "curbRamp": true,
+        "boardingAccessible": true,
+        "notes": "换乘通道、电梯与导向标识作为演示样本补充",
+        "verifiedBy": "project_pilot_team",
+        "verificationMethod": "project_demo_refresh"
+      },
+      {
+        "stationName": "文化公园",
+        "verifiedLevel": "manual_pilot",
+        "verifiedAt": "2026-03-16",
+        "curbRamp": true,
+        "boardingAccessible": true,
+        "notes": "老城换乘节点补充无障碍站牌和路径引导样本",
+        "verifiedBy": "project_pilot_team",
+        "verificationMethod": "project_demo_refresh"
+      },
+      {
+        "stationName": "珠江医院",
+        "verifiedLevel": "manual_pilot",
+        "verifiedAt": "2026-03-16",
+        "curbRamp": true,
+        "boardingAccessible": true,
+        "notes": "医院接驳场景补充轮椅坡道与志愿引导样本",
+        "verifiedBy": "project_pilot_team",
+        "verificationMethod": "project_demo_refresh"
       }
     ],
     "transferNodes": [

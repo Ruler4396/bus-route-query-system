@@ -44,23 +44,23 @@
 						<div class="nav-group-title">核心出行任务</div>
 						<ul>
 							<li :class="{current: activeNavUrl === './pages/home/home.html'}">
-								<a href="javascript:void(0)" @click="openNav('./pages/home/home.html')">首页总览</a>
+								<a :href="buildNavHref('./pages/home/home.html')" @click.prevent="openNav('./pages/home/home.html', $event)">首页总览</a>
 							</li>
 							<li v-for="(item,index) in primaryNav" :key="'primary-'+index" :class="{current: activeNavUrl === item.url}">
-								<a href="javascript:void(0)" @click="openNav(item.url)">{{item.name}}</a>
+								<a :href="buildNavHref(item.url)" @click.prevent="openNav(item.url, $event)">{{item.name}}</a>
 							</li>
 						</ul>
 					</div>
 					<div class="nav-support-group" aria-label="服务与支持">
 						<div class="nav-group-title">支持与管理</div>
 						<div class="nav-utility-actions">
-							<a href="javascript:void(0)" class="utility-link" @click="centerPageShell()">个人中心</a>
-							<a href="javascript:void(0)" class="utility-link" @click="openAccessibilityPage()">无障碍设置</a>
+							<a :href="buildCenterHref()" class="utility-link" @click.prevent="centerPageShell()">个人中心</a>
+							<a :href="buildNavHref('./pages/accessibility/settings.html')" class="utility-link" @click.prevent="openAccessibilityPage()">无障碍设置</a>
 							<a v-if="chatFlag" href="javascript:void(0)" class="utility-link urgent" @click="chatTapShell()">在线提问</a>
 							<a v-if="showAdminEntry" :href="adminurl" target="_blank" class="utility-link">后台管理</a>
 						</div>
 						<div class="nav-support-links">
-							<a v-for="(item,index) in supportNav" :key="'support-'+index" href="javascript:void(0)" @click="openNav(item.url)" class="support-link">{{item.name}}</a>
+							<a v-for="(item,index) in supportNav" :key="'support-'+index" :href="buildNavHref(item.url)" @click.prevent="openNav(item.url, $event)" class="support-link">{{item.name}}</a>
 						</div>
 					</div>
 				</div>
@@ -101,7 +101,7 @@
 		<script src="./js/demo-mode.js"></script>
 		<script src="./js/login-guard-prompt.js"></script>
 
-					<script src="./js/pages/shell-page.js"></script>
+					<script src="./js/pages/shell-page.js?v=20260316-646"></script>
 
 		</body>
 	</html>

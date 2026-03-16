@@ -112,17 +112,6 @@
                        {{scope.row.luxianmingcheng}}
                      </template>
                 </el-table-column>
-                  <el-table-column :sortable="contents.tableSortable" :align="contents.tableAlign"  prop="fengmian"
-                   :header-align="contents.tableAlign"
-                    width="200"
-                    label="封面">
-                    <template slot-scope="scope">
-                      <div v-if="scope.row.fengmian">
-                        <img :src="$base.url+scope.row.fengmian.split(',')[0]" width="100" height="100">
-                      </div>
-                      <div v-else>无图片</div>
-                    </template>
-                  </el-table-column>
                 <el-table-column  :sortable="contents.tableSortable" :align="contents.tableAlign" 
                     prop="jiage"
                    :header-align="contents.tableAlign"

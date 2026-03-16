@@ -44,3 +44,34 @@ runtime/
 data/*.mv.db
 data/*.lock.db
 data/*.trace.db
+
+# Accidental repo-root filesystem mirror noise (ignore only; do not delete blindly)
+/bin
+/bin.usr-is-merged
+/boot/
+/cdrom/
+/dev/
+/etc/
+/home/
+/lib
+/lib.usr-is-merged
+/lib64
+/lost+found/
+/media/
+/mnt/
+/opt/
+/proc/
+/root/
+/run/
+/sbin
+/sbin.usr-is-merged
+/snap/
+/srv/
+/swapfile
+/sys/
+/tmp/
+/usr/
+/var/
+
+# Admin frontend local dependencies
+src/main/resources/admin/admin/node_modules/

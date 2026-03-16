@@ -77,10 +77,7 @@ var indexNav = [
 	name: '无障碍路线规划',
 	url: './pages/gongjiaoluxian/list.html'
 }, 
-{
-	name: '实时线路地图',
-	url: './pages/gongjiaoluxian/map.html'
-}, 
+
 {
 	name: '出行服务公告',
 	url: './pages/wangzhangonggao/list.html'
@@ -95,7 +92,7 @@ var indexNav = [
 }
 ]
 
-var adminurl = appBaseUrl + "admin/dist/index.html";
+var adminurl = appBaseUrl + "console/index.html";
 
 /**
  * 地图引擎配置

@@ -87,23 +87,6 @@
           </el-form-item>
         </div>
       </el-col>
-      <el-col :span="24">  
-        <el-form-item class="upload" v-if="type!='info' && !ro.zhaopian" label="照片" prop="zhaopian">
-          <file-upload
-          tip="点击上传照片"
-          action="file/upload"
-          :limit="3"
-          :multiple="true"
-          :fileUrls="ruleForm.zhaopian?ruleForm.zhaopian:''"
-          @change="zhaopianUploadChange"
-          ></file-upload>
-        </el-form-item>
-        <div v-else>
-          <el-form-item v-if="ruleForm.zhaopian" label="照片" prop="zhaopian">
-            <img style="margin-right:20px;" v-bind:key="index" v-for="(item,index) in ruleForm.zhaopian.split(',')" :src="$base.url+item" width="100" height="100">
-          </el-form-item>
-        </div>
-      </el-col>
       </el-row>
       <el-form-item class="btn">
         <el-button  v-if="type!='info'" type="primary" class="btn-success" @click="onSubmit">提交</el-button>

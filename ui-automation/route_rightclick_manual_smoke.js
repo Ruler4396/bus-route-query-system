@@ -1,0 +1,27 @@
+const { chromium } = require('playwright');
+(async()=>{
+  const browser = await chromium.launch({headless:true});
+  const page = await browser.newPage({viewport:{width:1440,height:1280}});
+  await page.goto('http://127.0.0.1:8134/springbootmf383/front/index.html?route=routes', {waitUntil:'networkidle', timeout:60000});
+  const frame = await (await page.waitForSelector('iframe')).contentFrame();
+  await frame.waitForSelector('#routePickerMap');
+  await frame.waitForTimeout(1500);
+  const map = frame.locator('#routePickerMap');
+  const startInput = frame.locator('#qidianzhanming');
+  const endInput = frame.locator('#zhongdianzhanming');
+  const out = {};
+  await map.click({button:'right', position:{x:360,y:220}});
+  await frame.waitForSelector('#routeMapContextMenu:not([hidden])', {timeout:10000});
+  out.menuVisible1 = await frame.locator('#routeMapContextMenu').evaluate(el => !el.hidden);
+  await frame.evaluate(() => document.querySelector('#routeMapContextMenu [data-action="set-start"]').click());
+  await frame.waitForTimeout(400);
+  out.start = await startInput.inputValue();
+  await map.click({button:'right', position:{x:700,y:260}});
+  await frame.waitForSelector('#routeMapContextMenu:not([hidden])', {timeout:10000});
+  out.menuVisible2 = await frame.locator('#routeMapContextMenu').evaluate(el => !el.hidden);
+  await frame.evaluate(() => document.querySelector('#routeMapContextMenu [data-action="set-end"]').click());
+  await frame.waitForTimeout(400);
+  out.end = await endInput.inputValue();
+  console.log(JSON.stringify(out, null, 2));
+  await browser.close();
+})();

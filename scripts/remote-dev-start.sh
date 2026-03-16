@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+bash "$ROOT_DIR/scripts/legacy-dev-warning.sh" "$(basename "$0")" >&2 || true
 cd "$ROOT_DIR"
 JAR_PATH="$ROOT_DIR/target/springbootmf383-0.0.1-SNAPSHOT.jar"
 RUNTIME_DIR="$ROOT_DIR/runtime/remote-dev"

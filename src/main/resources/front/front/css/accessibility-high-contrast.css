@@ -298,3 +298,180 @@ body.page-accessibility-settings.high-contrast .font-size-btn:hover {
     color: #000000 !important;
     border-color: #000000 !important;
 }
+
+
+/* 路线规划页在高对比度下使用深底卡片，避免白字叠浅底 */
+body.page-route-list.high-contrast,
+body.page-route-map.high-contrast {
+    background: #000000 !important;
+    color: #ffffff !important;
+}
+
+.page-route-list.high-contrast .route-page-shell,
+.page-route-list.high-contrast .route-page-box,
+.page-route-list.high-contrast .route-plan-summary,
+.page-route-list.high-contrast .route-plan-notice,
+.page-route-list.high-contrast .route-solution-item .route-solution-body,
+.page-route-list.high-contrast .route-solution-fact-row,
+.page-route-list.high-contrast .summary-chip,
+.page-route-list.high-contrast .route-stage-map-shell,
+.page-route-list.high-contrast .route-stage-form,
+.page-route-list.high-contrast .route-stage-actions,
+.page-route-list.high-contrast .route-input-hint,
+.page-route-list.high-contrast .route-picker-candidates,
+.page-route-list.high-contrast .route-stop-pill,
+.page-route-list.high-contrast .route-solution-meta-pill {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border-color: #ffffff !important;
+    box-shadow: none !important;
+}
+
+.page-route-list.high-contrast .route-page-titlebar,
+.page-route-list.high-contrast .route-solution-line {
+    background: #ffff00 !important;
+    color: #000000 !important;
+    border-color: #ffff00 !important;
+}
+
+.page-route-list.high-contrast .route-solution-kind,
+.page-route-list.high-contrast .route-solution-transfer,
+.page-route-list.high-contrast .route-plan-summary-alert,
+.page-route-list.high-contrast .route-solution-meta-pill.good,
+.page-route-list.high-contrast .route-solution-meta-pill.warn,
+.page-route-list.high-contrast .route-solution-meta-pill.danger {
+    background: #000000 !important;
+    color: #ffff00 !important;
+    border: 2px solid #ffff00 !important;
+}
+
+.page-route-list.high-contrast .route-solution-journey,
+.page-route-list.high-contrast .route-solution-path,
+.page-route-list.high-contrast .route-solution-fact-row strong,
+.page-route-list.high-contrast .route-solution-fact-row span,
+.page-route-list.high-contrast .summary-chip strong,
+.page-route-list.high-contrast .summary-chip span,
+.page-route-list.high-contrast .route-input-hint,
+.page-route-list.high-contrast .route-stage-status,
+.page-route-list.high-contrast .route-stage-map-note span {
+    color: #ffffff !important;
+}
+
+.page-route-list.high-contrast .item-list,
+.page-route-list.high-contrast .route-stage-input,
+.page-route-list.high-contrast .route-stage-option,
+.page-route-list.high-contrast .route-solution-stops,
+.page-route-list.high-contrast .route-empty-tip,
+.page-route-list.high-contrast .route-stage-label-row,
+.page-route-list.high-contrast .route-stage-option-grid,
+.page-route-list.high-contrast .route-stage-input-grid {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border-color: #ffffff !important;
+}
+
+.page-route-list.high-contrast .route-stage-option .lable,
+.page-route-list.high-contrast .route-stage-input .lable,
+.page-route-list.high-contrast .route-stage-label-row label,
+.page-route-list.high-contrast .route-solution-rank-label,
+.page-route-list.high-contrast .route-solution-rank-index,
+.page-route-list.high-contrast .route-solution-stops-label,
+.page-route-list.high-contrast .route-empty-tip,
+.page-route-list.high-contrast .route-plan-notice,
+.page-route-list.high-contrast .route-picker-candidate span,
+.page-route-list.high-contrast .route-solution-actions .route-card-btn,
+.page-route-list.high-contrast .route-solution-primary,
+.page-route-list.high-contrast .route-solution-secondary {
+    color: #ffffff !important;
+}
+
+.page-route-list.high-contrast .layui-form-select,
+.page-route-list.high-contrast .layui-form-select .layui-select-title,
+.page-route-list.high-contrast .layui-form-select .layui-input,
+.page-route-list.high-contrast .layui-form-select dl,
+.page-route-list.high-contrast .layui-form-select dl dd,
+.page-route-list.high-contrast .layui-form-select dl dt,
+.page-route-list.high-contrast select option {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border-color: #ffffff !important;
+    box-shadow: none !important;
+}
+
+.page-route-list.high-contrast .layui-form-select .layui-input::placeholder,
+.page-route-list.high-contrast input::placeholder {
+    color: rgba(255, 255, 255, 0.78) !important;
+}
+
+.page-route-list.high-contrast .layui-form-selected dl {
+    border: 2px solid #ffffff !important;
+}
+
+.page-route-list.high-contrast .layui-form-select .layui-edge {
+    border-top-color: #ffff00 !important;
+}
+
+.page-route-list.high-contrast .layui-form-selected .layui-edge {
+    border-top-color: transparent !important;
+    border-bottom-color: #ffff00 !important;
+}
+
+.page-route-list.high-contrast .layui-form-select dl dd:hover,
+.page-route-list.high-contrast .layui-form-select dl dd.layui-this,
+.page-route-list.high-contrast .layui-form-select dl dd.layui-select-tips,
+.page-route-list.high-contrast .route-picker-candidate:hover,
+.page-route-list.high-contrast .route-picker-candidate.is-active {
+    background: #ffff00 !important;
+    color: #000000 !important;
+    border-color: #ffff00 !important;
+}
+
+.page-route-list.high-contrast .route-picker-candidate {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
+}
+
+.page-route-list.high-contrast .route-picker-candidate span,
+.page-route-list.high-contrast .layui-form-select dl dd:hover *,
+.page-route-list.high-contrast .layui-form-select dl dd.layui-this * {
+    color: inherit !important;
+}
+
+.page-route-map.high-contrast .map-page-shell,
+.page-route-map.high-contrast .map-toolbar-panel,
+.page-route-map.high-contrast .map-wrapper,
+.page-route-map.high-contrast .map-panel,
+.page-route-map.high-contrast .station-list,
+.page-route-map.high-contrast .route-summary,
+.page-route-map.high-contrast .journey-detail-item,
+.page-route-map.high-contrast .map-route-kpi {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border-color: #ffffff !important;
+    box-shadow: none !important;
+}
+
+.page-route-map.high-contrast .map-route-badge,
+.page-route-map.high-contrast .journey-detail-badge,
+.page-route-map.high-contrast .legend-item,
+.page-route-map.high-contrast .station-item-btn,
+.page-route-map.high-contrast .btn-map {
+    background: #000000 !important;
+    color: #ffff00 !important;
+    border: 2px solid #ffff00 !important;
+}
+
+.page-route-map.high-contrast .map-toolbar-kicker,
+.page-route-map.high-contrast .panel-title,
+.page-route-map.high-contrast .route-summary-head h3,
+.page-route-map.high-contrast .route-summary-head p,
+.page-route-map.high-contrast .route-summary-subtitle,
+.page-route-map.high-contrast .journey-detail-copy,
+.page-route-map.high-contrast .journey-detail-meta,
+.page-route-map.high-contrast .map-route-kpi strong,
+.page-route-map.high-contrast .map-route-kpi span,
+.page-route-map.high-contrast .station-name,
+.page-route-map.high-contrast #engineStatus {
+    color: #ffffff !important;
+}

@@ -124,17 +124,6 @@
                        {{scope.row.shouji}}
                      </template>
                 </el-table-column>
-                  <el-table-column :sortable="contents.tableSortable" :align="contents.tableAlign"  prop="zhaopian"
-                   :header-align="contents.tableAlign"
-                    width="200"
-                    label="照片">
-                    <template slot-scope="scope">
-                      <div v-if="scope.row.zhaopian">
-                        <img :src="$base.url+scope.row.zhaopian.split(',')[0]" width="100" height="100">
-                      </div>
-                      <div v-else>无图片</div>
-                    </template>
-                  </el-table-column>
             <el-table-column width="300" :align="contents.tableAlign" 
                :header-align="contents.tableAlign"
                 label="操作">

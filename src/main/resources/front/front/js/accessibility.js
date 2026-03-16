@@ -29,6 +29,14 @@
         return './' + clean;
     }
 
+    function resolveShellRouteUrl(routeKey) {
+        var key = String(routeKey || 'home').trim().toLowerCase();
+        if (!/^[a-z0-9_-]+$/.test(key)) {
+            key = 'home';
+        }
+        return resolveFrontUrl('index.html?route=' + encodeURIComponent(key));
+    }
+
     function resolveBackendUrl(relativePath) {
         var clean = String(relativePath || '').replace(/^\.\//, '').replace(/^\//, '');
         var path = window.location.pathname || '';
@@ -59,6 +67,9 @@
         lastMode: 'idle',
         lastSpeakAt: 0,
         lastSpokenText: '',
+        lastDedupAt: 0,
+        lastDedupText: '',
+        dedupeWindowMs: 1200,
 
         getSpeechHostService: function() {
             try {
@@ -138,6 +149,29 @@
                 deferIfLocked: false,
                 interrupt: latest.options && latest.options.interrupt !== false
             }));
+        },
+
+        normalizeText: function(text) {
+            return String(text == null ? '' : text).replace(/\s+/g, ' ').trim();
+        },
+
+        shouldSkipDuplicate: function(text, options) {
+            options = options || {};
+            if (options.allowRepeat || options.forceRepeat) {
+                return false;
+            }
+            var normalized = this.normalizeText(text);
+            if (!normalized) {
+                return false;
+            }
+            var now = Date.now();
+            var windowMs = typeof options.dedupeWindowMs === 'number' ? options.dedupeWindowMs : this.dedupeWindowMs;
+            if (normalized === this.lastDedupText && now - this.lastDedupAt < windowMs) {
+                return true;
+            }
+            this.lastDedupText = normalized;
+            this.lastDedupAt = now;
+            return false;
         },
 
         shouldUseAudioFallback: function() {
@@ -262,6 +296,11 @@
             }
 
             if (!this.isEnabled || !text) {
+                return Promise.resolve(false);
+            }
+
+            if (this.shouldSkipDuplicate(text, options)) {
+                this.lastMode = 'deduped';
                 return Promise.resolve(false);
             }
 
@@ -817,43 +856,43 @@
 
         goHome: function() {
             if (!openViaTopNav('./pages/home/home.html')) {
-                window.location.href = resolveFrontUrl('index.html');
+                window.location.href = resolveShellRouteUrl('home');
             }
         },
 
         goRouteList: function() {
             if (!openViaTopNav('./pages/gongjiaoluxian/list.html')) {
-                window.location.href = resolveFrontUrl('pages/gongjiaoluxian/list.html');
+                window.location.href = resolveShellRouteUrl('routes');
             }
         },
 
         goMap: function() {
             if (!openViaTopNav('./pages/gongjiaoluxian/map.html')) {
-                window.location.href = resolveFrontUrl('pages/gongjiaoluxian/map.html');
+                window.location.href = resolveShellRouteUrl('map');
             }
         },
 
         goAnnouncements: function() {
             if (!openViaTopNav('./pages/wangzhangonggao/list.html')) {
-                window.location.href = resolveFrontUrl('pages/wangzhangonggao/list.html');
+                window.location.href = resolveShellRouteUrl('announcements');
             }
         },
 
         goMessages: function() {
             if (!openViaTopNav('./pages/messages/list.html')) {
-                window.location.href = resolveFrontUrl('pages/messages/list.html');
+                window.location.href = resolveShellRouteUrl('messages');
             }
         },
 
         goResources: function() {
             if (!openViaTopNav('./pages/youqinglianjie/list.html')) {
-                window.location.href = resolveFrontUrl('pages/youqinglianjie/list.html');
+                window.location.href = resolveShellRouteUrl('resources');
             }
         },
 
         goAccessibility: function() {
             if (!openViaTopNav('./pages/accessibility/settings.html')) {
-                window.location.href = resolveFrontUrl('pages/accessibility/settings.html');
+                window.location.href = resolveShellRouteUrl('accessibility');
             }
         },
 
@@ -870,7 +909,7 @@
                     return;
                 }
             } catch (e2) {}
-            window.location.href = resolveFrontUrl('index.html?demo=auto');
+            window.location.href = resolveFrontUrl('index.html?route=home&demo=auto');
         },
 
         focusMainContent: function() {
@@ -921,7 +960,7 @@
         },
 
         showShortcutHelp: function() {
-            AccessibilityUtils.announce('快捷键帮助：Alt加1到7可切换导航，Alt加S 聚焦搜索，Alt加L 聚焦主要内容，Alt加C 切换字幕提示，Alt加R 切换减少动态，Alt加A 打开无障碍设置，Alt加D 打开演示。');
+            AccessibilityUtils.announce('快捷键帮助：Alt加1到7可切换导航，Alt加S 聚焦搜索，Alt加L 聚焦主要内容，Alt加C 切换字幕提示，Alt加R 切换减少动态，Alt加A 打开无障碍设置。');
         },
 
         /**
@@ -957,6 +996,9 @@
         visualCaptionEnabled: localStorage.getItem('accessibility_visual_caption') !== 'false',
         captionHistory: [],
         captionHistoryLimit: 8,
+        lastAnnounceAt: 0,
+        lastAnnounceText: '',
+        announceDedupeWindowMs: 1000,
 
         getCaptionHostService: function() {
             try {
@@ -1037,6 +1079,25 @@
             }, 4200);
         },
 
+        shouldSkipDuplicateAnnounce: function(message, options) {
+            options = options || {};
+            if (options.allowRepeat || options.forceRepeat) {
+                return false;
+            }
+            var normalized = String(message == null ? '' : message).replace(/\s+/g, ' ').trim();
+            if (!normalized) {
+                return false;
+            }
+            var now = Date.now();
+            var windowMs = typeof options.dedupeWindowMs === 'number' ? options.dedupeWindowMs : this.announceDedupeWindowMs;
+            if (normalized === this.lastAnnounceText && now - this.lastAnnounceAt < windowMs) {
+                return true;
+            }
+            this.lastAnnounceText = normalized;
+            this.lastAnnounceAt = now;
+            return false;
+        },
+
         /**
          * 向屏幕阅读器宣告内容
          * @param {string} message - 要宣告的消息
@@ -1045,6 +1106,10 @@
         announce: function(message, priority, options) {
             priority = priority || 'polite';
             options = options || {};
+
+            if (this.shouldSkipDuplicateAnnounce(message, options)) {
+                return;
+            }
 
             var announcer = document.getElementById('sr-announcer');
             if (!announcer) {

@@ -1,5 +1,667 @@
 # PJT-0001 · PROJECT_CHANGELOG
 
+
+## 2026-03-16 · CHG-20260316-646 · 合成换乘标记区分 + 非乘坐区间灰显
+- 根据用户反馈，地图上的“所在地”和“上车站”此前都显示为 `起`，“下车站”和“目的地”都显示为 `终`，容易混淆；本轮已将用户位置标记调整为 `发 / 达`，线路关键站点标记调整为 `上 / 换 / 下`。
+- synthetic 完整线路现改为“双层线”渲染：整条线路先以灰色底线展示当前路线全貌，仅本次实际乘坐的区间再叠加原有彩色高亮，从而把“需要乘坐”和“超出乘坐范围”的线路清晰区分开。
+- 远端浏览器已验证：当前 `64路 / 106路` 组合线路会渲染 `4` 条 polyline（两条灰底 + 两条彩色乘坐段），颜色样式为 `灰 / 蓝 / 灰 / 紫`，并保留 `10` 个沿途站点 marker；截图留档 `runtime/remote-dev/route-map-v646-segment-gray.png`。
+- 前台资源版本提升到 `shell-page.js?v=20260316-646`、`map.html?v=20260316-646`。
+
+## 2026-03-16 · CHG-20260316-637 · 半条线路按站序段号裁切（修正拼接错误）
+- 已确认核心问题不在“拿不到线路名”，而在“半条线路如何从整条细化轨迹里裁出来”：整条线路可直接显示，半条线路若靠最近点裁切，很容易切到错误区段。
+- 本轮改为为每条 demo 线路记录“第 i 站 → 第 i+1 站”的轨迹段范围；换乘方案只按站序段号精确拼接所需区间，不再依赖最近点裁切整条轨迹。
+- 这样 `64路` 的 `海珠广场 → 江南西` 与 `106路` 的 `江南西 → 纸厂地铁燕岗站` 会直接按各自对应的轨迹段拼接，更符合“半条线路也应正常显示”的预期。
+- 前台资源版本提升到 `shell-page.js?v=20260316-637`、`map.html?v=20260316-637`。
+
+## 2026-03-16 · CHG-20260316-636 · 线路级站序拼接优先（替代直接 OD 道路规划）
+- 根据用户反馈，进一步调整 synthetic 换乘轨迹生成策略：不再优先直接对“海珠广场 → 江南西 → 纸厂地铁燕岗站”做 OD 道路规划，而是先按 `64路`、`106路` 各自的本地 demo 站序生成线路级细化轨迹，再按换乘站窗口裁切并拼接。
+- 这样得到的轨迹仍然是“按线路拼接”的结果，只是利用道路拟合去补足 demo 线路自身过稀的轨迹数据，避免把组合推荐误表现成普通驾车/道路导航。
+- 当前回退顺序为：本地线路级细化轨迹 → 高德 `LineSearch` → 单段道路拟合 → 本地直连，优先保证线路语义正确，再继续逼近真实道路外观。
+- 前台资源版本提升到 `shell-page.js?v=20260316-636`、`map.html?v=20260316-636`。
+
+## 2026-03-16 · CHG-20260316-635 · 组合线路道路拟合兜底（继续逼近真实道路轨迹）
+- 已确认 demo 中的 `64路/106路` 组合线路与高德真实公交线路并不完全一致，单靠 `LineSearch` 难以稳定获得真实公交轨迹；继续强行匹配会反复落到错误候选上。
+- 本轮改为：当 synthetic 换乘方案的子线路无法通过 `LineSearch` 获得可靠轨迹时，优先调用高德 `Driving` 在相邻站点之间做道路拟合，把 `海珠广场 → 江南西 → 纸厂地铁燕岗站` 连成更接近真实道路的曲线，而不是仅做三点直连。
+- 仅当道路拟合也失败时，才继续回退到本地站点连线；这样可以在保证稳定性的前提下，继续逼近真实道路轨迹。
+- 前台资源版本提升到 `shell-page.js?v=20260316-635`、`map.html?v=20260316-635`。
+
+## 2026-03-16 · CHG-20260316-634 · 换乘连线可见性修正（收紧错误切片判定）
+- 针对用户反馈“站点之间的连线直接消失”，继续收紧 synthetic 换乘轨迹的成功判定：若子线路切片后的首尾点与目标站点偏差过大，不再误判为成功，而是继续尝试其他候选线路。
+- 地图页现会对候选切片做端点距离校验与方向归一化，避免出现“状态显示高德换乘组合轨迹，但实际轨迹点落在站点之外”的假成功情况。
+- 同时为高德轨迹统一增加白色描边与更高可见性样式，降低底图道路颜色干扰导致的“线已画出但难以辨认”问题。
+- 前台资源版本提升到 `shell-page.js?v=20260316-634`、`map.html?v=20260316-634`。
+
+## 2026-03-16 · CHG-20260316-633 · 地图换乘轨迹裁剪 + 留言页 schema 对齐 + 演示数据补齐
+- 地图页 `map.html` 针对 `64路/106路` 这类 synthetic 换乘方案补充“按命中站点裁剪子线路轨迹”的二次保护，并在单段搜索失败时仅对该段做局部直连兜底，避免误把整条线路拼进组合轨迹。
+- 路线导航页继续优化分段可读性：站点可达性与乘车段描述增加候车座椅、无障碍厕所、临停接驳、站内/车内转向区与试点说明等字段，配合现有多行排版降低“信息堆在一起”的问题。
+- `scripts/reset-single-demo-data.sh` 现会自动检查并补齐 MySQL `messages` 表缺失字段；`--with-content` 额外恢复公告 / 友情链接 / 留言演示样本，避免留言页再次因 schema 漂移或空数据影响演示。
+- `data-demo.sql` 新增留言演示样本，并补充 2026-03-16 的站点/线路无障碍增强基线。
+
+## 2026-03-16 · CHG-20260316-631 · 换乘组合轨迹修复（避免 64路/106路 直线连点）
+- 根据用户最新截图，已定位“线路变成直线”的直接原因：`64路/106路` 这类**合成换乘方案**虽然有 `luxianguiji` 字段，但其中只写入了 `海珠广场 → 江南西 → 纸厂地铁燕岗站` 这类少量站点点位，不是真实贴路网轨迹，所以地图上只能显示成直线连点。
+- 本轮修复分两层：
+  - 后端：继续保留组合路线的合成轨迹字段，但明确它只是兜底；
+  - 前端地图页：当检测到 synthetic 换乘路线且线路名为 `A/B` 组合时，优先按每条子线路分别调用高德 `LineSearch`，再把两段轨迹拼接成一条组合路线显示；若搜索失败，才回退到本地合成轨迹。
+- 本轮结果：`海珠广场 → 纸厂地铁燕岗站` 在 `WHEELCHAIR` 画像下，进入首推 `64路/106路` 后，地图引擎状态已变为 `高德地图（换乘组合轨迹）`，不再默认显示三点直连的直线。
+- 资源版本更新：
+  - `shell-page.js?v=20260316-631`
+  - `map.html?v=20260316-631`
+- 低冲击验证：
+  - `mvn -q -DskipTests compile`
+  - `bash scripts/single-demo-deploy.sh`
+  - `bash scripts/single-demo-smoke.sh --with-ui`
+  - 浏览器回归：`海珠广场 → 纸厂地铁燕岗站` + `WHEELCHAIR`，地图宽度 `1278px`，引擎状态=`高德地图（换乘组合轨迹）`
+
+## 2026-03-16 · CHG-20260316-630 · 路线页首次滚动 / 低视力下拉可读性 / 地图空白修复
+- 根据最新现场反馈，继续对 `8133` 单实例前台做一轮稳定性热修，重点修复 3 个直接影响演示的问题：首次点击 `生成方案` 未滚动到候选列表、`低视力` 高对比下下拉菜单/部分文字可读性差、点击候选进入导航后地图偶发空白。
+- 本轮前台交互修复：
+  - `route-list-page.js` 为结果区滚动新增 **多次重试 + 父级壳层滚动联动**，首次点击 `生成方案` 后就会把候选结果带入当前视野，不再需要第二次点击才到位。
+  - `accessibility-high-contrast.css` 继续补强 Layui 下拉、候选列表、标签、占位文字与结果卡文字的高对比适配，`低视力` 预设下改为黑底白字 / 黄色高亮，避免白字叠浅底或无背景。
+- 地图导航页修复：
+  - `map.html` 显式覆盖 `.page-route-map .map-wrapper` 的拉伸宽度，修复全局样式里 `align-self:start` 导致地图容器塌成 `2px`、出现空白地图的问题。
+  - 地图页新增有限次 `resize / invalidateSize + fitBounds` 重算，配合进入导航后的滚动聚焦一起执行，减少 iframe 旧壳层高度变化导致的首屏空白风险。
+- 本轮前台资源版本提升到 `20260316-630`：
+  - `shell-page.js?v=20260316-630`
+  - `list.html / route-list-page.js / route-list-picker.js / route-list-core.js?v=20260316-630`
+  - `map.html?v=20260316-630`
+  - `accessibility-high-contrast.css?v=20260316-630`
+- 低冲击验证：
+  - `bash scripts/remote-dev-check.sh`
+  - `bash scripts/single-demo-deploy.sh`
+  - `bash scripts/single-demo-smoke.sh --with-ui`
+  - 额外浏览器验证（主演示对）：`海珠广场 → 纸厂地铁燕岗站`
+    - 首次生成方案后结果列表外层坐标 `y≈271px`，已进入当前视野；
+    - `LOW_VISION` 下服务画像输入框背景=`rgb(0,0,0)`、文字=`rgb(255,255,255)`；
+    - 地图容器宽度恢复到 `1278px`，引擎状态为 `高德地图（GCJ转换+轨迹字段）`。
+
+## 2026-03-16 · CHG-20260316-629 · 路线页与导航页进一步融合（删查看路线 / 删实时地图入口 / 地图下沉信息卡 / 坐标映射兜底）
+- 按“删除查看路线按钮、弱化说明文案、移除实时线路地图页面入口、把无障碍与换乘信息放到地图下方、并继续修正坐标偏移”的要求，在远端继续对路线页与地图导航页做了一轮融合式收口。
+- 本轮前台交互收口：
+  - 路线规划页已删除 `查看路线` 按钮，保留 `生成方案` 作为主动作；地图入口文案同步收口为 `进入线路导航`。
+  - 前台主导航中的 `实时线路地图` 入口已移除，避免继续给用户造成“路线规划”和“地图导航”是两套系统的感觉。
+  - 地图导航页不再显示“该方案来自推荐结果，已直接在地图上展开首末段接驳、乘车段与换乘节点；实时车辆与 ETA 暂不提供。”等说明性文字。
+  - 旧的 `首段接驳清晰 / 末段接驳清晰` 文案已替换为更直接的步行距离等级描述。
+- 地图导航页布局重构：
+  - 从“左侧边栏 + 右侧地图”改成“上方地图 + 下方信息卡/站点列表”布局，更适合演示与浏览。
+  - 地图下方新增结构化摘要卡，把 `无障碍等级 / 换乘方案 / 总耗时 / 总步行 / 覆盖站数 / 总分 / 无障碍分 / 数据更新时间` 作为高可读信息块展示。
+  - 上下车无障碍、乘车与换乘、到站后路线改为分段卡片，加入状态标签与更清晰的视觉层级。
+- 低视力高对比增强：
+  - 为路线规划页与地图导航页增加了**页面级高对比覆盖**，不再使用“白字叠浅底卡片”的原样式，重点修复摘要区、结果卡、地图信息卡在低视力模式下看不清的问题。
+- 坐标映射与偏移兜底：
+  - 当前高德渲染改为：**只要本地路线轨迹字段可用，就优先使用本地轨迹 + 坐标转换渲染**，减少 LineSearch 名称命中偏移带来的站点/线路错位。
+  - 对必须走 LineSearch 的情况，新增站点偏移检测；若偏移过大（>120m），则自动放弃 LineSearch，回退到本地轨迹/站点兜底，避免继续把明显错位的结果展示给用户。
+- 资源版本已提升到 `20260316-629`：
+  - `shell-page.js?v=20260316-629`
+  - `list.html?v=20260316-629`
+  - `map.html?v=20260316-629`
+  - `route-list-core.js?v=20260316-629`
+  - `transit-route-list.css?v=20260316-629`
+
+
+## 2026-03-16 · CHG-20260316-625 · 路线规划页轻量化 + 画像权重细化 + 快速验证命令固化
+- 按“旧页面太慢、网页上不要再堆说明性文字、不同用户画像要体现真实差异”的要求，在远端继续对路线规划链路做了一轮**轻量化与差异化推荐**收口。
+- 本轮涉及文件：
+  - `src/main/resources/front/front/js/pages/shell-page.js`
+  - `src/main/resources/front/front/index.html`
+  - `src/main/resources/front/front/pages/gongjiaoluxian/list.html`
+  - `src/main/resources/front/front/js/pages/route-list-page.js`
+  - `src/main/resources/front/front/js/pages/route-list-core.js`
+  - `src/main/resources/front/front/css/transit-route-list.css`
+  - `src/main/java/com/service/impl/RoutePlanningServiceImpl.java`
+  - `docs/PROJECT_RUNBOOK.md`
+  - `docs/REMOTE_DEV_WORKFLOW.md`
+  - `docs/MIDTERM_DEMO_GUIDE.md`
+  - `docs/DEMO_INNOVATION_SCRIPT.md`
+- 页面轻量化与性能收口：
+  - 路线规划页移除网页内长段“创新说明 / 查看路线 vs 生成方案大段解释 / 推荐引擎长文案”，改为只保留**短摘要 chip + 紧凑事实行**；讲解口径统一下沉到文档与答复中。
+  - 推荐结果列表继续保留 `content-visibility` / `contain-intrinsic-size`，减少多卡片同时渲染时的布局压力。
+  - 壳层 `shell-page.js` 的 iframe 高度自适应从多轮无差别 burst 改为**去重后的短 burst（0/120/420ms）**，减少旧壳层切页时不必要的反复测高与重排。
+- 用户画像逻辑深化：
+  - `LOW_VISION`：更强调 `盲道支持 / 语音播报 / 高对比友好信息`；切换到该画像时会**自动开启高对比模式**。
+  - 额外修复了 Layui 渲染下拉不触发原生 `change` 的兼容问题：现在通过 `lay-filter=profileType + form.on('select(profileType)')` 保证真实点击也会切换高对比。
+  - `WHEELCHAIR`：更强调 `上下车可达性 / 换乘设施 / 坡道 / 电梯 / 低地板`；切换到其他画像时会**自动关闭高对比模式**，避免普通模式被视觉障碍预设残留影响。
+  - 后端权重已按画像细化：
+    - 轮椅 / 行动不便：`routeLevel=0.22 / station=0.34 / userMatch=0.44`
+    - 低视力：`routeLevel=0.18 / station=0.37 / userMatch=0.45`
+    - 听障（文本优先）：`routeLevel=0.24 / station=0.22 / userMatch=0.54`
+    - 多重障碍：`routeLevel=0.20 / station=0.35 / userMatch=0.45`
+- 适合现场展示画像差异的起终点已固化到文档：
+  - **首选**：`海珠广场 → 纸厂地铁燕岗站`
+    - 轮椅 / 行动不便首选：`64路/106路`
+    - 低视力首选：`16路`
+  - **备选**：`中山图书馆 → 南石西地铁棣园站总站`
+    - 轮椅 / 行动不便首选：`541路`
+    - 低视力首选：`106路`
+- 已把本轮推荐使用的**快速验证命令**正式写入项目文档：
+  - `bash scripts/single-demo-smoke.sh --with-ui`
+  - 用途：快速确认旧壳层/路线页是否已命中新版本、候选输入是否已收短、次级按钮是否仍可见；后续做 UI 微调时优先跑这一条。
+- 资源版本收口到 `20260316-627`：
+  - `shell-page.js?v=20260316-627`
+  - `list.html?v=20260316-627`
+  - `route-list-core.js?v=20260316-627`
+  - `route-list-page.js?v=20260316-627`
+  - `transit-route-list.css?v=20260316-627`
+- 低冲击验证：
+  - `bash scripts/remote-dev-check.sh`
+  - `bash scripts/single-demo-deploy.sh`
+  - `bash scripts/single-demo-smoke.sh --with-ui`
+  - 轻量 Playwright 核对：
+    - `LOW_VISION` 下 `bodyHighContrast=true`
+    - `WHEELCHAIR` 下 `bodyHighContrast=false`
+    - “生成方案”后 `activeId=routeResultList`
+    - 页面正文不再包含“为什么不是普通路线筛选 / 推荐引擎 pipeline / 查看路线只做线路覆盖筛选”等长说明文本
+    - 外层页面滚动从 `scrollY=34` 自动推进到 `scrollY=746`，已确认生成方案后视线会从地图区移动到结果区
+
+## 2026-03-16 · CHG-20260316-624 · 路线规划结果可用性深化（自动聚焦 + 透明推荐 + 步行/耗时/评分展示）
+- 按“删除演示线路标签、生成后自动滚动到结果区、补充无障碍设置/风险/数据来源/更新时间/置信度/步行距离/总耗时/评分，并把创新点讲清楚”的要求，在远端继续对路线规划页做了一轮**可用性与创新表达双增强**。
+- 本轮涉及文件：
+  - `src/main/resources/front/front/pages/gongjiaoluxian/list.html`
+  - `src/main/resources/front/front/js/pages/route-list-core.js`
+  - `src/main/resources/front/front/js/pages/route-list-page.js`
+  - `src/main/resources/front/front/js/pages/shell-page.js`
+  - `src/main/resources/front/front/index.html`
+  - `src/main/resources/front/front/css/transit-route-list.css`
+- 交互层增强：
+  - 删除结果卡片中的“演示线路”标签，避免演示时显得像静态样例；
+  - 点击“生成方案”成功后，页面会**自动滚动并把焦点移动到结果列表**，不再停留在地图上方；
+  - 在表单区新增“查看路线 vs 生成方案”差异说明，明确：
+    - `查看路线` = 线路覆盖筛选
+    - `生成方案` = 结合画像/偏好/风险/置信度/分段结果的完整推荐
+- 结果卡片增强：
+  - 推荐方案卡片新增：
+    - 总分
+    - 无障碍分
+    - 预计总耗时
+    - 起点步行距离
+    - 终点步行距离
+    - 总步行 / 乘车里程
+  - 增加“推荐理由 / 风险核对点 / 透明度信息”三块内容，集中展示：
+    - 推荐理由
+    - 决策提示
+    - 风险提示
+    - 数据来源
+    - 更新时间
+    - 置信度
+    - 当前画像与偏好
+    - 预计抵达时间
+- 创新表达增强：
+  - 顶部 `planMeta` 摘要区新增“为什么这不是普通路线筛选 / 本次创新主线 / 推荐引擎透明展示”三个模块；
+  - 展示推荐引擎 pipeline 与权重，突出本项目不是只做线路列表，而是做“可解释、可核对、面向无障碍场景的完整出行方案”。
+- 前端估算补充：
+  - 复用路线轨迹、站点数、首末段步行距离与换乘段信息，在前端补充估算：
+    - 乘车里程
+    - 预计乘车时间
+    - 预计步行时间
+    - 预计总耗时
+    - 预计抵达时间
+  - 估算逻辑与当前 `MapController` 的 ETA 基线保持同方向（交通状态 + 站点停靠时间 + 站数/轨迹距离）。
+- 资源版本已提升到 `20260316-624`：
+  - `shell-page.js?v=20260316-624`
+  - `list.html?v=20260316-624`
+  - `route-list-core.js?v=20260316-624`
+  - `route-list-page.js?v=20260316-624`
+  - `transit-route-list.css?v=20260316-624`
+- 低冲击验证：
+  - `node --check src/main/resources/front/front/js/pages/route-list-core.js`
+  - `node --check src/main/resources/front/front/js/pages/route-list-page.js`
+  - `bash scripts/remote-dev-check.sh`
+  - `bash scripts/single-demo-deploy.sh`
+  - `bash scripts/single-demo-smoke.sh --with-ui`
+  - Playwright 验证自动聚焦结果区：`activeId=routeResultList`、`resultTop≈0`
+- 当前留档：
+  - `runtime/manual-backups/route-plan-usability-20260316_175849/`
+  - `runtime/remote-dev/route-plan-v624.png`
+
+## 2026-03-16 · CHG-20260316-622 · 路线详情页去封面化 + 信息卡重排收口
+- 按“删除线路封面图片、优化 UI 显示、修复结构框之间白色缝隙”的要求，继续在**远端开发服务器**对路线详情页做了一轮低风险收口，重点是把原先依赖轮播图/双列旧结构的详情页，改成更稳定的“文字概览 + 单卡信息区”布局。
+- 本轮前台详情页调整：
+  - `src/main/resources/front/front/pages/gongjiaoluxian/detail.html`
+  - `src/main/resources/front/front/css/transit-route-list.css`
+- 已完成的详情页 UI 收口：
+  - 删除详情页的线路封面轮播展示，保留**文字优先**的概览头部；
+  - 头部改为统一摘要卡，突出 `路线编号 / 起终点 / 无障碍设施 / 换乘接驳提示 / 点赞踩`；
+  - 原先右侧基础字段区改为**单独的信息卡**，用更稳定的 facts grid 展示 `票价 / 起终点 / 无障碍等级 / 途经站点 / 电梯坡道接驳 / 训练补充说明`；
+  - 去掉旧的 `layui-col-md5/md7 + 内联宽度` 布局依赖，避免多个结构框之间出现不贴合、留白或白缝。
+- 同步收口了详情页资源版本：
+  - `detail.html` 现命中 `transit-route-list.css?v=20260316-623`
+- 本轮刻意**没有**继续拆 `detail.html` 的脚本逻辑，也没有继续推进更大的后台/地图页拆分，避免把“功能迭代”和“结构大改”混在同一轮里。
+- 低冲击验证：
+  - `bash scripts/remote-dev-check.sh`
+  - `bash scripts/single-demo-deploy.sh`
+  - `bash scripts/single-demo-smoke.sh --with-ui`
+  - 截图留档：`runtime/remote-dev/route-detail-v623.png`
+- 当前实测：
+  - `bus-route.service=active`
+  - `route_count=12`
+  - `covered_routes=9`
+  - `covered_pct=75.0`
+  - 前后台访问链路正常，路线详情页已无封面轮播，主内容区改为上下两张贴合卡片
+
+## 2026-03-16 · CHG-20260316-621 · Phase 2D 完成（RouteCandidateQueryService 第一刀拆分）
+- 按方案 A 继续推进 `RoutePlanningServiceImpl` 后端拆分，本轮把**候选路线查询职责**从主服务中迁出，重点是“直达候选 + 一次换乘候选 + 合成换乘路线”这一层；仍保持 controller 接口、`route/plan` 出参和前台行为不变。
+- 新增候选查询服务：
+  - `src/main/java/com/service/RouteCandidateQueryService.java`
+  - `src/main/java/com/service/impl/RouteCandidateQueryServiceImpl.java`
+- 当前迁出的候选查询职责包括：
+  - `getAllPossibleRoutes(...)`
+  - 直达路线初筛
+  - 一次换乘候选组合
+  - 合成换乘路线 `buildTransferRoute(...)`
+  - 合成路线坐标/轨迹拼装与基础字段合并
+- `RoutePlanningServiceImpl` 现已改为通过 `routeCandidateQueryService` 取得候选路线列表；主类中已移除：
+  - `GongjiaoluxianService` 依赖
+  - 候选查询与合成路线相关 helper 大块实现
+- 当前拆分结果：
+  - `RoutePlanningServiceImpl.java` 由约 `1241` 行进一步降到约 `983` 行；
+  - 新增 `RouteCandidateQueryServiceImpl.java` 约 `294` 行；
+  - `RoutePlanningServiceImpl` 已明显更接近“编排层”角色。
+- 本轮继续刻意**不碰**评分、治理提示和前台映射逻辑，避免把“候选查询 + 评分 + 输出映射”三层同时搅动。
+- 低冲击验证：
+  - `bash scripts/remote-dev-check.sh`
+  - `bash scripts/remote-dev-build.sh`
+  - `systemctl restart bus-route.service`
+  - `bash scripts/single-demo-smoke.sh --with-ui`
+- 当前实测：
+  - `bus-route.service=active`
+  - `route_count=12`
+  - `covered_routes=9`
+  - `covered_pct=75.0`
+  - `single-demo-smoke.sh --with-ui` 通过
+  - 路线规划接口仍返回 `count=12`
+  - 输入 `珠` 候选仍为 `海珠广场 / 珠江医院`
+- 备份目录：
+  - `runtime/manual-backups/phase2d-route-candidate-query-20260316_165714/`
+
+## 2026-03-16 · CHG-20260316-620 · Phase 2C 完成（RouteStationMatchService 第一刀后端拆分）
+- 按“完成 Phase 2C”的要求，开始进入 `RoutePlanningServiceImpl` 的**真实后端职责拆分**；本轮继续保持低风险边界，只抽离“站点匹配 / 站序解析 / 换乘站识别”这一类纯逻辑，不改 controller 接口、不改 `route/plan` 出参结构。
+- 新增站点匹配服务：
+  - `src/main/java/com/service/RouteStationMatchService.java`
+  - `src/main/java/com/service/impl/RouteStationMatchServiceImpl.java`
+- 当前已从 `RoutePlanningServiceImpl` 抽出的职责包括：
+  - 路线站点顺序构建 `buildOrderedStations`
+  - 站点名匹配 `matchesStationName`
+  - 路线是否命中起终点 `matchesRouteStation`
+  - 一次换乘节点识别 `findTransferStation`
+  - 起终点最佳站点命中 `findBestMatchingStationName`
+  - 输入命中类型判断 `resolveMatchType`
+- `RoutePlanningServiceImpl` 现已改为通过 `routeStationMatchService` 编排这些匹配逻辑：
+  - `getAllPossibleRoutes(...)` 不再直接持有站点匹配细节；
+  - `buildTransferRoute(...)` 与 `resolveTravelPath(...)` 不再自行做站序解析，而是依赖 `RouteStationMatchService`。
+- 当前拆分结果：
+  - `RoutePlanningServiceImpl.java` 由约 `1364` 行降到约 `1241` 行；
+  - 新增 `RouteStationMatchServiceImpl.java` 约 `165` 行；
+  - 保持现有 API 与前台行为不变，优先降低后续继续拆分的风险。
+- 本轮刻意**没有**同步抽评分、映射、治理文案逻辑，避免一次改动同时触碰“匹配 + 评分 + 输出”三层。
+- 低冲击验证：
+  - `bash scripts/remote-dev-check.sh`
+  - `bash scripts/remote-dev-build.sh`
+  - `systemctl restart bus-route.service`
+  - `bash scripts/single-demo-smoke.sh --with-ui`
+- 当前实测：
+  - `bus-route.service=active`
+  - `route_count=12`
+  - `covered_routes=9`
+  - `covered_pct=75.0`
+  - `single-demo-smoke.sh --with-ui` 通过
+  - 输入 `珠` 候选仍为 `海珠广场 / 珠江医院`
+  - 路线规划接口仍返回 `count=12`
+- 备份目录：
+  - `runtime/manual-backups/phase2c-route-station-match-20260316_163053/`
+
+## 2026-03-16 · CHG-20260316-619 · Phase 2B 完成（后台运行时资源收口 + 历史脚本告警 + 仓库噪音压降）
+- 按“完成 Phase 2B”的要求，继续沿着**降低后续开发误伤面、减少重复维护和误操作**的方向做第二轮低风险收口；这轮不碰高风险后端逻辑，重点处理后台运行时资源、脚本入口和仓库噪音三个最影响日常开发的问题。
+- 后台 `admin/public` 与 `admin/dist` 的运行时资源现已收口到**单一维护入口**：
+  - 新增 `scripts/sync-admin-runtime-assets.sh`；
+  - 当前约定 `src/main/resources/admin/admin/public/css/transit-admin-theme.css` 与 `src/main/resources/admin/admin/public/js/transit-admin-sidebar-dom.js` 为维护源；
+  - `--sync` 会自动把上述资源镜像到 `dist/css` 与 `dist/js`，并同步刷新 `public/index.html`、`dist/index.html` 的版本参数；
+  - `--check` 只校验 public/dist 内容与版本号是否一致，不直接改文件。
+- 新增后台运行时版本文件：
+  - `src/main/resources/admin/admin/admin-runtime.version`
+  - 当前版本：`20260316-619`
+  - `public/index.html` 与 `dist/index.html` 已统一命中 `transit-admin-theme.css?v=20260316-619`、`transit-admin-sidebar-dom.js?v=20260316-619`。
+- 构建链路已接入后台资源校验/同步：
+  - `scripts/remote-dev-check.sh` 现在会先执行 `bash scripts/sync-admin-runtime-assets.sh --check`，再走 `mvn -q -DskipTests compile`；
+  - `scripts/remote-dev-build.sh` 现在会先执行 `bash scripts/sync-admin-runtime-assets.sh --sync`，避免继续出现“public 改了但 dist 漏同步”的情况。
+- 历史 `8134` 开发脚本已增加**醒目告警**，降低误操作概率：
+  - 新增 `scripts/legacy-dev-warning.sh`；
+  - `remote-dev-start.sh / remote-dev-stop.sh / remote-dev-status.sh / remote-dev-reset-demo-db.sh` 现在执行时会先提示：当前日常主流程应走 `single-demo-deploy/status/smoke`，这些脚本仅保留给历史 `8134` 开发流。
+- 单实例状态脚本补充后台资源状态：
+  - `scripts/single-demo-status.sh` 现在除服务、守护、路线基线与前台版本外，也会输出 `admin_runtime_version / admin_runtime_assets / admin_runtime_mode`，方便快速判断后台壳层资源是否漂移。
+- 仓库噪音已做一层**只忽略、不盲删**的治理：
+  - `.gitignore` 新增顶层根文件系统镜像噪音忽略项（如 `/bin`、`/boot/`、`/etc/`、`/proc/`、`/swapfile` 等），以及 `src/main/resources/admin/admin/node_modules/`；
+  - 当前 `git status` 已不再被这些系统级镜像噪音刷屏，但并**没有**直接删除对应目录，避免误删潜在排障证据。
+- 低冲击验证：
+  - `bash -n scripts/sync-admin-runtime-assets.sh`
+  - `bash -n scripts/legacy-dev-warning.sh`
+  - `bash -n scripts/remote-dev-check.sh`
+  - `bash -n scripts/remote-dev-build.sh`
+  - `bash -n scripts/remote-dev-start.sh`
+  - `bash -n scripts/remote-dev-status.sh`
+  - `bash -n scripts/remote-dev-stop.sh`
+  - `bash -n scripts/remote-dev-reset-demo-db.sh`
+  - `bash -n scripts/single-demo-status.sh`
+  - `bash scripts/sync-admin-runtime-assets.sh --check`
+  - `bash scripts/remote-dev-check.sh`
+  - `bash scripts/remote-dev-build.sh`
+  - `systemctl restart bus-route.service`
+  - `bash scripts/single-demo-smoke.sh`
+  - `curl http://127.0.0.1:8133/springbootmf383/admin/dist/index.html` 已确认命中 `v=20260316-619`
+- 当前实测：
+  - `bus-route.service=active`
+  - `route_count=12`
+  - `covered_routes=9`
+  - `covered_pct=75.0`
+  - `single-demo-smoke.sh` 通过
+  - 后台入口已命中 `transit-admin-theme.css?v=20260316-619`、`transit-admin-sidebar-dom.js?v=20260316-619`
+- 备份目录：
+  - `runtime/manual-backups/phase2b-admin-flow-20260316_161600/`
+
+## 2026-03-16 · CHG-20260316-618 · Phase 2A 完成（路线页 JS/CSS 第一刀拆分 + RoutePlanningServiceImpl 蓝图）
+- 按“完成 Phase 2A，先处理最影响开发的结构热点”的要求，对当前单实例 demo 做了一轮**结构级收口**，重点是降低后续继续在超大文件上直接叠加改动的风险。
+- 前台路线页 JS 已做第一刀拆分：
+  - 原 `src/main/resources/front/front/js/pages/route-list-page.js` 从约 `1889` 行降到约 `583` 行；
+  - 新增 `src/main/resources/front/front/js/pages/route-list-core.js`（约 `723` 行），承接站点索引、输入匹配、推荐结果映射等核心逻辑；
+  - 新增 `src/main/resources/front/front/js/pages/route-list-picker.js`（约 `593` 行），承接地图选点、右键菜单、设起终点与输入联动逻辑。
+- 前台路线页 CSS 已做第一刀拆分：
+  - 原 `src/main/resources/front/front/css/transit-business-ui.css` 从约 `5948` 行降到约 `4500` 行；
+  - 新增 `src/main/resources/front/front/css/transit-route-list.css`（约 `1451` 行），承接路线页/路线地图/无障碍设置页尾部的页面级样式与补丁样式，降低继续污染全局样式文件的风险。
+- 资源版本已提升到 `20260316-618`：
+  - `front/index.html` → `shell-page.js?v=20260316-618`
+  - `shell-page.js` → `routes / map / accessibility` 路由统一切到 `v=20260316-618`
+  - `list.html` 额外加载 `transit-route-list.css`、`route-list-core.js`、`route-list-picker.js`
+  - `map.html`、`accessibility/settings.html` 额外加载 `transit-route-list.css`
+- 新增后端拆分蓝图文档：
+  - `docs/ROUTE_PLANNING_SERVICE_SPLIT_BLUEPRINT.md`
+  - 当前只定义 `RouteStationMatchService / RouteCandidateQueryService / RouteAccessibilityScoringService / RoutePlanViewMapper` 的目标职责边界，不直接重构后端行为，避免在演示期引入高风险变更。
+- 补充稳定化小修：
+  - `scripts/single-demo-smoke.sh` 已加入本机前台预热等待，避免“刚重启立刻冒烟”时把正常冷启动误判为失败。
+- 低冲击验证：
+  - `node --check src/main/resources/front/front/js/pages/route-list-core.js`
+  - `node --check src/main/resources/front/front/js/pages/route-list-picker.js`
+  - `node --check src/main/resources/front/front/js/pages/route-list-page.js`
+  - `bash scripts/remote-dev-check.sh`
+  - `bash scripts/remote-dev-build.sh`
+  - `systemctl restart bus-route.service`
+  - `bash scripts/single-demo-smoke.sh --with-ui`
+- 当前实测：
+  - `route_count=12`
+  - `covered_routes=9`
+  - `covered_pct=75.0`
+  - UI 烟测仍通过：输入 `珠` 后候选为 `海珠广场 / 珠江医院`，`详情` 按钮为深色可见文本
+- 备份目录：
+  - `runtime/manual-backups/phase2a-route-split-20260316_155827/`
+
+## 2026-03-16 · CHG-20260316-617 · 单实例开发稳定化治理（基线重置 + 一键冒烟 + 状态收口）
+- 按“先暂停功能开发，优先补开发稳定性，不要再把服务器搞炸”的要求，对当前唯一 demo 实例 `8133` 做了一轮**低风险治理**，重点不是继续改页面，而是把日常操作收口成更稳的开发/验证链路。
+- 新增单实例 demo 数据基线脚本：`scripts/reset-single-demo-data.sh`
+  - 默认恢复 `gongjiaoluxian`、`zhandian_wuzhangai` 到 `src/main/resources/data-demo.sql` 的当前演示基线；
+  - 支持 `--dry-run`，可先只提取 SQL 并输出当前数据库统计，不直接改库；
+  - 支持 `--with-content`，按需额外恢复公告与友情链接内容；
+  - 每次实际重置前都会先把线上表快照备份到 `runtime/manual-backups/reset-single-demo-data-*/`。
+- 新增单实例一键冒烟脚本：`scripts/single-demo-smoke.sh`
+  - 默认检查 `bus-route.service`、`bus-route-health-guardian.timer`、`8133` 端口、本机/公网首页、`gongjiaoluxian/list`、`route/all-routes`、典型换乘规划、MySQL 路线数、覆盖率、前台版本号；
+  - 可加 `--with-ui`，额外校验“输入 `珠` 后候选被收短”和“次级按钮不是白底白字空白态”。
+- 增强单实例状态脚本：`scripts/single-demo-status.sh`
+  - 除服务/守护状态外，追加输出：
+    - MySQL `route_count / covered_routes / covered_pct`
+    - 当前 `shell-page.js` 与 `route-list-page.js` 版本号
+- 本轮刻意**没有再改 systemd 配置、没有新增常驻后台进程、没有额外重启整机**，只补脚本和文档，并执行只读/低冲击验证。
+- 低冲击验证：
+  - `bash -n scripts/reset-single-demo-data.sh`
+  - `bash -n scripts/single-demo-smoke.sh`
+  - `bash -n scripts/single-demo-status.sh`
+  - `bash scripts/reset-single-demo-data.sh --dry-run`
+  - `bash scripts/single-demo-status.sh`
+  - `bash scripts/single-demo-smoke.sh`
+  - `bash scripts/single-demo-smoke.sh --with-ui`
+- 当前实测结果：
+  - `route_count=12`
+  - `covered_routes=9`
+  - `covered_pct=75.0`
+  - UI 烟测：输入 `珠` 后候选为 `海珠广场 / 珠江医院`，`详情` 按钮为深色可见文本
+- 备份目录：
+  - `runtime/manual-backups/stability-governance-20260316_154510/`
+  - `runtime/manual-backups/reset-single-demo-data-20260316_154604/`（dry-run 生成 baseline SQL 预览）
+
+## 2026-03-16 · CHG-20260316-616 · 路线输入候选收短 + 次级按钮修复 + 8133 演示路线恢复到 12 条
+- 根据最新现场反馈，对当前唯一 demo 实例 `8133` 做了一轮前台收口，解决 3 个直接影响演示的问题：
+  - 路线输入框候选过长，聚焦后容易一下子弹出整列站点；
+  - 候选路线卡片右侧次级按钮出现“白底白字/像空白按钮”；
+  - `8133` 上的演示路线数量回落到了 `5` 条，和之前 `12` 条换乘演示网络不一致。
+- 前台输入候选现已改为**按输入即时匹配**：
+  - 默认不再预灌整列站点；
+  - 用户至少输入 `1` 个字后，才会显示匹配候选；
+  - 候选结果按现有站点匹配评分排序，并限制为最相关的 `12` 条，便于快速命中“海珠广场 / 珠江医院 / 文化公园”等站点。
+- 候选路线卡片的次级按钮样式已修复：
+  - `详情` 按钮恢复深色文字、可见边框和悬浮态；
+  - 不再出现白底白字、看起来像空白胶囊按钮的问题。
+- 同步补齐了 `8133` 对外实例的演示路线数据：
+  - 将 `src/main/resources/data-demo.sql` 中的 `12` 条 demo 路线同步回 MySQL `springbootmf383.gongjiaoluxian`；
+  - 当前接口 `gongjiaoluxian/list?page=1&limit=20` 已返回 `total=12`；
+  - 当前 `route/all-routes` 已返回 `12` 条路线，站点索引与换乘演示网络恢复一致。
+- 缓存版本已提升到 `20260316-616`：
+  - `front/index.html` → `shell-page.js?v=20260316-616`
+  - `shell-page.js` → `list.html?v=20260316-616`
+  - `list.html` → `transit-business-ui.css?v=20260316-616` / `route-list-page.js?v=20260316-616`
+- 远端备份：
+  - `runtime/manual-backups/route-ui-shortlist-fix-20260316_153716/`
+  - 已额外备份 MySQL 当前 `gongjiaoluxian` 表快照。
+- 低冲击验证：
+  - `node --check src/main/resources/front/front/js/pages/route-list-page.js`
+  - `bash scripts/remote-dev-check.sh`
+  - `bash scripts/remote-dev-build.sh`
+  - `systemctl restart bus-route.service`
+  - API 校验：`gongjiaoluxian/list` = `12`，`route/all-routes` = `12`
+  - Playwright 烟测：输入 `珠` 后候选仅返回 `海珠广场 / 珠江医院`；`详情` 按钮文字颜色恢复为深色可见。
+
+## 2026-03-16 · CHG-20260316-615 · 单实例 demo 收口到 8133 + 本机健康守护落地
+- 按“不要再同时维护 `8133 + 8134` 两套系统，这个项目就是 demo”的要求，已在开发服务器 `8.134.206.52` 收口为**单实例 demo**：
+  - 当前唯一长期运行服务为 `8133`
+  - `8134` 不再作为长期维护实例
+  - 当前远端工作区最新构建产物已直接替换到 `bus-route.service`
+- 新增本机健康守护能力，目标是尽量避免再靠人工整机重启恢复：
+  - 新脚本：`scripts/host-health-guardian.sh`
+  - 新安装脚本：`scripts/install-host-health-guardian.sh`
+  - 新 systemd 单元：`ops/systemd/bus-route-health-guardian.service`、`ops/systemd/bus-route-health-guardian.timer`
+  - 新单实例运维入口：`scripts/single-demo-deploy.sh`、`scripts/single-demo-status.sh`
+- 守护逻辑：
+  - 每分钟检查本机 `8133`
+  - 检查公网 `8133`
+  - 检查 `ssh.socket / ssh.service`
+  - 检查默认路由 + 阿里云元数据链路
+  - 优先自动重启 `bus-route/nginx/ssh/network`
+  - 仍持续异常时，才按**有冷却时间和每日上限**的策略自动重启整机，避免无限重启
+- 已做的低冲击验证：
+  - `bash scripts/remote-dev-check.sh`
+  - `bash scripts/remote-dev-build.sh`
+  - `systemctl restart bus-route.service`
+  - `bash scripts/install-host-health-guardian.sh`
+  - `bash scripts/single-demo-status.sh`
+  - 现场人工演练：手动停止 `bus-route.service` 后再恢复，确认当前守护状态日志已正常记录检测结果
+- 当前事实：
+  - `bus-route.service` 正在监听 `8133`
+  - `bus-route-health-guardian.timer` 已启用
+  - `8133` 首页返回 `200`
+  - 当前接口 `gongjiaoluxian/list?page=1&limit=5` 返回 `total=5`
+- 备份目录：`runtime/manual-backups/single-demo-guard-20260316_151519`
+
+## 2026-03-16 · CHG-20260316-614 · 远端 SSH 断线原因取证与文档固化
+- 对远端主机 `8.134.206.52` 的 SSH 断线做了取证，结论已固化到 `docs/REMOTE_DEV_WORKFLOW.md` 与 `docs/PROJECT_RUNBOOK.md` 的醒目位置。
+- 取证结果：
+  - 用户现场观测：**在手动重启前，SSH 与外网网站已同时失效**
+  - 当前 boot 时间：`2026-03-16 14:43:09 CST`
+  - 上一轮 boot 日志终止在：`2026-03-16 13:55:13 CST` 左右
+  - `journalctl -u ssh -b -1` 未见 sshd 崩溃或异常退出
+  - `journalctl -b -1` 未见 `shutdown/reboot/systemctl reboot/OOM/panic/watchdog` 等正常收尾
+  - `sar` 在 `13:50 CST` 前后未见负载、CPU、内存、swap 明显异常
+- 结论：本次故障更应按**主机级卡死 / 网络栈失联 / 云侧宿主机异常**处理；用户手动重启是恢复动作，不是故障起点。上述分类属于基于日志缺失和现场现象的推断。
+- 同时补充关键背景：
+  - 当前机器使用 `ssh.socket` 激活 SSH（`ssh.service=disabled`、`ssh.socket=enabled/active`），因此重启后首次连接才会拉起 sshd，这本身不是故障。
+- 已写入的应对措施：
+  - 长任务前必须先写文档 checkpoint
+  - 长任务默认放进 `tmux new -As bus-route-dev`
+  - 开发实例异常优先处理 `8134` 项目脚本，不直接重启整机
+  - 断线后先用 `uptime -s / last -x / journalctl -b -1 / journalctl -u ssh -b -1 / systemctl is-active ssh.socket` 判因
+- 本轮仅更新文档，不修改远端项目代码/服务配置，也未触碰 `8133` / `8134` 实例。
+
+## 2026-03-16 · CHG-20260316-613 · 候选方案列表改为地图软件样式 + 地图右键菜单 + routes 旧备份清理
+- 按“候选方案列表更像高德 / 百度、支持右键直接设起终点和交换、结构框与地图等宽”的最新反馈，继续收口 routes 页面：
+  - 结果区改为**单列候选方案列表**，突出方案序号、线路编号、直达 / 换乘状态、上下车区间、首末段接驳与一键进入地图；
+  - 下方结构框已改成与地图同宽，输入区 / 偏好区 / 动作区不再缩在左半边；
+  - 路线页继续保持“地图在上、输入在下、按钮收口”的布局，不再回到旧卡片模板。
+- 地图交互补齐右键链路：
+  - 地图上右键会直接弹出快捷菜单；
+  - 可一键执行 `设为起点`、`设为终点`、`交换起终点`；
+  - 菜单动作会把最近匹配站点直接回写到输入框与提示中。
+- 资源版本已统一升级到 `20260316-613`：`front/index.html`、`shell-page.js`、`list.html`、`route-list-page.js`、`transit-business-ui.css` 已同步更新，避免继续命中旧缓存。
+- 已清理前台 routes / shell / accessibility 相关遗留 `.bak.*` 文件，避免这轮路线页迭代继续堆积旧备份混杂在源码目录中。
+- 验证：
+  - `node --check src/main/resources/front/front/js/pages/route-list-page.js`
+  - `node --check src/main/resources/front/front/js/pages/shell-page.js`
+  - `bash scripts/remote-dev-check.sh`
+  - `bash scripts/remote-dev-build.sh`
+  - `bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh && bash scripts/remote-dev-status.sh`
+  - `ui-automation/route_v613_smoke.js`：已确认 iframe 命中 `./pages/gongjiaoluxian/list.html?v=20260316-613`，地图右键菜单可完成 `设为起点 / 设为终点 / 交换起终点`，且 `东山署前路总站 -> 珠江医院` 能生成 `6` 条候选方案。
+- 验收截图：`runtime/remote-dev/route-v613-map-panel.png`、`runtime/remote-dev/route-v613-solution-list.png`。
+- 当前开发实例 PID=`166233`；本轮仅重启 `8134` 开发实例，`8133` 生产实例保持不动。
+- 对应提交：`TBD`
+
+## 2026-03-16 · CHG-20260316-612 · routes 导航强制切新版 + 地图选点可直接设起终点
+- 修复“从别的页面切换到无障碍路线规划仍是旧版，刷新后才变新版”的问题：壳层点击 routes 时不再只做 iframe 内部切页，而是直接跳到 `index.html?route=routes&rt=...` 强制刷新当前壳层并命中最新版 routes 页面。
+- 壳层 `resolveRouteByUrl` 已补齐对 `list.html / map.html / accessibility/settings.html` 等**无版本 URL** 的识别，避免导航栏传入原始相对路径时仍被误判为当前页。
+- 路线页地图选点交互已去掉“手动切换当前设置的是起点还是终点”的方式：
+  - 点击地图后会先生成一个临时点位与最近站点候选；
+  - 然后可以直接点“设为起点”或“设为终点”；
+  - 同时新增“交换起终点”按钮；
+  - 设定后会自动把匹配结果回写到下方输入框与对应提示中。
+- 输入框下方提示也已收短为“站点名 + 距离”，避免继续出现冗长解释文案。
+- 本轮仍保持地图优先布局与高德优先底图；缓存版本维持在 `20260316-612`。
+- 验证：`node -c src/main/resources/front/front/js/pages/route-list-page.js`、`node -c src/main/resources/front/front/js/pages/shell-page.js`、`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、`bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh && bash scripts/remote-dev-status.sh`；Playwright 烟测已确认：
+  - 点击壳层“无障碍路线规划”后，URL 变为 `?route=routes&rt=...`，iframe 命中 `list.html?v=20260316-612`；
+  - 地图点位可依次设为 `农讲所 -> 江南西`，并可通过“交换起终点”成功互换。
+- 说明：本轮仅重启 `8134` 开发实例，`8133` 生产实例保持不动。
+- 对应提交：`TBD`
+
+## 2026-03-16 · CHG-20260316-611 · 路线页改为地图优先布局并默认展示广州地图
+- 按“页面重点应该是地图、输入框放到地图下方、说明文案尽量删掉”的反馈，重做路线页首屏：
+  - 地图改为页面顶部主视觉，默认直接展示广州视角；
+  - 出发地 / 目的地输入框收口到地图下方；
+  - 服务画像、推荐偏好与主操作按钮继续保留，但整体改成更紧凑的单屏布局。
+- 页面说明文案已显著精简：移除原先大段“路线查询说明 / 地点辅助地图说明 / 当前正在设置...”等显眼文案，只保留最小必要状态词，降低 AI 味。
+- 页内选点地图改为**高德优先、Leaflet 兜底**：优先使用已配置的高德地图底图，避免默认出现灰底空白地图；仍保留点击地图选点、输入地点自动定位、站点候选确认等能力。
+- 同步提升缓存版本到 `20260316-611`：`front/index.html`、`shell-page.js`、`list.html`、`route-list-page.js`、`transit-business-ui.css` 已统一升级，避免浏览器继续命中旧布局。
+- 验证：`node -c src/main/resources/front/front/js/pages/route-list-page.js`、`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、备份 jar 后执行 `bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh && bash scripts/remote-dev-status.sh`；Playwright 烟测确认 `engineType=amap`、默认中心为广州 `113.2644,23.1291`，且壳层 `iframe src=./pages/gongjiaoluxian/list.html?v=20260316-611`。
+- 验收截图：`runtime/remote-dev/route-page-compact-20260316.png`。
+- 说明：本轮仅重启 `8134` 开发实例，`8133` 生产实例保持不动。
+- 对应提交：`TBD`
+
+## 2026-03-16 · CHG-20260316-610 · 路线页地图选点改为页内面板并接入地点搜索联动
+- 把路线页 `地图选出发地 / 地图选目的地` 从 `layui.layer` 弹层改为**页内常驻地图面板**：避免壳层 iframe 内点击时弹窗定位错位，也让选点流程更接近普通地图软件。
+- 路线页新增“地点辅助地图”面板：支持在页面内直接切换当前正在设置的字段、查看最近站点候选、确认当前点位，不再依赖浮层关闭 / 打开。
+- 输入地点名后，页内地图会在失焦时自动识别并把视角移动到该区域；同时保留“定位当前输入”按钮，方便演示时主动展示“地点名 → 地图区域 → 最近站点”的联动。
+- 站点候选按钮与确认按钮已保留在页内面板中，当前输入框仍可接受地标 / 医院 / 地铁口名称，确认后再将匹配站点写回规划链路。
+- 验证：`bash scripts/remote-dev-check.sh`、`bash scripts/remote-dev-build.sh`、备份 `target/springbootmf383-0.0.1-SNAPSHOT.jar` 后执行 `bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh && bash scripts/remote-dev-status.sh`；Playwright 烟测确认 `layerCount=0`，并生成截图 `runtime/remote-dev/route-inline-picker-20260316.png`。
+- 说明：本轮仅重启 `8134` 开发实例，`8133` 生产实例保持不动。
+- 对应提交：`TBD`
+
+## 2026-03-16 · CHG-20260316-609 · 地点名/地图选点接入完整出行方案，地图页承接首末段与换乘信息
+- 根据最新演示反馈，继续把前台路线页从“按线路看详情”收口为“按出发地/目的地看完整出行方案”：
+  - 路线页现在支持直接输入地点名（如医院、地铁口、商圈）并自动匹配最近站点；
+  - 同步新增“地图选出发地 / 地图选目的地”入口，点击地图即可把点位匹配到最近公交站；
+  - 推荐结果会把 `startSelection / endSelection` 一并写入 `localStorage.routeMapSelection`，供地图页承接完整方案。
+- 路线卡片层同步强调完整方案而非单纯线路：
+  - “开始推荐”升级为“生成完整方案”；
+  - 推荐结果说明改为“首段接驳 + 乘车/换乘 + 到站后路线”的完整表述；
+  - 首末段步行/接驳距离会根据地点匹配结果覆盖到方案分段文案里。
+- 地图页同步承接整条链路：
+  - 侧栏标题改为“出行方案信息”；
+  - 推荐结果进入地图后，会展示出发位置、目的位置、上/下车点、换乘信息、首末段接驳说明与站点无障碍提示；
+  - 地图上新增起点/终点标记，并补画首段与末段的虚线接驳提示，避免只看见公交主线。
+- 验证：
+  - `bash scripts/remote-dev-check.sh` → `bash scripts/remote-dev-build.sh` 通过；
+  - 已重启 `8134` 开发实例，当前 PID=`140602`，`8133` 生产实例未触碰；
+  - Playwright 烟测（地点名输入 `中山大学附属第一医院 → 珠江医院门诊`）已确认：路线页能生成完整方案摘要，点击首条结果后会直达地图页，且侧栏出现“出发接驳 / 上车站无障碍 / 乘车与换乘 / 到站后路线”等内容。
+
+## 2026-03-16 · CHG-20260316-608 · 壳层 routes 路由缓存强制刷新（修复仍偶现旧表单）
+- 根据外部浏览器实测，虽然开发服务器上的 `front/pages/gongjiaoluxian/list.html` 已经返回“我的出发地 / 我的目的地”新表单，但 `front/index.html?route=routes` 在部分客户端上仍可能继续命中旧 iframe 缓存，表现为地址正确但页面仍显示 `路线名称 / 起点站名 / 途径站点 / 终点站名` 老表单。
+- 根因定位：
+  - `front/js/pages/shell-page.js` 中的 `SHELL_ROUTE_MAP.routes` 仍使用不带版本号的 `./pages/gongjiaoluxian/list.html`
+  - `front/index.html` 对 `shell-page.js` 的引用也不带版本号
+  - 因而壳层与 iframe 都可能继续复用旧缓存资源
+- 本轮修复：
+  - `front/index.html` 改为引用 `shell-page.js?v=20260316-608`
+  - `shell-page.js` 中的 `home / routes / map / announcements / messages / resources / accessibility / center` 路由统一追加版本号
+  - `DEFAULT_IFRAME_URL` 与 `center` 动态路由也同步版本化，避免仅部分页面刷新
+- 结果：`?route=routes` 现在会把 iframe 明确切到 `./pages/gongjiaoluxian/list.html?v=20260316-608`，不再复用旧 `list.html`
+- 验证：
+  - `curl http://127.0.0.1:8134/.../front/index.html?route=routes` 已确认命中 `shell-page.js?v=20260316-608`
+  - Playwright 访问外网地址 `http://8.134.206.52:8134/springbootmf383/front/index.html?route=routes`，已确认 iframe src 为 `./pages/gongjiaoluxian/list.html?v=20260316-608`
+  - 同一次验证中筛选区标签已显示为 `我的出发地 / 我的目的地 / 服务画像 / 推荐偏好`
+- 当前开发实例重启后 PID：`129040`；本轮仅操作 `8134` 开发实例，未触碰 `8133`。
+
+## 2026-03-16 · CHG-20260316-607 · 路线卡片展示语义收口（区间导向替代旧详情模板）
+- 根据最新演示反馈，继续对 `8134` 前台路线页做显示层收口：虽然表单已改为“我的出发地 / 我的目的地”，但默认路线卡片仍容易让人联想到旧模板的“线路名称 / 起点站 / 终点站”详情页样式。
+- 路线卡片现已改为更贴近“路线入口”的区间导向表达：
+  - 顶部突出 `线路编号 + 类型（演示线路 / 推荐结果 / 换乘方案）`
+  - 主标题突出 `区间：A → B`
+  - 辅助文案改为“这条线路覆盖的出行区间 / 当前推荐的上车下车区间”
+  - 把 `途经站点` 改成“沿线关键点”胶囊列表，避免继续像原模板字段表
+- 普通列表模式下，卡片现在更像“先看这条线覆盖哪里，再决定是否进地图”；推荐模式下，卡片继续承载推荐分、分段结果与风险提醒，但主视觉仍保持“进地图导航”的主导向。
+- 同步增加列表页静态资源版本号：
+  - `transit-business-ui.css?v=20260316-607`
+  - `route-list-page.js?v=20260316-607`
+  用于降低浏览器继续混用旧样式 / 旧脚本缓存的概率。
+- 低冲击验证：
+  - `node --check src/main/resources/front/front/js/pages/route-list-page.js`
+  - `bash scripts/remote-dev-build.sh`
+  - `bash scripts/remote-dev-stop.sh && bash scripts/remote-dev-start.sh`
+  - Playwright 抽样确认：筛选区标签已显示为 `我的出发地 / 我的目的地 / 服务画像 / 推荐偏好`，首张卡片主标题已显示为 `东山署前路总站 → 芳村花园南门总站`
+- 当前开发实例重启后 PID：`127229`；本轮仅操作 `8134` 开发实例，未触碰 `8133`。
+
+## 2026-03-16 · CHG-20260316-606 · 前台路线查询主链路改造（出发地/目的地 → 推荐结果 → 地图导航）
+- 远端开发服务器 `8.134.206.52:8134` 已完成一轮前台主交互收口，重点修正“路线查询语义不实用、查询结果与地图脱节、说明性文案过重”的问题。
+- 路线页 `list.html + route-list-page.js` 已改为更贴近真实出行习惯的主表单：用户直接输入“**我的出发地 / 我的目的地**”，再选择画像与偏好，不再围绕“线路起点站 / 终点站 / 途经站点”做模板式筛选。
+- 路线页主文案已删去大段“数据治理说明 / 数据较少提示 / 大按钮说明 chip”等 AI 味较重的展示内容，仅保留简洁状态提示；推荐结果卡片也删去了“置信度未知 / 数据源未知 / 更新未知 / 通用 / 智能推荐”等无意义兜底字段。
+- 推荐结果卡片的主操作已从“进入详情页”改为“**进入地图导航**”；保留 `查看详情` 作为次级按钮，避免用户在主流程里多绕一步。
+- 路线结果与地图页的耦合已加强：路线页会把当前候选方案写入 `localStorage.routeMapSelection`，地图页优先读取该选择并直接展开当前路线。
+- 地图页已支持两类来源：
+  - 普通真实线路：继续按 `route.id` 拉取后端详情与站点；
+  - `id=null` 的一次换乘合成方案：直接使用推荐结果中的 `zhandianzuobiao / luxianguiji` 在地图上绘制，不再卡死在“无法打开地图”。
+- 点击推荐结果进入地图后，壳层地址栏会同步切换到 `?route=map`，修复了“上方仍停留在无障碍路线规划页”的问题。
+- 地图页对合成换乘方案已做能力降级提示：允许查看轨迹、站点与路径规划，但会明确提示“暂不支持实时车辆 / ETA”，避免误导。
+- `accessibility.js` 已补充短时间同文案去重：`SpeechService.speak` 与 `AriaService.announce` 都增加了去重窗口，用于缓解按钮点击偶发双语音播报。
+- 无障碍设置页已去掉“一键场景预设”下方的副文案与多余解释句，预设按钮仅保留主标题，提升可辨认性。
+- 低冲击验证：
+  - 远端静态资源语法检查：`node --check src/main/resources/front/front/js/pages/route-list-page.js`、`node --check src/main/resources/front/front/js/accessibility.js`
+  - 地图页内联脚本语法检查：提取 `map.html` 内联脚本后执行 `node --check`
+  - 构建发布：`bash scripts/remote-dev-check.sh` → `bash scripts/remote-dev-build.sh` → `bash scripts/remote-dev-stop.sh` → `bash scripts/remote-dev-start.sh`
+  - 浏览器烟测：Playwright 走通 `路线页填写 东山署前路总站 → 珠江医院 → 点击“进入地图导航” → 壳层 URL 切到 ?route=map → 地图页自动载入换乘方案`
+- 当前开发实例重启后 PID：`124760`；本轮仅操作 `8134` 开发实例，未触碰 `8133` 生产实例。
+
+## 2026-03-16 · CHG-20260316-605 · 演示路线网络扩充与换乘方案启用
+- 远端开发服务器 `8.134.206.52:8134` 的 H2 演示库已从 `3` 条路线扩充到 `12` 条路线，围绕 `海珠广场 / 文化公园 / 珠江医院 / 纸厂地铁燕岗站` 形成可换乘走廊。
+- 新增演示路线：`16路`、`64路`、`82路`、`106路`、`183路`、`244路`、`541路`、`B3A线`、`旅游1线`。
+- 结构化无障碍字段覆盖率已校准为 `9/12 = 75.0%`：保留 `82路`、`244路`、`B3A线` 作为“待补采样本”，便于课堂演示过滤逻辑与数据边界。
+- 路线规划逻辑已补充“一次换乘组合方案”生成：对类似 `东山署前路总站 → 珠江医院`、`中山图书馆 → 南石西地铁棣园站总站` 的查询，可返回带中转节点的候选路线。
+- 前台路线列表提示文案已同步改为 `12 条演示路线 / 老城换乘走廊` 表述，避免继续显示“仅 1路、3路、31路”旧口径。
+- 低冲击验证：
+  - `bash scripts/remote-dev-check.sh`
+  - `bash scripts/remote-dev-reset-demo-db.sh`
+  - H2 验证：`route_count=12`、`covered_routes=9`、`covered_pct=75.0`
+  - 接口抽样：`/route/plan?startStation=东山署前路总站&endStation=珠江医院&profileType=WHEELCHAIR&preferenceType=ACCESSIBLE` 已返回带换乘候选结果。
+- 说明：本轮仅操作 `8134` 开发实例，未触碰 `8133` 生产实例。
+
+## 2026-03-15 · CHG-20260315-604 · 新增创新主线演示讲稿
+- 新增 `docs/DEMO_INNOVATION_SCRIPT.md`，用于支撑项目展示时的口头讲解。
+- 文档按“点击什么地方 → 讲什么内容 → 创新点怎么落 → 哪些地方一笔带过”组织，便于演示时直接照着讲。
+- 讲解主线聚焦 4 个创新点：目标用户与试点范围冻结、画像驱动推荐、路线分段建模、风险/可信度表达。
+- 本轮仅为本地文档补充，不影响开发服务器与服务实例。
+
+## 2026-03-13 · CHG-20260313-603 · 本地镜像规则固化（README + docs 稀疏检出）
+- 明确本地 `/root/dev/bus-route-query-system` 的长期形态：仅保留 `README.md + docs/` 的稀疏检出。
+- 明确执行边界：项目改动只在开发服务器 `root@8.134.206.52:/root/dev/bus-route-query-system` 执行，本地只回写文档。
+- 本条为本地文档治理，不影响 `8133` / `8134` 服务实例。
+
 ## 2026-03-11 · CHG-20260311-059 · 后台入口精简重组（高频工作台 + 低频下拉）与遗留暴露收口
 - 按“后台只保留高频功能、低频功能下沉到下拉菜单，并清理遗留入口文案与无效模块暴露”的要求，对后台壳层做了结构级收口：
   - 工作台主入口改为仅保留高频模块：`公交路线`、`出行公告`、`资源链接`、`留言建议`、`用户管理`；

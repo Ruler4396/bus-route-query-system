@@ -94,8 +94,8 @@
                 <li>演示账号：<strong>demo_user</strong> / <strong>demo123</strong></li>
             </ul>
             <div class="login-note-card">
-                <div class="login-note-title">演示登录提示</div>
-                <p>公共场所请勿勾选自动登录；演示时建议登录后返回首页，继续使用 Alt + D 自动巡检全站流程。</p>
+                <div class="login-note-title">登录提示</div>
+                <p>公共场所请勿勾选自动登录；建议仅在个人设备保存登录状态，提升账号安全性。</p>
             </div>
         </section>
         <form id="loginForm" class="layui-form login-form">
@@ -136,6 +136,9 @@
             <button class="layui-btn layui-btn-fluid layui-btn-danger btn-submit" lay-submit lay-filter="login">登录并进入系统</button>
             <div class="login-action-row">
                 <button type="button" class="layui-btn login-guest-btn" onclick="browseAsGuest()">先浏览公共功能</button>
+            </div>
+            <div class="login-action-row">
+                <a id="adminConsoleEntry" class="layui-btn login-admin-btn" href="javascript:void(0)" target="_blank" rel="noopener">管理员后台入口</a>
             </div>
             <p class="txt"><a style="color: inherit;font-size: inherit;" v-if="item.hasFrontRegister=='是'" v-for="(item,index) in menu" v-bind:key="index" :href="'javascript:registerClick(\''+item.tableName+'\')'">注册{{item.roleName.replace('注册','')}}</a></p>
         </form>
@@ -199,6 +202,11 @@
             var form = layui.form;
             var http = layui.http;
             var jquery = layui.jquery;
+
+            var adminConsoleEntry = document.getElementById('adminConsoleEntry');
+            if (adminConsoleEntry) {
+                adminConsoleEntry.href = (window.adminurl || (appBaseUrl + 'console/index.html'));
+            }
 		
 		function randomString() {
 			var len = 4;

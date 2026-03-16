@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理员后台入口</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f5f7fa; color: #1f2937; }
+    .card { width: min(92vw, 520px); background: #fff; border-radius: 16px; box-shadow: 0 14px 36px rgba(15, 23, 42, .12); padding: 24px; }
+    h1 { margin: 0 0 10px; font-size: 22px; }
+    p { margin: 0 0 14px; line-height: 1.7; }
+    a { display: inline-block; padding: 10px 16px; border-radius: 10px; background: #2563eb; color: #fff; text-decoration: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>管理员后台入口</h1>
+    <p>正在跳转到独立后台地址，如未自动跳转，请点击下方按钮。</p>
+    <a id="adminLoginLink" href="#" target="_self" rel="noopener">进入管理员后台</a>
+  </div>
+  <script>
+    (function () {
+      function resolveContextPath() {
+        var pathname = window.location.pathname || '';
+        var marker = '/console/';
+        var markerIdx = pathname.indexOf(marker);
+        if (markerIdx > 0) {
+          return pathname.slice(0, markerIdx);
+        }
+        var parts = pathname.split('/').filter(Boolean);
+        if (parts.length > 0) {
+          return '/' + parts[0];
+        }
+        return '/springbootmf383';
+      }
+      var target = window.location.origin + resolveContextPath() + '/admin/dist/index.html#/login';
+      var link = document.getElementById('adminLoginLink');
+      if (link) {
+        link.href = target;
+      }
+      setTimeout(function () {
+        window.location.replace(target);
+      }, 120);
+    })();
+  </script>
+</body>
+</html>

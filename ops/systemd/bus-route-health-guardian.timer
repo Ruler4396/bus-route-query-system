@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Bus Route Demo Host Health Guardian every minute
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+AccuracySec=15s
+Persistent=true
+Unit=bus-route-health-guardian.service
+
+[Install]
+WantedBy=timers.target

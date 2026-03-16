@@ -1,13 +1,12 @@
 package com.service.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.baomidou.mybatisplus.mapper.EntityWrapper;
-import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.entity.GongjiaoluxianEntity;
 import com.entity.YonghuEntity;
 import com.entity.ZhandianWuzhangaiEntity;
-import com.service.GongjiaoluxianService;
+import com.service.RouteCandidateQueryService;
 import com.service.RoutePlanningService;
+import com.service.RouteStationMatchService;
 import com.service.YonghuService;
 import com.service.ZhandianWuzhangaiService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,13 +23,16 @@ import java.util.*;
 public class RoutePlanningServiceImpl implements RoutePlanningService {
 
     @Autowired
-    private GongjiaoluxianService gongjiaoluxianService;
-
-    @Autowired
     private ZhandianWuzhangaiService zhandianWuzhangaiService;
 
     @Autowired
     private YonghuService yonghuService;
+
+    @Autowired
+    private RouteStationMatchService routeStationMatchService;
+
+    @Autowired
+    private RouteCandidateQueryService routeCandidateQueryService;
 
     private Map<String, Object> governanceMetaCache;
 
@@ -68,7 +70,7 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
             resolvedPreferenceType = determineBestStrategy(effectiveProfile);
         }
 
-        List<GongjiaoluxianEntity> routes = getAllPossibleRoutes(startStation, endStation);
+        List<GongjiaoluxianEntity> routes = routeCandidateQueryService.getAllPossibleRoutes(startStation, endStation);
         List<RouteResult> results = new ArrayList<>();
         for (GongjiaoluxianEntity route : routes) {
             RouteResult result = new RouteResult();
@@ -147,7 +149,7 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
     public double calculateAccessibilityScore(GongjiaoluxianEntity route, YonghuEntity userProfile) {
         RouteScoreContext context = new RouteScoreContext(route, userProfile);
         Map<String, ScoreRule> ruleRegistry = buildRuleRegistry();
-        Map<String, Double> weightMap = buildRuleWeightMap();
+        Map<String, Double> weightMap = buildRuleWeightMap(userProfile);
         double weightedScore = 0.0;
         double totalWeight = 0.0;
         for (String ruleKey : resolveRulePipeline()) {
@@ -169,15 +171,7 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
 
     @Override
     public List<GongjiaoluxianEntity> getAllPossibleRoutes(String startStation, String endStation) {
-        Wrapper<GongjiaoluxianEntity> wrapper = new EntityWrapper<>();
-        wrapper.like("qidianzhanming", startStation)
-                .or()
-                .like("zhongdianzhanming", endStation)
-                .or()
-                .like("tujingzhandian", startStation)
-                .or()
-                .like("tujingzhandian", endStation);
-        return gongjiaoluxianService.selectList(wrapper);
+        return routeCandidateQueryService.getAllPossibleRoutes(startStation, endStation);
     }
 
     @Override
@@ -201,7 +195,7 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
     public Map<String, Object> getRuleEngineMeta() {
         Map<String, Object> meta = new LinkedHashMap<>();
         meta.put("pipeline", resolveRulePipeline());
-        meta.put("weights", buildRuleWeightMap());
+        meta.put("weights", buildRuleWeightMap(null));
         meta.put("neutralScore", DEFAULT_NEUTRAL_SCORE);
         meta.put("supportedProfiles", Arrays.asList(
                 buildProfileMeta(PROFILE_WHEELCHAIR),
@@ -393,19 +387,21 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
         double score = 20.0;
         switch (userProfile.getZhangaijibie()) {
             case 1: // 低视力 / 视障
-                if (route.getYuyintongbao() != null && route.getYuyintongbao() == 1) score += 35.0;
-                if (route.getMangdaozhichi() != null && route.getMangdaozhichi() == 1) score += 30.0;
-                if (route.getDitezhichi() != null && route.getDitezhichi() == 1) score += 10.0;
-                if (containsKeyword(route.getWuzhangaisheshi(), "语音", "盲道", "引导")) score += 10.0;
+                if (route.getMangdaozhichi() != null && route.getMangdaozhichi() == 1) score += 36.0;
+                if (route.getYuyintongbao() != null && route.getYuyintongbao() == 1) score += 28.0;
+                if (containsKeyword(route.getWuzhangaisheshi(), "盲道", "引导", "语音", "高对比")) score += 14.0;
+                if (route.getDitezhichi() != null && route.getDitezhichi() == 1) score += 8.0;
+                if (userProfile.getGaoduibidu() != null && userProfile.getGaoduibidu() == 1) score += 6.0;
                 break;
             case 2: // 听障
                 if (containsKeyword(route.getWuzhangaisheshi(), "电子显示屏", "字幕", "文字提示", "显示")) score += 40.0;
                 score += 15.0;
                 break;
             case 3: // 轮椅 / 行动不便
-                if (containsKeyword(route.getWuzhangaisheshi(), "轮椅", "坡道", "低地板", "无障碍")) score += 35.0;
-                if (route.getDiantifacilities() != null && !route.getDiantifacilities().trim().isEmpty()) score += 25.0;
+                if (containsKeyword(route.getWuzhangaisheshi(), "轮椅", "坡道", "低地板", "无障碍", "升降台")) score += 32.0;
+                if (route.getDiantifacilities() != null && !route.getDiantifacilities().trim().isEmpty()) score += 28.0;
                 if (route.getWuzhangaijibie() != null && route.getWuzhangaijibie() <= 1) score += 10.0;
+                if (containsKeyword(route.getXunlianzhuankuan(), "换乘", "接驳", "电梯", "坡道")) score += 10.0;
                 break;
             case 4: // 多重障碍
                 if (route.getWuzhangaijibie() != null && route.getWuzhangaijibie() <= 1) score += 35.0;
@@ -619,21 +615,21 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
     }
 
     private TravelPath resolveTravelPath(GongjiaoluxianEntity route, String startStation, String endStation) {
-        List<String> orderedStations = buildOrderedStations(route);
+        List<String> orderedStations = routeStationMatchService.buildOrderedStations(route);
         TravelPath path = new TravelPath();
         if (orderedStations.isEmpty()) {
             path.boardingStationName = route.getQidianzhanming();
             path.alightingStationName = route.getZhongdianzhanming();
             path.travelStationCount = 1;
         } else {
-            path.boardingStationName = findBestMatchingStationName(route, startStation, true);
-            path.alightingStationName = findBestMatchingStationName(route, endStation, false);
+            path.boardingStationName = routeStationMatchService.findBestMatchingStationName(route, startStation, true);
+            path.alightingStationName = routeStationMatchService.findBestMatchingStationName(route, endStation, false);
             int boardingIndex = Math.max(0, orderedStations.indexOf(path.boardingStationName));
             int alightingIndex = Math.max(boardingIndex, orderedStations.indexOf(path.alightingStationName));
             path.travelStationCount = Math.max(1, alightingIndex - boardingIndex + 1);
         }
-        path.boardingMatchType = resolveMatchType(startStation, path.boardingStationName, orderedStations, true);
-        path.alightingMatchType = resolveMatchType(endStation, path.alightingStationName, orderedStations, false);
+        path.boardingMatchType = routeStationMatchService.resolveMatchType(startStation, path.boardingStationName, orderedStations, true);
+        path.alightingMatchType = routeStationMatchService.resolveMatchType(endStation, path.alightingStationName, orderedStations, false);
         path.transferRequired = false;
         if (route.getDiantifacilities() != null && route.getDiantifacilities().contains("换乘")) {
             path.transferRequired = true;
@@ -642,44 +638,6 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
             path.transferRequired = true;
         }
         return path;
-    }
-
-    private List<String> buildOrderedStations(GongjiaoluxianEntity route) {
-        List<String> ordered = new ArrayList<>();
-        appendStationIfAbsent(ordered, route.getQidianzhanming());
-        if (route.getTujingzhandian() != null && !route.getTujingzhandian().trim().isEmpty()) {
-            for (String raw : route.getTujingzhandian().split(",")) {
-                appendStationIfAbsent(ordered, raw);
-            }
-        }
-        appendStationIfAbsent(ordered, route.getZhongdianzhanming());
-        return ordered;
-    }
-
-    private void appendStationIfAbsent(List<String> target, String stationName) {
-        String safe = stationName == null ? "" : stationName.trim();
-        if (!safe.isEmpty() && !target.contains(safe)) {
-            target.add(safe);
-        }
-    }
-
-    private String resolveMatchType(String keyword, String primaryStation, List<String> stations, boolean startSide) {
-        String safeKeyword = keyword == null ? "" : keyword.trim();
-        if (safeKeyword.isEmpty()) {
-            return "UNKNOWN";
-        }
-        if (primaryStation != null && (primaryStation.equalsIgnoreCase(safeKeyword) || primaryStation.contains(safeKeyword) || safeKeyword.contains(primaryStation))) {
-            return primaryStation.equalsIgnoreCase(safeKeyword) ? "EXACT" : "FUZZY";
-        }
-        for (String station : stations) {
-            if (station.contains(safeKeyword) || safeKeyword.contains(station)) {
-                return station.equalsIgnoreCase(safeKeyword) ? "EXACT" : "FUZZY";
-            }
-        }
-        if (startSide) {
-            return "HEURISTIC_START";
-        }
-        return "HEURISTIC_END";
     }
 
     private List<Map<String, Object>> buildRouteSegments(GongjiaoluxianEntity route, TravelPath path, String profileType, RouteAssessment assessment) {
@@ -766,15 +724,26 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
         segment.put("status", status);
         segment.put("statusText", statusText);
         Map<String, Object> stationSample = findStationPilotSample(stationName);
-        String description = "无障碍等级：" + getAccessibilityLevelText(station.getWuzhangaijibie()) + "；升降台/坡道：" + (hasLift ? "有" : "未知/无") + "；盲道：" + (hasBlind ? "有" : "未知/无");
+        List<String> descriptionParts = new ArrayList<>();
+        descriptionParts.add("无障碍等级：" + getAccessibilityLevelText(station.getWuzhangaijibie()));
+        descriptionParts.add("升降台/坡道：" + (hasLift ? "有" : "未知/无"));
+        descriptionParts.add("盲道：" + (hasBlind ? "有" : "未知/无"));
+        descriptionParts.add("候车座椅：" + ((station.getZuoweishu() != null && station.getZuoweishu() > 0) ? (station.getZuoweishu() + " 个") : "待补充"));
+        descriptionParts.add("无障碍厕所：" + booleanFeatureText(station.getCesuo(), "有", "无/待补充"));
+        descriptionParts.add("临停接驳：" + booleanFeatureText(station.getTingchechang(), "支持", "无/待补充"));
         if (stationSample != null) {
-            description += "；缘石坡道：" + (Boolean.TRUE.equals(stationSample.get("curbRamp")) ? "有" : "待核对/无");
-            description += "；上落车可达：" + (Boolean.TRUE.equals(stationSample.get("boardingAccessible")) ? "已核验" : "待核对");
+            descriptionParts.add("缘石坡道：" + (Boolean.TRUE.equals(stationSample.get("curbRamp")) ? "有" : "待核对/无"));
+            descriptionParts.add("上落车可达：" + (Boolean.TRUE.equals(stationSample.get("boardingAccessible")) ? "已核验" : "待核对"));
+            if (stationSample.get("notes") != null) {
+                descriptionParts.add("试点说明：" + String.valueOf(stationSample.get("notes")));
+            }
             segment.put("curbRamp", stationSample.get("curbRamp"));
             segment.put("boardingAccessible", stationSample.get("boardingAccessible"));
             segment.put("pilotVerifiedLevel", stationSample.get("verifiedLevel"));
+        } else if (station.getBeizhu() != null && !station.getBeizhu().trim().isEmpty()) {
+            descriptionParts.add("补充说明：" + station.getBeizhu().trim());
         }
-        segment.put("description", description);
+        segment.put("description", String.join("；", descriptionParts));
         segment.put("seatCount", station.getZuoweishu());
         segment.put("accessibleToilet", station.getCesuo());
         segment.put("parking", station.getTingchechang());
@@ -789,7 +758,18 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
         segment.put("status", assessment.recommendable ? (assessment.degraded ? "CAUTION" : "READY") : "RISK");
         segment.put("statusText", assessment.recommendable ? (assessment.degraded ? "可乘坐但需谨慎" : "可优先乘坐") : "不建议直接依赖");
         segment.put("stationSpan", path.travelStationCount);
-        segment.put("description", "乘坐线路：" + route.getLuxianmingcheng() + "；预计覆盖站数：" + path.travelStationCount + "；语音：" + booleanFeatureText(route.getYuyintongbao(), "支持", "未知/无") + "；盲道：" + booleanFeatureText(route.getMangdaozhichi(), "支持", "未知/无"));
+        List<String> rideDescription = new ArrayList<>();
+        rideDescription.add("乘坐线路：" + route.getLuxianmingcheng());
+        rideDescription.add("预计覆盖站数：" + path.travelStationCount);
+        rideDescription.add("语音：" + booleanFeatureText(route.getYuyintongbao(), "支持", "未知/无"));
+        rideDescription.add("盲道：" + booleanFeatureText(route.getMangdaozhichi(), "支持", "未知/无"));
+        if (route.getWuzhangaisheshi() != null && !route.getWuzhangaisheshi().trim().isEmpty()) {
+            rideDescription.add("无障碍设施：" + route.getWuzhangaisheshi().trim());
+        }
+        if (route.getXunlianzhuankuan() != null && !route.getXunlianzhuankuan().trim().isEmpty()) {
+            rideDescription.add("站内/车内转向：" + route.getXunlianzhuankuan().trim());
+        }
+        segment.put("description", String.join("；", rideDescription));
         segment.put("dataSourceText", resolveDataSourceText(route));
         return segment;
     }
@@ -818,32 +798,6 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
         segment.put("description", description);
         segment.put("dataSourceText", transferSample != null ? PILOT_SOURCE_MANUAL : (hasTransferFacility ? "路线换乘设施字段" : "潜在换乘节点启发式识别"));
         return segment;
-    }
-
-    private String findBestMatchingStationName(GongjiaoluxianEntity route, String keyword, boolean startSide) {
-        List<String> ordered = buildOrderedStations(route);
-        if (ordered.isEmpty()) {
-            return startSide ? route.getQidianzhanming() : route.getZhongdianzhanming();
-        }
-        String safeKeyword = keyword == null ? "" : keyword.trim();
-        if (safeKeyword.isEmpty()) {
-            return startSide ? ordered.get(0) : ordered.get(ordered.size() - 1);
-        }
-        if (startSide) {
-            for (String station : ordered) {
-                if (station.contains(safeKeyword) || safeKeyword.contains(station)) {
-                    return station;
-                }
-            }
-            return ordered.get(0);
-        }
-        for (int i = ordered.size() - 1; i >= 0; i--) {
-            String station = ordered.get(i);
-            if (station.contains(safeKeyword) || safeKeyword.contains(station)) {
-                return station;
-            }
-        }
-        return ordered.get(ordered.size() - 1);
     }
 
     private Map<String, Object> getGovernanceMeta() {
@@ -951,11 +905,34 @@ public class RoutePlanningServiceImpl implements RoutePlanningService {
         return registry;
     }
 
-    private Map<String, Double> buildRuleWeightMap() {
+    private Map<String, Double> buildRuleWeightMap(YonghuEntity userProfile) {
+        String resolvedProfileType = resolveProfileType(userProfile, "AUTO");
+        double routeWeight = routeLevelWeight;
+        double stationWeightValue = stationWeight;
+        double userMatchWeightValue = userMatchWeight;
+
+        if (PROFILE_WHEELCHAIR.equals(resolvedProfileType)) {
+            routeWeight = 0.22;
+            stationWeightValue = 0.34;
+            userMatchWeightValue = 0.44;
+        } else if (PROFILE_LOW_VISION.equals(resolvedProfileType)) {
+            routeWeight = 0.18;
+            stationWeightValue = 0.37;
+            userMatchWeightValue = 0.45;
+        } else if (PROFILE_HEARING_TEXT.equals(resolvedProfileType)) {
+            routeWeight = 0.24;
+            stationWeightValue = 0.22;
+            userMatchWeightValue = 0.54;
+        } else if (PROFILE_MULTI.equals(resolvedProfileType)) {
+            routeWeight = 0.20;
+            stationWeightValue = 0.35;
+            userMatchWeightValue = 0.45;
+        }
+
         Map<String, Double> weights = new LinkedHashMap<>();
-        weights.put(RULE_ROUTE_LEVEL, clampWeight(routeLevelWeight));
-        weights.put(RULE_STATION, clampWeight(stationWeight));
-        weights.put(RULE_USER_MATCH, clampWeight(userMatchWeight));
+        weights.put(RULE_ROUTE_LEVEL, clampWeight(routeWeight));
+        weights.put(RULE_STATION, clampWeight(stationWeightValue));
+        weights.put(RULE_USER_MATCH, clampWeight(userMatchWeightValue));
         return weights;
     }
 
