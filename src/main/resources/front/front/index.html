@@ -43,7 +43,7 @@
 					<div class="nav-primary-group" aria-label="核心出行任务">
 						<div class="nav-group-title">核心出行任务</div>
 						<ul>
-							<li :class="{current: activeNavUrl === './pages/home/home.html'}">
+							<li :class="{current: buildNavHref('./pages/home/home.html').indexOf('route=home') !== -1 && activeNavUrl && activeNavUrl.indexOf('./pages/home/home.html') === 0}">
 								<a :href="buildNavHref('./pages/home/home.html')" @click.prevent="openNav('./pages/home/home.html', $event)">首页总览</a>
 							</li>
 							<li v-for="(item,index) in primaryNav" :key="'primary-'+index" :class="{current: activeNavUrl === item.url}">
@@ -101,7 +101,7 @@
 		<script src="./js/demo-mode.js"></script>
 		<script src="./js/login-guard-prompt.js"></script>
 
-					<script src="./js/pages/shell-page.js?v=20260316-647"></script>
+					<script src="./js/pages/shell-page.js?v=20260316-650"></script>
 
 		</body>
 	</html>

@@ -102,6 +102,9 @@
 
 					function resolveRouteByUrl(url) {
 						var safeUrl = normalizeIframeUrl(url);
+						if (/^\.\/pages\/home\/home\.html(?:[?#].*)?$/.test(safeUrl)) {
+							return 'home';
+						}
 						if (/^\.\/pages\/[a-zA-Z0-9_-]+\/center\.html(?:[?#].*)?$/.test(safeUrl)) {
 							return 'center';
 						}
@@ -126,7 +129,7 @@
 						if (/^\.\/pages\/storeup\/list\.html(?:[?#].*)?$/.test(safeUrl)) {
 							return 'center';
 						}
-						return URL_TO_ROUTE_MAP[safeUrl] || sanitizeRouteKey(parseRouteFromLocation()) || 'home';
+						return URL_TO_ROUTE_MAP[safeUrl] || 'home';
 					}
 
 					function resolveUrlByRoute(routeKey) {
