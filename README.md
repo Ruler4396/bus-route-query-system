@@ -1,6 +1,9 @@
 # 城市公交在线查询系统
 
 > 基于 Spring Boot 的毕业设计项目，提供公交线路查询、地图可视化、模拟实时追踪等核心功能演示
+>
+> **本地镜像约束：`/root/dev/bus-route-query-system` 长期保持为“只保留 `README.md + docs/` 的稀疏检出”。**
+> **项目改动只在开发服务器 `root@8.134.206.52:/root/dev/bus-route-query-system` 执行，本地仅允许回写文档。**
 
 ---
 
